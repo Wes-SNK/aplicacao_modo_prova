@@ -62,3 +62,8 @@ begin
    '[]',
    null,0);
 end $$;
+
+
+-- A aplicação atual utiliza somente questões objetivas.
+-- Mantém eventual conteúdo aberto antigo apenas como histórico, sem exibi-lo aos alunos.
+update public.questions set active=false where type='open';
