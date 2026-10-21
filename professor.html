@@ -110,16 +110,30 @@
     </section>
   </main>
 
+  <div id="resumeAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resumeAttemptTitle">
+    <div class="overlay-card">
+      <h2 id="resumeAttemptTitle">Continuar de onde parou</h2>
+      <p id="resumeAttemptText" class="lead"></p>
+      <div class="message info">
+        As respostas, as marcações de revisão, as ocorrências e o horário original serão preservados. O cronômetro não será reiniciado. A sessão anterior será invalidada.
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelResume" class="secondary">Cancelar</button>
+        <button id="btnConfirmResume" class="primary">Liberar continuação</button>
+      </div>
+    </div>
+  </div>
+
   <div id="resetAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resetAttemptTitle">
     <div class="overlay-card">
-      <h2 id="resetAttemptTitle">Permitir nova tentativa</h2>
+      <h2 id="resetAttemptTitle">Nova tentativa (do zero)</h2>
       <p id="resetAttemptText" class="lead"></p>
       <div class="message warn">
-        Esta ação apaga a tentativa atual, incluindo respostas, nota e ocorrências. O cadastro do aluno será mantido.
+        Esta ação apaga a tentativa atual, incluindo respostas, marcações de revisão, nota, ocorrências e cronômetro. O cadastro do aluno será mantido.
       </div>
       <div class="modal-actions">
         <button id="btnCancelReset" class="secondary">Cancelar</button>
-        <button id="btnConfirmReset" class="danger">Permitir nova tentativa</button>
+        <button id="btnConfirmReset" class="danger">Iniciar do zero</button>
       </div>
     </div>
   </div>
