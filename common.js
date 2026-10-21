@@ -3,21 +3,26 @@
 
   const cfg = window.APP_CONFIG || {};
 
+  function publicKey() {
+    return cfg.supabasePublishableKey || cfg.supabaseAnonKey || "";
+  }
+
   function assertConfigured() {
-    if (!cfg.supabaseUrl || !cfg.supabaseAnonKey ||
+    const key = publicKey();
+    if (!cfg.supabaseUrl || !key ||
         cfg.supabaseUrl.includes("COLE_AQUI") ||
-        cfg.supabaseAnonKey.includes("COLE_AQUI")) {
-      throw new Error("Aplicação ainda não configurada. Edite assets/config.js.");
+        key.includes("COLE_AQUI")) {
+      throw new Error("Aplicação ainda não configurada. Edite config.js.");
     }
   }
 
   function baseHeaders(token) {
-    const bearer = token || cfg.supabaseAnonKey;
-    return {
+    const headers = {
       "Content-Type": "application/json",
-      "apikey": cfg.supabaseAnonKey,
-      "Authorization": `Bearer ${bearer}`
+      "apikey": publicKey()
     };
+    if (token) headers["Authorization"] = `Bearer ${token}`;
+    return headers;
   }
 
   async function rpc(name, args = {}, token = null) {
@@ -48,7 +53,7 @@
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey": cfg.supabaseAnonKey
+        "apikey": publicKey()
       },
       body: JSON.stringify({ email, password })
     });
@@ -85,7 +90,7 @@
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "apikey": cfg.supabaseAnonKey
+        "apikey": publicKey()
       },
       body: JSON.stringify({ refresh_token: refreshToken })
     });
