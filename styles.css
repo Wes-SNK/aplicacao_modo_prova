@@ -133,6 +133,34 @@ input:focus, textarea:focus { outline: 3px solid rgba(37,99,235,.15); border-col
   background: white; border-radius: 14px; padding: 24px;
 }
 .detail-modal { width: min(1000px, 100%); }
+.modal-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+.submit-warnings {
+  display: grid;
+  gap: 10px;
+  margin: 16px 0;
+}
+.submit-warning {
+  padding: 12px 14px;
+  border-radius: 9px;
+  background: #fff7ed;
+  border: 1px solid #fed7aa;
+  color: #7c2d12;
+}
+.submit-warning p {
+  margin: 4px 0 0;
+  font-weight: 700;
+}
+.submit-warning.danger-warning {
+  background: #fef2f2;
+  border-color: #fecaca;
+  color: #991b1b;
+}
+
 
 .toast {
   position: fixed; right: 18px; bottom: 18px; z-index: 120;
