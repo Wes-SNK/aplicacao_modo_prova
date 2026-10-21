@@ -12,6 +12,10 @@
   let pollTimer = null;
   let resetTarget = null;
   let resumeTarget = null;
+  let questionsData = [];
+  let questionsLocked = false;
+  let editingQuestionId = null;
+  let deleteQuestionTarget = null;
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -47,6 +51,7 @@
       setMessage($("teacherLoginMessage"), "", "info");
       showDashboard();
       await refreshDashboard();
+      await loadQuestions();
       startPolling();
     } catch (err) {
       setMessage($("teacherLoginMessage"), "Falha no login. Verifique as credenciais.", "error");
@@ -214,6 +219,272 @@
     }
   }
 
+  async function loadQuestions() {
+    try {
+      const data = await teacherRpc("teacher_questions", { p_exam_slug: cfg.examSlug });
+      questionsData = data.questions || [];
+      questionsLocked = !!data.locked;
+      renderQuestionList();
+    } catch (err) {
+      $("questionsMessage").textContent = "Não foi possível carregar as questões.";
+    }
+  }
+
+  function renderQuestionList() {
+    $("questionsMeta").textContent =
+      `${questionsData.filter(q => q.active).length} ativa(s) • ${questionsData.length} cadastrada(s)`;
+
+    const lock = $("questionsLockMessage");
+    if (questionsLocked) {
+      lock.textContent = "A estrutura da prova está bloqueada porque já existem tentativas registradas. Para preservar igualdade entre os alunos, questões não podem ser criadas, alteradas, excluídas ou reordenadas enquanto houver tentativas.";
+      lock.classList.remove("hidden");
+    } else {
+      lock.classList.add("hidden");
+    }
+    $("btnNewQuestion").disabled = questionsLocked;
+
+    const list = $("questionList");
+    list.textContent = "";
+    if (!questionsData.length) {
+      const empty = document.createElement("p");
+      empty.className = "muted";
+      empty.textContent = "Nenhuma questão cadastrada.";
+      list.appendChild(empty);
+      return;
+    }
+
+    questionsData.forEach((q, index) => {
+      const card = document.createElement("div");
+      card.className = "question-admin-item";
+
+      const head = document.createElement("div");
+      head.className = "question-admin-head";
+
+      const titleWrap = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = `Questão ${q.position}`;
+      const badges = document.createElement("div");
+      badges.className = "question-badges";
+
+      const typeBadge = document.createElement("span");
+      typeBadge.className = "pill info";
+      typeBadge.textContent = q.type === "objective" ? "Objetiva" : "Aberta";
+
+      const activeBadge = document.createElement("span");
+      activeBadge.className = q.active ? "pill ok" : "pill";
+      activeBadge.textContent = q.active ? "Ativa" : "Inativa";
+      badges.append(typeBadge, activeBadge);
+      titleWrap.append(title, badges);
+
+      const actions = document.createElement("div");
+      actions.className = "row-actions";
+
+      const up = document.createElement("button");
+      up.className = "small secondary";
+      up.textContent = "↑";
+      up.title = "Mover para cima";
+      up.disabled = questionsLocked || index === 0;
+      up.addEventListener("click", () => moveQuestion(q.id, -1));
+
+      const down = document.createElement("button");
+      down.className = "small secondary";
+      down.textContent = "↓";
+      down.title = "Mover para baixo";
+      down.disabled = questionsLocked || index === questionsData.length - 1;
+      down.addEventListener("click", () => moveQuestion(q.id, 1));
+
+      const edit = document.createElement("button");
+      edit.className = "small secondary";
+      edit.textContent = "Editar";
+      edit.disabled = questionsLocked;
+      edit.addEventListener("click", () => openQuestionEditor(q));
+
+      const del = document.createElement("button");
+      del.className = "small danger";
+      del.textContent = "Excluir";
+      del.disabled = questionsLocked;
+      del.addEventListener("click", () => openDeleteQuestion(q));
+
+      actions.append(up, down, edit, del);
+      head.append(titleWrap, actions);
+
+      const stem = document.createElement("p");
+      stem.className = "question-admin-stem";
+      stem.textContent = q.stem;
+
+      const meta = document.createElement("p");
+      meta.className = "muted question-admin-meta";
+      meta.textContent = q.type === "objective"
+        ? `Gabarito: ${q.correct_answer || "—"} • ${Number(q.points || 0).toFixed(1)} ponto(s)`
+        : "Resposta aberta • sem correção automática";
+
+      card.append(head, stem, meta);
+      list.appendChild(card);
+    });
+  }
+
+  function toggleQuestionTypeFields() {
+    const objective = $("questionTypeInput").value === "objective";
+    $("objectiveFields").classList.toggle("hidden", !objective);
+  }
+
+  function openQuestionEditor(q = null) {
+    if (questionsLocked) return;
+    editingQuestionId = q?.id || null;
+    $("questionEditorTitle").textContent = q ? `Editar questão ${q.position}` : "Nova questão";
+    $("questionTypeInput").value = q?.type || "objective";
+    $("questionStemInput").value = q?.stem || "";
+    $("questionActiveInput").checked = q?.active ?? true;
+    $("questionPointsInput").value = q?.type === "objective" ? Number(q.points ?? 1) : 1;
+
+    const optionMap = {};
+    (q?.options || []).forEach(o => optionMap[o.key] = o.text);
+    ["A","B","C","D"].forEach(k => {
+      $(`option${k}Input`).value = optionMap[k] || "";
+    });
+    $("correctAnswerInput").value = q?.correct_answer || "A";
+    setMessage($("questionEditorMessage"), "", "info");
+    toggleQuestionTypeFields();
+    $("questionEditorModal").classList.remove("hidden");
+  }
+
+  function closeQuestionEditor() {
+    editingQuestionId = null;
+    $("questionEditorModal").classList.add("hidden");
+  }
+
+  async function saveQuestion() {
+    if (questionsLocked) return;
+    const type = $("questionTypeInput").value;
+    const stem = $("questionStemInput").value.trim();
+    const active = $("questionActiveInput").checked;
+    let options = [];
+    let correct = null;
+    let points = 0;
+
+    if (!stem) {
+      setMessage($("questionEditorMessage"), "Informe o enunciado.", "warn");
+      return;
+    }
+
+    if (type === "objective") {
+      options = ["A","B","C","D"].map(key => ({
+        key,
+        text: $(`option${key}Input`).value.trim()
+      }));
+      if (options.some(o => !o.text)) {
+        setMessage($("questionEditorMessage"), "Preencha as quatro alternativas A, B, C e D.", "warn");
+        return;
+      }
+      correct = $("correctAnswerInput").value;
+      points = Number($("questionPointsInput").value);
+      if (!Number.isFinite(points) || points < 0 || points > 100) {
+        setMessage($("questionEditorMessage"), "Informe um valor entre 0 e 100.", "warn");
+        return;
+      }
+    }
+
+    $("btnSaveQuestion").disabled = true;
+    setMessage($("questionEditorMessage"), "Salvando…", "info");
+    try {
+      await teacherRpc("teacher_save_question", {
+        p_exam_slug: cfg.examSlug,
+        p_question_id: editingQuestionId,
+        p_type: type,
+        p_stem: stem,
+        p_options: options,
+        p_correct_answer: correct,
+        p_points: points,
+        p_active: active
+      });
+      closeQuestionEditor();
+      await loadQuestions();
+      await refreshDashboard();
+      $("questionsMessage").textContent = "Questão salva.";
+    } catch (err) {
+      setMessage($("questionEditorMessage"), err.message || "Não foi possível salvar a questão.", "error");
+    } finally {
+      $("btnSaveQuestion").disabled = false;
+    }
+  }
+
+  async function moveQuestion(questionId, direction) {
+    if (questionsLocked) return;
+    try {
+      await teacherRpc("teacher_move_question", {
+        p_question_id: questionId,
+        p_direction: direction
+      });
+      await loadQuestions();
+    } catch (err) {
+      $("questionsMessage").textContent = err.message || "Não foi possível reordenar a questão.";
+    }
+  }
+
+  function openDeleteQuestion(q) {
+    if (questionsLocked) return;
+    deleteQuestionTarget = q;
+    $("deleteQuestionText").textContent = `Excluir definitivamente a questão ${q.position}?`;
+    $("deleteQuestionModal").classList.remove("hidden");
+  }
+
+  function closeDeleteQuestion() {
+    deleteQuestionTarget = null;
+    $("deleteQuestionModal").classList.add("hidden");
+  }
+
+  async function confirmDeleteQuestion() {
+    if (!deleteQuestionTarget) return;
+    const target = deleteQuestionTarget;
+    $("btnConfirmDeleteQuestion").disabled = true;
+    try {
+      await teacherRpc("teacher_delete_question", { p_question_id: target.id });
+      closeDeleteQuestion();
+      await loadQuestions();
+      await refreshDashboard();
+      $("questionsMessage").textContent = "Questão excluída.";
+    } catch (err) {
+      $("deleteQuestionText").textContent = err.message || "Não foi possível excluir a questão.";
+    } finally {
+      $("btnConfirmDeleteQuestion").disabled = false;
+    }
+  }
+
+  function openQuestionPreview() {
+    const area = $("questionPreviewList");
+    area.textContent = "";
+    const active = questionsData.filter(q => q.active);
+    if (!active.length) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.textContent = "Não há questões ativas para pré-visualizar.";
+      area.appendChild(p);
+    } else {
+      active.forEach((q, idx) => {
+        const box = document.createElement("div");
+        box.className = "preview-question";
+        const h = document.createElement("h3");
+        h.textContent = `${idx + 1}. ${q.stem}`;
+        box.appendChild(h);
+        if (q.type === "objective") {
+          (q.options || []).forEach(o => {
+            const p = document.createElement("p");
+            p.className = o.key === q.correct_answer ? "preview-correct" : "";
+            p.textContent = `${o.key}) ${o.text}${o.key === q.correct_answer ? " ✓" : ""}`;
+            box.appendChild(p);
+          });
+        } else {
+          const p = document.createElement("p");
+          p.className = "muted";
+          p.textContent = "Questão aberta.";
+          box.appendChild(p);
+        }
+        area.appendChild(box);
+      });
+    }
+    $("questionPreviewModal").classList.remove("hidden");
+  }
+
   async function saveExamSettings() {
     const title = $("examTitleInput").value.trim();
     const duration = Number($("examDurationInput").value);
@@ -354,6 +625,15 @@
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    $("btnNewQuestion").addEventListener("click", () => openQuestionEditor());
+    $("btnPreviewQuestions").addEventListener("click", openQuestionPreview);
+    $("questionTypeInput").addEventListener("change", toggleQuestionTypeFields);
+    $("btnCloseQuestionEditor").addEventListener("click", closeQuestionEditor);
+    $("btnCancelQuestionEdit").addEventListener("click", closeQuestionEditor);
+    $("btnSaveQuestion").addEventListener("click", saveQuestion);
+    $("btnCancelDeleteQuestion").addEventListener("click", closeDeleteQuestion);
+    $("btnConfirmDeleteQuestion").addEventListener("click", confirmDeleteQuestion);
+    $("btnCloseQuestionPreview").addEventListener("click", () => $("questionPreviewModal").classList.add("hidden"));
     $("btnCancelResume").addEventListener("click", closeResumeAttempt);
     $("btnConfirmResume").addEventListener("click", confirmResumeAttempt);
     $("btnCancelReset").addEventListener("click", closeResetAttempt);
@@ -364,6 +644,7 @@
     if (session) {
       showDashboard();
       await refreshDashboard();
+      await loadQuestions();
       startPolling();
     } else {
       showLogin();
