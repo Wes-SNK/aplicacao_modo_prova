@@ -17,7 +17,7 @@ create table if not exists public.exams (
 
 create table if not exists public.students (
   id uuid primary key default gen_random_uuid(),
-  access_code text not null unique,
+  access_code text unique,
   name text not null,
   class_group text,
   active boolean not null default true,
@@ -137,9 +137,9 @@ $$;
 
 -- ---------------- ALUNO ----------------
 
-create or replace function public.start_attempt(
+create or replace function public.start_attempt_by_name(
   p_exam_slug text,
-  p_access_code text,
+  p_student_name text,
   p_user_agent text default null
 )
 returns jsonb
@@ -152,20 +152,30 @@ declare
   s public.students;
   a public.attempts;
   q jsonb;
+  v_matches integer;
 begin
   select * into e from public.exams where slug = p_exam_slug;
   if e.id is null or not public._exam_available(e) then
     raise exception 'Avaliação indisponível';
   end if;
 
-  select * into s
+  select count(*)
+    into v_matches
     from public.students
-   where upper(access_code) = upper(trim(p_access_code))
+   where lower(btrim(name)) = lower(btrim(p_student_name))
      and active = true;
 
-  if s.id is null then
-    raise exception 'Código inválido';
+  if v_matches = 0 then
+    raise exception 'Estudante não encontrado';
+  elsif v_matches > 1 then
+    raise exception 'Nome ambíguo';
   end if;
+
+  select * into s
+    from public.students
+   where lower(btrim(name)) = lower(btrim(p_student_name))
+     and active = true
+   limit 1;
 
   select * into a from public.attempts
    where exam_id = e.id and student_id = s.id;
@@ -179,8 +189,11 @@ begin
     values(e.id, s.id, p_user_agent)
     returning * into a;
   else
-    update public.attempts set last_seen_at = now(), user_agent = coalesce(p_user_agent,user_agent)
-     where id = a.id returning * into a;
+    update public.attempts
+       set last_seen_at = now(),
+           user_agent = coalesce(p_user_agent,user_agent)
+     where id = a.id
+     returning * into a;
   end if;
 
   select coalesce(jsonb_agg(
@@ -563,7 +576,7 @@ end;
 $$;
 
 -- Execução das funções públicas pelo aluno.
-grant execute on function public.start_attempt(text,text,text) to anon, authenticated;
+grant execute on function public.start_attempt_by_name(text,text,text) to anon, authenticated;
 grant execute on function public.begin_attempt(uuid) to anon, authenticated;
 grant execute on function public.resume_attempt(uuid) to anon, authenticated;
 grant execute on function public.save_answer(uuid,uuid,jsonb) to anon, authenticated;
