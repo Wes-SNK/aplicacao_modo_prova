@@ -149,11 +149,24 @@
 
     try {
       const payload = await rpc("resume_attempt", { p_session_token: cached.sessionToken });
-      if (!payload || payload.status === "submitted" || payload.status === "auto_submitted") {
+      if (!payload) {
         clearSessionCache();
         return false;
       }
       hydrate(payload);
+      if (payload.status === "submitted" || payload.status === "auto_submitted") {
+        if (state.assessmentMode === "simulation") {
+          let result = null;
+          try {
+            result = await rpc("simulation_result", { p_session_token: cached.sessionToken });
+          } catch {}
+          state.active = false;
+          finishUi("Simulado finalizado. Confira seu resultado abaixo.", result);
+          return true;
+        }
+        clearSessionCache();
+        return false;
+      }
       if (payload.status === "ready") {
         renderRules();
         showScreen("screenRules");
@@ -201,7 +214,7 @@
     if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";
     if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
     if (m.includes("Avaliação indisponível")) return "Esta avaliação não está disponível neste momento.";
-    if (m.includes("já iniciada")) return "Esta avaliação já foi iniciada para este estudante. Se for você, use o mesmo computador e chame o professor se a prova não for retomada automaticamente.";
+    if (m.includes("já iniciada")) return "Esta avaliação já foi iniciada para este estudante. Se for você, use o mesmo computador e chame o professor se a atividade não for retomada automaticamente.";
     if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
     if (m.includes("configurada")) return m;
     return "Não foi possível acessar a avaliação. Verifique a conexão e tente novamente.";
@@ -210,7 +223,9 @@
   function renderRules() {
     const isSimulation = state.assessmentMode === "simulation";
     $("loginHeading").textContent = isSimulation ? "Simulado" : "Avaliação";
-    $("studentGreeting").textContent = `Olá, ${state.studentName}. Leia as regras do ${isSimulation ? "simulado" : "prova"}.`;
+    $("studentGreeting").textContent = isSimulation
+      ? `Olá, ${state.studentName}. Leia as regras do simulado.`
+      : `Olá, ${state.studentName}. Leia as regras da prova.`;
     $("examLabel").textContent = state.examTitle ? ` — ${state.examTitle}` : "";
     $("appTitle").textContent = isSimulation ? "Modo Simulado — Técnico em Informática" : (cfg.appTitle || "Modo Prova");
     $("btnStart").textContent = isSimulation ? "Iniciar simulado" : "Iniciar avaliação";
@@ -237,7 +252,7 @@
       showScreen("screenExam");
       startTimer();
     } catch (err) {
-      setMessage($("ruleMessage"), "Não foi possível iniciar a prova. Tente novamente.", "error");
+      setMessage($("ruleMessage"), "Não foi possível iniciar a atividade. Tente novamente.", "error");
       $("btnStart").disabled = false;
     }
   }
