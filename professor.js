@@ -96,7 +96,7 @@
     $("teacherExamLabel").textContent = data.exam_title ? ` — ${data.exam_title}` : "";
     $("dashboardTitle").textContent = data.exam_title || "Avaliação";
     $("dashboardMeta").textContent =
-      `${data.duration_minutes} min • limite de ${data.max_occurrences} ocorrência(s) • ${data.question_count} questão(ões)`;
+      `${data.assessment_mode === "simulation" ? "Simulado" : "Prova"} • ${data.duration_minutes} min • limite de ${data.max_occurrences} ocorrência(s) • ${data.question_count} questão(ões)`;
 
     $("examTitleInput").value = data.exam_title || "";
     $("examDurationInput").value = data.duration_minutes ?? 50;
@@ -501,7 +501,7 @@
       $("settingsMessage").textContent = "Configurações salvas.";
       await refreshDashboard();
     } catch (err) {
-      $("settingsMessage").textContent = "Não foi possível salvar as configurações.";
+      $("settingsMessage").textContent = err.message || "Não foi possível salvar as configurações.";
     } finally {
       $("btnSaveSettings").disabled = false;
     }
