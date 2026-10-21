@@ -9,6 +9,7 @@ create table if not exists public.exams (
   title text not null,
   duration_minutes integer not null default 50 check (duration_minutes between 5 and 300),
   max_occurrences integer not null default 3 check (max_occurrences between 1 and 20),
+  assessment_mode text not null default 'exam' check (assessment_mode in ('exam','simulation')),
   is_active boolean not null default false,
   opens_at timestamptz,
   closes_at timestamptz,
@@ -235,6 +236,7 @@ begin
     'status', a.status,
     'student_name', s.name,
     'exam_title', e.title,
+    'assessment_mode', e.assessment_mode,
     'duration_minutes', e.duration_minutes,
     'max_occurrences', e.max_occurrences,
     'occurrences', a.occurrences,
@@ -333,6 +335,7 @@ begin
     'status', a.status,
     'student_name', s.name,
     'exam_title', e.title,
+    'assessment_mode', e.assessment_mode,
     'duration_minutes', e.duration_minutes,
     'max_occurrences', e.max_occurrences,
     'occurrences', a.occurrences,
@@ -495,19 +498,24 @@ set search_path = public
 as $$
 declare
   a public.attempts;
+  e public.exams;
   g record;
 begin
   select * into a from public.attempts where session_token=p_session_token;
   if a.id is null then raise exception 'Sessão inválida'; end if;
+  select * into e from public.exams where id=a.exam_id;
 
   if a.status in ('submitted','auto_submitted') then
-    return jsonb_build_object('status',a.status,'score',a.score,'max_score',a.max_score);
+    return jsonb_build_object(
+      'status',a.status,'score',a.score,'max_score',a.max_score,
+      'assessment_mode',e.assessment_mode
+    );
   end if;
 
   select * into g from public._grade_attempt(a.id);
 
   update public.attempts
-     set status = case when p_reason in ('occurrence_limit','time_expired') then 'auto_submitted' else 'submitted' end,
+     set status=case when p_reason in ('occurrence_limit','time_expired') then 'auto_submitted' else 'submitted' end,
          submitted_at=now(),
          submission_reason=p_reason,
          last_seen_at=now()
@@ -518,7 +526,54 @@ begin
     'status',a.status,
     'submitted_at',a.submitted_at,
     'score',a.score,
-    'max_score',a.max_score
+    'max_score',a.max_score,
+    'assessment_mode',e.assessment_mode
+  );
+end;
+$$;
+
+create or replace function public.simulation_result(p_session_token uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  a public.attempts;
+  e public.exams;
+  arr jsonb;
+  pct numeric;
+begin
+  select * into a from public.attempts where session_token=p_session_token;
+  if a.id is null then raise exception 'Sessão inválida'; end if;
+  select * into e from public.exams where id=a.exam_id;
+
+  if e.assessment_mode <> 'simulation' then raise exception 'Resultado detalhado indisponível'; end if;
+  if a.status not in ('submitted','auto_submitted') then raise exception 'Simulado ainda não finalizado'; end if;
+
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'position',q.position,
+      'stem',q.stem,
+      'options',q.options,
+      'answer',coalesce(an.answer,'{}'::jsonb),
+      'correct_answer',q.correct_answer,
+      'is_correct',(an.answer->>'value'=q.correct_answer),
+      'points',q.points
+    ) order by q.position
+  ),'[]'::jsonb)
+  into arr
+  from public.questions q
+  left join public.answers an on an.question_id=q.id and an.attempt_id=a.id
+  where q.exam_id=a.exam_id and q.active=true and q.type='objective';
+
+  pct := case when coalesce(a.max_score,0)>0 then round((a.score/a.max_score)*100,1) else 0 end;
+
+  return jsonb_build_object(
+    'score',a.score,
+    'max_score',a.max_score,
+    'percentage',pct,
+    'questions',arr
   );
 end;
 $$;
@@ -569,6 +624,7 @@ begin
     'duration_minutes',e.duration_minutes,
     'max_occurrences',e.max_occurrences,
     'is_active',e.is_active,
+    'assessment_mode',e.assessment_mode,
     'question_count',qcount,
     'attempts',arr
   );
@@ -670,7 +726,7 @@ begin
   ),'[]'::jsonb)
   into arr
   from public.questions q
-  where q.exam_id=e.id;
+  where q.exam_id=e.id and q.type='objective';
 
   return jsonb_build_object(
     'locked',v_locked,
@@ -708,33 +764,24 @@ begin
     raise exception 'Estrutura bloqueada: já existem tentativas registradas';
   end if;
 
-  if p_type not in ('objective','open') then raise exception 'Tipo de questão inválido'; end if;
+  if p_type <> 'objective' then raise exception 'Somente questões objetivas são permitidas'; end if;
   if btrim(coalesce(p_stem,'')) = '' then raise exception 'Enunciado obrigatório'; end if;
-
-  if p_type='objective' then
-    if jsonb_typeof(p_options) <> 'array' or jsonb_array_length(p_options) <> 4 then
-      raise exception 'Questão objetiva deve possuir quatro alternativas';
-    end if;
-    if p_correct_answer not in ('A','B','C','D') then
-      raise exception 'Gabarito inválido';
-    end if;
-    if p_points < 0 or p_points > 100 then raise exception 'Valor inválido'; end if;
-  else
-    p_options := '[]'::jsonb;
-    p_correct_answer := null;
-    p_points := 0;
+  if jsonb_typeof(p_options) <> 'array' or jsonb_array_length(p_options) <> 4 then
+    raise exception 'Questão objetiva deve possuir quatro alternativas';
   end if;
+  if p_correct_answer not in ('A','B','C','D') then raise exception 'Gabarito inválido'; end if;
+  if p_points <= 0 or p_points > 100 then raise exception 'Valor inválido'; end if;
 
   if p_question_id is null then
     select coalesce(max(position),0)+1 into v_position
     from public.questions where exam_id=e.id;
 
     insert into public.questions(exam_id,position,type,stem,options,correct_answer,points,active)
-    values(e.id,v_position,p_type,btrim(p_stem),p_options,p_correct_answer,p_points,p_active)
+    values(e.id,v_position,'objective',btrim(p_stem),p_options,p_correct_answer,p_points,p_active)
     returning * into q;
   else
     update public.questions
-       set type=p_type,
+       set type='objective',
            stem=btrim(p_stem),
            options=p_options,
            correct_answer=p_correct_answer,
@@ -840,44 +887,44 @@ create or replace function public.teacher_update_exam_settings(
   p_title text,
   p_duration_minutes integer,
   p_max_occurrences integer,
-  p_is_active boolean
+  p_is_active boolean,
+  p_assessment_mode text
 )
 returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   e public.exams;
 begin
   if auth.uid() is null then raise exception 'Acesso negado'; end if;
   if btrim(coalesce(p_title,'')) = '' then raise exception 'Título obrigatório'; end if;
-  if p_duration_minutes < 5 or p_duration_minutes > 300 then
-    raise exception 'Duração inválida';
-  end if;
-  if p_max_occurrences < 1 or p_max_occurrences > 20 then
-    raise exception 'Limite de ocorrências inválido';
-  end if;
+  if p_duration_minutes < 5 or p_duration_minutes > 300 then raise exception 'Duração inválida'; end if;
+  if p_max_occurrences < 1 or p_max_occurrences > 20 then raise exception 'Limite de ocorrências inválido'; end if;
+  if p_assessment_mode not in ('exam','simulation') then raise exception 'Modo inválido'; end if;
 
   update public.exams
-     set title = btrim(p_title),
-         duration_minutes = p_duration_minutes,
-         max_occurrences = p_max_occurrences,
-         is_active = p_is_active
-   where slug = p_exam_slug
+     set title=btrim(p_title),
+         duration_minutes=p_duration_minutes,
+         max_occurrences=p_max_occurrences,
+         is_active=p_is_active,
+         assessment_mode=p_assessment_mode
+   where slug=p_exam_slug
    returning * into e;
 
   if e.id is null then raise exception 'Avaliação não encontrada'; end if;
 
   return jsonb_build_object(
-    'ok', true,
-    'title', e.title,
-    'duration_minutes', e.duration_minutes,
-    'max_occurrences', e.max_occurrences,
-    'is_active', e.is_active
+    'ok',true,
+    'title',e.title,
+    'duration_minutes',e.duration_minutes,
+    'max_occurrences',e.max_occurrences,
+    'is_active',e.is_active,
+    'assessment_mode',e.assessment_mode
   );
 end;
-$;
+$$;
 
 create or replace function public.teacher_allow_resume_attempt(p_attempt_id uuid)
 returns jsonb
@@ -959,6 +1006,7 @@ grant execute on function public.save_answer(uuid,uuid,jsonb) to anon, authentic
 grant execute on function public.save_review_flag(uuid,uuid,boolean) to anon, authenticated;
 grant execute on function public.record_violation(uuid,text,uuid,jsonb) to anon, authenticated;
 grant execute on function public.submit_attempt(uuid,text) to anon, authenticated;
+grant execute on function public.simulation_result(uuid) to anon, authenticated;
 
 -- Painel: apenas usuário autenticado.
 grant execute on function public.teacher_dashboard(text) to authenticated;
@@ -967,6 +1015,6 @@ grant execute on function public.teacher_questions(text) to authenticated;
 grant execute on function public.teacher_save_question(text,uuid,text,text,jsonb,text,numeric,boolean) to authenticated;
 grant execute on function public.teacher_move_question(uuid,integer) to authenticated;
 grant execute on function public.teacher_delete_question(uuid) to authenticated;
-grant execute on function public.teacher_update_exam_settings(text,text,integer,integer,boolean) to authenticated;
+grant execute on function public.teacher_update_exam_settings(text,text,integer,integer,boolean,text) to authenticated;
 grant execute on function public.teacher_reset_attempt(uuid) to authenticated;
 grant execute on function public.teacher_allow_resume_attempt(uuid) to authenticated;
