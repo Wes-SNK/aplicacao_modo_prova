@@ -53,6 +53,8 @@ create table if not exists public.attempts (
   max_score numeric(8,2),
   user_agent text,
   submission_reason text,
+  resume_allowed boolean not null default false,
+  review_flags jsonb not null default '{}'::jsonb,
   unique(exam_id, student_id)
 );
 
@@ -152,6 +154,7 @@ declare
   s public.students;
   a public.attempts;
   q jsonb;
+  ans jsonb;
   v_matches integer;
 begin
   select * into e from public.exams where slug = p_exam_slug;
@@ -159,11 +162,10 @@ begin
     raise exception 'Avaliação indisponível';
   end if;
 
-  select count(*)
-    into v_matches
-    from public.students
-   where lower(btrim(name)) = lower(btrim(p_student_name))
-     and active = true;
+  select count(*) into v_matches
+  from public.students
+  where lower(btrim(name)) = lower(btrim(p_student_name))
+    and active = true;
 
   if v_matches = 0 then
     raise exception 'Estudante não encontrado';
@@ -172,24 +174,33 @@ begin
   end if;
 
   select * into s
-    from public.students
-   where lower(btrim(name)) = lower(btrim(p_student_name))
-     and active = true
-   limit 1;
+  from public.students
+  where lower(btrim(name)) = lower(btrim(p_student_name))
+    and active = true
+  limit 1;
 
-  select * into a from public.attempts
-   where exam_id = e.id and student_id = s.id;
-
-  if a.id is not null and a.status = 'in_progress' then
-    raise exception 'Avaliação já iniciada';
-  elsif a.id is not null and a.status in ('submitted','auto_submitted') then
-    raise exception 'Avaliação já finalizada';
-  end if;
+  select * into a
+  from public.attempts
+  where exam_id = e.id and student_id = s.id;
 
   if a.id is null then
     insert into public.attempts(exam_id, student_id, user_agent)
     values(e.id, s.id, p_user_agent)
     returning * into a;
+  elsif a.status = 'in_progress' then
+    if not a.resume_allowed then
+      raise exception 'Avaliação já iniciada';
+    end if;
+
+    update public.attempts
+       set session_token = gen_random_uuid(),
+           resume_allowed = false,
+           last_seen_at = now(),
+           user_agent = coalesce(p_user_agent,user_agent)
+     where id = a.id
+     returning * into a;
+  elsif a.status in ('submitted','auto_submitted') then
+    raise exception 'Avaliação já finalizada';
   else
     update public.attempts
        set last_seen_at = now(),
@@ -209,9 +220,14 @@ begin
   into q
   from (
     select q.*, md5(a.session_token::text || q.id::text) as sort_key
-      from public.questions q
-     where q.exam_id = e.id and q.active = true
+    from public.questions q
+    where q.exam_id = e.id and q.active = true
   ) x;
+
+  select coalesce(jsonb_object_agg(question_id::text, answer),'{}'::jsonb)
+  into ans
+  from public.answers
+  where attempt_id = a.id;
 
   return jsonb_build_object(
     'attempt_id', a.id,
@@ -226,7 +242,8 @@ begin
     'ends_at', case when a.started_at is null then null
                     else a.started_at + make_interval(mins => e.duration_minutes) end,
     'questions', q,
-    'answers', '{}'::jsonb
+    'answers', ans,
+    'review_flags', coalesce(a.review_flags,'{}'::jsonb)
   );
 end;
 $$;
@@ -323,10 +340,11 @@ begin
     'ends_at', case when a.started_at is null then null
                     else a.started_at + make_interval(mins => e.duration_minutes) end,
     'questions', q,
-    'answers', ans
+    'answers', ans,
+    'review_flags', coalesce(a.review_flags,'{}'::jsonb)
   );
 end;
-$$;
+$;
 
 create or replace function public.save_answer(
   p_session_token uuid,
@@ -367,6 +385,45 @@ begin
   return jsonb_build_object('ok',true,'saved_at',now());
 end;
 $$;
+
+create or replace function public.save_review_flag(
+  p_session_token uuid,
+  p_question_id uuid,
+  p_marked boolean
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  a public.attempts;
+begin
+  select * into a from public.attempts where session_token=p_session_token;
+  if a.id is null or a.status <> 'in_progress' then
+    raise exception 'Tentativa não está em andamento';
+  end if;
+
+  if not exists(
+    select 1 from public.questions
+    where id=p_question_id and exam_id=a.exam_id and active=true
+  ) then
+    raise exception 'Questão inválida';
+  end if;
+
+  update public.attempts
+     set review_flags = jsonb_set(
+           coalesce(review_flags,'{}'::jsonb),
+           array[p_question_id::text],
+           to_jsonb(p_marked),
+           true
+         ),
+         last_seen_at = now()
+   where id=a.id;
+
+  return jsonb_build_object('ok',true);
+end;
+$;
 
 create or replace function public.record_violation(
   p_session_token uuid,
@@ -498,7 +555,8 @@ begin
       'occurrences',a.occurrences,
       'score',a.score,
       'max_score',a.max_score,
-      'submission_reason',a.submission_reason
+      'submission_reason',a.submission_reason,
+      'resume_allowed',a.resume_allowed
     ) order by s.name
   ),'[]'::jsonb)
   into arr
@@ -622,6 +680,52 @@ begin
 end;
 $;
 
+create or replace function public.teacher_allow_resume_attempt(p_attempt_id uuid)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $
+declare
+  a public.attempts;
+  e public.exams;
+  s public.students;
+begin
+  if auth.uid() is null then raise exception 'Acesso negado'; end if;
+
+  select * into a from public.attempts where id=p_attempt_id;
+  if a.id is null then raise exception 'Tentativa não encontrada'; end if;
+  if a.status <> 'in_progress' then
+    raise exception 'Somente tentativas em andamento podem ser retomadas';
+  end if;
+
+  select * into e from public.exams where id=a.exam_id;
+  if a.started_at is not null
+     and a.started_at + make_interval(mins => e.duration_minutes) <= now() then
+    raise exception 'Tempo encerrado';
+  end if;
+
+  select * into s from public.students where id=a.student_id;
+
+  update public.attempts
+     set resume_allowed=true,
+         session_token=gen_random_uuid(),
+         last_seen_at=now()
+   where id=a.id
+   returning * into a;
+
+  insert into public.exam_events(attempt_id,event_type,counted,details)
+  values(a.id,'teacher_resume_authorized',false,
+         jsonb_build_object('authorized_at',now()));
+
+  return jsonb_build_object(
+    'ok',true,
+    'student_name',s.name,
+    'resume_allowed',true
+  );
+end;
+$;
+
 create or replace function public.teacher_reset_attempt(p_attempt_id uuid)
 returns jsonb
 language plpgsql
@@ -653,6 +757,7 @@ grant execute on function public.start_attempt_by_name(text,text,text) to anon, 
 grant execute on function public.begin_attempt(uuid) to anon, authenticated;
 grant execute on function public.resume_attempt(uuid) to anon, authenticated;
 grant execute on function public.save_answer(uuid,uuid,jsonb) to anon, authenticated;
+grant execute on function public.save_review_flag(uuid,uuid,boolean) to anon, authenticated;
 grant execute on function public.record_violation(uuid,text,uuid,jsonb) to anon, authenticated;
 grant execute on function public.submit_attempt(uuid,text) to anon, authenticated;
 
@@ -661,3 +766,4 @@ grant execute on function public.teacher_dashboard(text) to authenticated;
 grant execute on function public.teacher_attempt_detail(uuid) to authenticated;
 grant execute on function public.teacher_update_exam_settings(text,text,integer,integer,boolean) to authenticated;
 grant execute on function public.teacher_reset_attempt(uuid) to authenticated;
+grant execute on function public.teacher_allow_resume_attempt(uuid) to authenticated;
