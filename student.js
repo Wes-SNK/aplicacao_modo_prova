@@ -196,7 +196,8 @@
     if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";
     if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
     if (m.includes("Avaliação indisponível")) return "Esta avaliação não está disponível neste momento.";
-    if (m.includes("já iniciada")) return "Esta avaliação já foi iniciada para este estudante. Se for você, use o mesmo computador e chame o professor se a prova não for retomada automaticamente.";\n    if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
+    if (m.includes("já iniciada")) return "Esta avaliação já foi iniciada para este estudante. Se for você, use o mesmo computador e chame o professor se a prova não for retomada automaticamente.";
+    if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
     if (m.includes("configurada")) return m;
     return "Não foi possível acessar a avaliação. Verifique a conexão e tente novamente.";
   }
