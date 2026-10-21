@@ -166,14 +166,14 @@
     }
   }
 
-  async function enterWithCode() {
-    const code = $("accessCode").value.trim().toUpperCase();
+  async function enterWithName() {
+    const studentName = $("studentNameInput").value.trim();
     if (!code) {
       setMessage($("loginMessage"), "Informe o código de acesso.", "warn");
       return;
     }
     $("btnEnter").disabled = true;
-    setMessage($("loginMessage"), "Validando código…", "info");
+    setMessage($("loginMessage"), "Localizando estudante…", "info");
     try {
       const payload = await rpc("start_attempt", {
         p_exam_slug: cfg.examSlug,
@@ -193,9 +193,9 @@
 
   function humanError(msg) {
     const m = String(msg || "");
-    if (m.includes("Código inválido")) return "Código inválido ou estudante inativo.";
+    if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";\n    if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
     if (m.includes("Avaliação indisponível")) return "Esta avaliação não está disponível neste momento.";
-    if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este código.";
+    if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
     if (m.includes("configurada")) return m;
     return "Não foi possível acessar a avaliação. Verifique a conexão e tente novamente.";
   }
