@@ -11,6 +11,7 @@
     attemptId: null,
     studentName: null,
     examTitle: null,
+    assessmentMode: "exam",
     durationMinutes: 0,
     maxOccurrences: 0,
     occurrences: 0,
@@ -127,6 +128,7 @@
     state.attemptId = payload.attempt_id;
     state.studentName = payload.student_name;
     state.examTitle = payload.exam_title;
+    state.assessmentMode = payload.assessment_mode || "exam";
     state.durationMinutes = payload.duration_minutes;
     state.maxOccurrences = payload.max_occurrences;
     state.occurrences = payload.occurrences || 0;
@@ -206,8 +208,14 @@
   }
 
   function renderRules() {
-    $("studentGreeting").textContent = `Olá, ${state.studentName}. Leia as regras.`;
+    const isSimulation = state.assessmentMode === "simulation";
+    $("loginHeading").textContent = isSimulation ? "Simulado" : "Avaliação";
+    $("studentGreeting").textContent = `Olá, ${state.studentName}. Leia as regras do ${isSimulation ? "simulado" : "prova"}.`;
     $("examLabel").textContent = state.examTitle ? ` — ${state.examTitle}` : "";
+    $("appTitle").textContent = isSimulation ? "Modo Simulado — Técnico em Informática" : (cfg.appTitle || "Modo Prova");
+    $("btnStart").textContent = isSimulation ? "Iniciar simulado" : "Iniciar avaliação";
+    $("btnSubmit").textContent = isSimulation ? "Finalizar simulado" : "Finalizar prova";
+    $("submitTitle").textContent = isSimulation ? "Conferir antes de finalizar o simulado" : "Conferir antes de finalizar";
     $("ruleDuration").textContent = `${state.durationMinutes} min`;
     $("ruleQuestionCount").textContent = String(state.questions.length);
     $("ruleMaxOccurrences").textContent = String(state.maxOccurrences);
@@ -422,7 +430,9 @@
 
       if (payload.status === "auto_submitted") {
         state.active = false;
-        finishUi("A avaliação foi encerrada automaticamente após atingir o limite de ocorrências.");
+        await finishAfterSubmission(state.assessmentMode === "simulation"
+          ? "O simulado foi encerrado automaticamente após atingir o limite de ocorrências."
+          : "A avaliação foi encerrada automaticamente após atingir o limite de ocorrências.");
       }
     } catch {
       showViolationToast("A ocorrência não pôde ser enviada agora; ela será registrada localmente.");
@@ -491,6 +501,57 @@
     $("submitOverlay").classList.add("hidden");
   }
 
+
+  function renderSimulationResult(data) {
+    const area = $("simulationResult");
+    area.textContent = "";
+    if (!data) {
+      area.classList.add("hidden");
+      return;
+    }
+
+    area.classList.remove("hidden");
+
+    const score = document.createElement("p");
+    score.className = "result-score";
+    score.textContent = `Resultado: ${Number(data.score || 0).toFixed(1)} / ${Number(data.max_score || 0).toFixed(1)} • ${Number(data.percentage || 0).toFixed(1)}% de acertos`;
+    area.appendChild(score);
+
+    (data.questions || []).forEach((q, idx) => {
+      const box = document.createElement("div");
+      box.className = "result-question";
+
+      const h = document.createElement("strong");
+      h.textContent = `${idx + 1}. ${q.stem}`;
+
+      const chosen = q.answer?.value || "Sem resposta";
+      const answer = document.createElement("p");
+      answer.className = q.is_correct ? "result-ok" : "result-bad";
+      answer.textContent = `Sua resposta: ${chosen} • Gabarito: ${q.correct_answer}`;
+
+      const correctOption = (q.options || []).find(o => o.key === q.correct_answer);
+      const explanation = document.createElement("p");
+      explanation.textContent = correctOption
+        ? `Alternativa correta: ${q.correct_answer}) ${correctOption.text}`
+        : `Alternativa correta: ${q.correct_answer}`;
+
+      box.append(h, answer, explanation);
+      area.appendChild(box);
+    });
+  }
+
+  async function finishAfterSubmission(message) {
+    let simulationData = null;
+    if (state.assessmentMode === "simulation") {
+      try {
+        simulationData = await rpc("simulation_result", {
+          p_session_token: state.sessionToken
+        });
+      } catch {}
+    }
+    finishUi(message, simulationData);
+  }
+
   async function submitExam(reason = "submitted", automatic = false) {
     if (state.submitting || !state.active) return;
     closeSubmitConfirmation();
@@ -504,9 +565,9 @@
       });
       state.active = false;
       state.status = payload.status;
-      finishUi(reason === "time_expired"
-        ? "O tempo da avaliação terminou e as respostas foram enviadas."
-        : "Suas respostas foram enviadas com sucesso.");
+      await finishAfterSubmission(reason === "time_expired"
+        ? (state.assessmentMode === "simulation" ? "O tempo do simulado terminou e as respostas foram enviadas." : "O tempo da avaliação terminou e as respostas foram enviadas.")
+        : (state.assessmentMode === "simulation" ? "Simulado finalizado. Confira seu resultado abaixo." : "Suas respostas foram enviadas com sucesso."));
     } catch {
       state.submitting = false;
       showViolationToast("Não foi possível enviar a prova agora. Verifique a conexão e tente novamente.");
@@ -532,9 +593,14 @@
     localStorage.setItem(`${ANSWER_CACHE_KEY}:events`, JSON.stringify(remaining));
   }
 
-  function finishUi(message) {
+  function finishUi(message, simulationData = null) {
     $("timer").classList.add("hidden");
     $("finishedMessage").textContent = message;
+    $("finishedHeading").textContent = state.assessmentMode === "simulation" ? "Simulado finalizado" : "Avaliação finalizada";
+    $("finishedInstruction").textContent = state.assessmentMode === "simulation"
+      ? "Revise as questões abaixo antes de encerrar."
+      : "Você já pode chamar o professor.";
+    renderSimulationResult(simulationData);
     $("fullscreenOverlay").classList.add("hidden");
     $("submitOverlay").classList.add("hidden");
     showScreen("screenFinished");
@@ -547,7 +613,6 @@
       document.addEventListener(eventName, e => {
         if (!state.active) return;
         const target = e.target;
-        // Permite selecionar/digitar dentro de textarea de questão aberta, mas não copiar/colar.
         if (eventName === "selectstart" && target?.tagName === "TEXTAREA") return;
         e.preventDefault();
       });
