@@ -46,6 +46,9 @@
   function clearSessionCache() {
     localStorage.removeItem(CACHE_KEY);
     localStorage.removeItem(ANSWER_CACHE_KEY);
+    localStorage.removeItem(`${ANSWER_CACHE_KEY}:review`);
+    localStorage.removeItem(`${ANSWER_CACHE_KEY}:pending`);
+    localStorage.removeItem(`${ANSWER_CACHE_KEY}:events`);
   }
 
   function loadAnswerCache() {
@@ -132,7 +135,7 @@
     state.endsAt = payload.ends_at || null;
     state.status = payload.status;
     state.answers = payload.answers || loadAnswerCache() || {};
-    state.review = JSON.parse(localStorage.getItem(`${ANSWER_CACHE_KEY}:review`) || "{}");
+    state.review = payload.review_flags || JSON.parse(localStorage.getItem(`${ANSWER_CACHE_KEY}:review`) || "{}");
     saveSessionCache();
   }
 
@@ -606,12 +609,22 @@
       if (state.index < state.questions.length - 1) { state.index++; renderQuestion(); }
     });
 
-    $("markReview").addEventListener("change", e => {
+    $("markReview").addEventListener("change", async e => {
       const q = state.questions[state.index];
       if (!q) return;
-      state.review[q.id] = e.target.checked;
+      const marked = e.target.checked;
+      state.review[q.id] = marked;
       localStorage.setItem(`${ANSWER_CACHE_KEY}:review`, JSON.stringify(state.review));
       refreshQuestionNav();
+      try {
+        await rpc("save_review_flag", {
+          p_session_token: state.sessionToken,
+          p_question_id: q.id,
+          p_marked: marked
+        });
+      } catch {
+        showViolationToast("A marcação de revisão foi salva neste computador e será mantida enquanto esta sessão estiver disponível.");
+      }
     });
 
     $("btnSubmit").addEventListener("click", openSubmitConfirmation);
