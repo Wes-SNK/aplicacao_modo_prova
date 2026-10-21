@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Modo Prova</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <noscript>Esta avaliação precisa de JavaScript habilitado.</noscript>
+
+  <main class="app-shell" id="app">
+    <section class="card start-card" id="startScreen">
+      <div class="eyebrow">MODO PROVA</div>
+      <h1 id="examTitle"></h1>
+      <p class="subtitle" id="examSubtitle"></p>
+
+      <div class="student-grid">
+        <label>Nome completo
+          <input id="studentName" autocomplete="off" maxlength="100" />
+        </label>
+        <label>Turma
+          <input id="studentClass" autocomplete="off" maxlength="40" value="1º INF" />
+        </label>
+      </div>
+
+      <div class="rules-box">
+        <h2>Regras da avaliação</h2>
+        <ul id="rulesList"></ul>
+      </div>
+
+      <label class="check-line">
+        <input type="checkbox" id="acceptRules" />
+        <span>Li e compreendi as regras da avaliação.</span>
+      </label>
+
+      <div class="actions">
+        <button class="primary" id="startBtn">Iniciar avaliação</button>
+      </div>
+      <p class="small-note">A prova será iniciada em tela cheia. O sistema registra saídas da página e da tela cheia.</p>
+    </section>
+
+    <section class="card exam-card hidden" id="examScreen" aria-live="polite">
+      <header class="exam-header">
+        <div>
+          <div class="eyebrow" id="headerTitle"></div>
+          <div class="student-line" id="studentLine"></div>
+        </div>
+        <div class="header-metrics">
+          <div class="metric"><span>Tempo</span><strong id="timer">--:--</strong></div>
+          <div class="metric"><span>Ocorrências</span><strong id="incidentCount">0</strong></div>
+        </div>
+      </header>
+
+      <div class="progress-row">
+        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        <span id="progressText"></span>
+      </div>
+
+      <article class="question-card" id="questionCard"></article>
+
+      <footer class="exam-footer">
+        <button id="prevBtn" class="secondary">Anterior</button>
+        <button id="flagBtn" class="ghost">Marcar para revisar</button>
+        <button id="nextBtn" class="primary">Próxima</button>
+      </footer>
+    </section>
+
+    <section class="card hidden" id="submitScreen">
+      <div class="eyebrow">FINALIZAÇÃO</div>
+      <h1>Revisar e enviar</h1>
+      <p id="reviewSummary"></p>
+      <div id="reviewGrid" class="review-grid"></div>
+      <div class="actions split">
+        <button class="secondary" id="backToExamBtn">Voltar à prova</button>
+        <button class="danger" id="confirmSubmitBtn">Enviar avaliação</button>
+      </div>
+    </section>
+
+    <section class="card hidden" id="doneScreen">
+      <div class="success-icon">✓</div>
+      <h1>Avaliação enviada</h1>
+      <p id="doneMessage"></p>
+      <p class="small-note">Aguarde a orientação do professor antes de fechar esta página.</p>
+    </section>
+  </main>
+
+  <div class="modal-backdrop hidden" id="incidentModal" role="dialog" aria-modal="true">
+    <div class="modal card">
+      <div class="warning-icon">!</div>
+      <h2>Saída da prova registrada</h2>
+      <p id="incidentMessage"></p>
+      <button class="primary" id="resumeBtn">Retomar prova</button>
+    </div>
+  </div>
+
+  <script src="config.js"></script>
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
