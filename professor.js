@@ -102,6 +102,7 @@
     $("examDurationInput").value = data.duration_minutes ?? 50;
     $("examOccurrencesInput").value = data.max_occurrences ?? 3;
     $("examActiveInput").checked = !!data.is_active;
+    $("examModeInput").value = data.assessment_mode || "exam";
     $("examActiveBadge").textContent = data.is_active ? "Ativa" : "Inativa";
     $("examActiveBadge").className = data.is_active ? "pill ok" : "pill danger";
 
@@ -268,7 +269,7 @@
 
       const typeBadge = document.createElement("span");
       typeBadge.className = "pill info";
-      typeBadge.textContent = q.type === "objective" ? "Objetiva" : "Aberta";
+      typeBadge.textContent = "Objetiva";
 
       const activeBadge = document.createElement("span");
       activeBadge.className = q.active ? "pill ok" : "pill";
@@ -314,28 +315,20 @@
 
       const meta = document.createElement("p");
       meta.className = "muted question-admin-meta";
-      meta.textContent = q.type === "objective"
-        ? `Gabarito: ${q.correct_answer || "—"} • ${Number(q.points || 0).toFixed(1)} ponto(s)`
-        : "Resposta aberta • sem correção automática";
+      meta.textContent = `Gabarito: ${q.correct_answer || "—"} • ${Number(q.points || 0).toFixed(1)} ponto(s)`;
 
       card.append(head, stem, meta);
       list.appendChild(card);
     });
   }
 
-  function toggleQuestionTypeFields() {
-    const objective = $("questionTypeInput").value === "objective";
-    $("objectiveFields").classList.toggle("hidden", !objective);
-  }
-
   function openQuestionEditor(q = null) {
     if (questionsLocked) return;
     editingQuestionId = q?.id || null;
     $("questionEditorTitle").textContent = q ? `Editar questão ${q.position}` : "Nova questão";
-    $("questionTypeInput").value = q?.type || "objective";
     $("questionStemInput").value = q?.stem || "";
     $("questionActiveInput").checked = q?.active ?? true;
-    $("questionPointsInput").value = q?.type === "objective" ? Number(q.points ?? 1) : 1;
+    $("questionPointsInput").value = Number(q?.points ?? 1);
 
     const optionMap = {};
     (q?.options || []).forEach(o => optionMap[o.key] = o.text);
@@ -344,7 +337,6 @@
     });
     $("correctAnswerInput").value = q?.correct_answer || "A";
     setMessage($("questionEditorMessage"), "", "info");
-    toggleQuestionTypeFields();
     $("questionEditorModal").classList.remove("hidden");
   }
 
@@ -355,7 +347,6 @@
 
   async function saveQuestion() {
     if (questionsLocked) return;
-    const type = $("questionTypeInput").value;
     const stem = $("questionStemInput").value.trim();
     const active = $("questionActiveInput").checked;
     let options = [];
@@ -367,21 +358,19 @@
       return;
     }
 
-    if (type === "objective") {
-      options = ["A","B","C","D"].map(key => ({
-        key,
-        text: $(`option${key}Input`).value.trim()
-      }));
-      if (options.some(o => !o.text)) {
-        setMessage($("questionEditorMessage"), "Preencha as quatro alternativas A, B, C e D.", "warn");
-        return;
-      }
-      correct = $("correctAnswerInput").value;
-      points = Number($("questionPointsInput").value);
-      if (!Number.isFinite(points) || points < 0 || points > 100) {
-        setMessage($("questionEditorMessage"), "Informe um valor entre 0 e 100.", "warn");
-        return;
-      }
+    options = ["A","B","C","D"].map(key => ({
+      key,
+      text: $(`option${key}Input`).value.trim()
+    }));
+    if (options.some(o => !o.text)) {
+      setMessage($("questionEditorMessage"), "Preencha as quatro alternativas A, B, C e D.", "warn");
+      return;
+    }
+    correct = $("correctAnswerInput").value;
+    points = Number($("questionPointsInput").value);
+    if (!Number.isFinite(points) || points <= 0 || points > 100) {
+      setMessage($("questionEditorMessage"), "Informe um valor maior que 0 e de até 100.", "warn");
+      return;
     }
 
     $("btnSaveQuestion").disabled = true;
@@ -390,7 +379,7 @@
       await teacherRpc("teacher_save_question", {
         p_exam_slug: cfg.examSlug,
         p_question_id: editingQuestionId,
-        p_type: type,
+        p_type: "objective",
         p_stem: stem,
         p_options: options,
         p_correct_answer: correct,
@@ -466,19 +455,12 @@
         const h = document.createElement("h3");
         h.textContent = `${idx + 1}. ${q.stem}`;
         box.appendChild(h);
-        if (q.type === "objective") {
-          (q.options || []).forEach(o => {
-            const p = document.createElement("p");
-            p.className = o.key === q.correct_answer ? "preview-correct" : "";
-            p.textContent = `${o.key}) ${o.text}${o.key === q.correct_answer ? " ✓" : ""}`;
-            box.appendChild(p);
-          });
-        } else {
+        (q.options || []).forEach(o => {
           const p = document.createElement("p");
-          p.className = "muted";
-          p.textContent = "Questão aberta.";
+          p.className = o.key === q.correct_answer ? "preview-correct" : "";
+          p.textContent = `${o.key}) ${o.text}${o.key === q.correct_answer ? " ✓" : ""}`;
           box.appendChild(p);
-        }
+        });
         area.appendChild(box);
       });
     }
@@ -490,6 +472,7 @@
     const duration = Number($("examDurationInput").value);
     const maxOccurrences = Number($("examOccurrencesInput").value);
     const isActive = $("examActiveInput").checked;
+    const assessmentMode = $("examModeInput").value;
 
     if (!title) {
       $("settingsMessage").textContent = "Informe um título para a avaliação.";
@@ -512,7 +495,8 @@
         p_title: title,
         p_duration_minutes: duration,
         p_max_occurrences: maxOccurrences,
-        p_is_active: isActive
+        p_is_active: isActive,
+        p_assessment_mode: assessmentMode
       });
       $("settingsMessage").textContent = "Configurações salvas.";
       await refreshDashboard();
@@ -627,7 +611,6 @@
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
     $("btnNewQuestion").addEventListener("click", () => openQuestionEditor());
     $("btnPreviewQuestions").addEventListener("click", openQuestionPreview);
-    $("questionTypeInput").addEventListener("change", toggleQuestionTypeFields);
     $("btnCloseQuestionEditor").addEventListener("click", closeQuestionEditor);
     $("btnCancelQuestionEdit").addEventListener("click", closeQuestionEditor);
     $("btnSaveQuestion").addEventListener("click", saveQuestion);
