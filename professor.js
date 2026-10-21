@@ -11,6 +11,7 @@
   let dashboardData = null;
   let pollTimer = null;
   let resetTarget = null;
+  let resumeTarget = null;
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -144,9 +145,21 @@
       btn.textContent = "Detalhes";
       btn.addEventListener("click", () => openDetail(r.attempt_id));
 
+      if (r.status === "in_progress") {
+        const resumeBtn = document.createElement("button");
+        resumeBtn.className = "small secondary";
+        resumeBtn.textContent = r.resume_allowed ? "Retomada liberada" : "Continuar de onde parou";
+        resumeBtn.disabled = !!r.resume_allowed;
+        resumeBtn.title = r.resume_allowed
+          ? "O aluno já pode entrar novamente pelo nome para continuar."
+          : "Preserva respostas e tempo já consumido, mas invalida a sessão anterior.";
+        resumeBtn.addEventListener("click", () => openResumeAttempt(r));
+        tdAction.appendChild(resumeBtn);
+      }
+
       const retryBtn = document.createElement("button");
       retryBtn.className = "small danger";
-      retryBtn.textContent = "Nova tentativa";
+      retryBtn.textContent = "Nova tentativa (do zero)";
       retryBtn.title = "Apaga a tentativa atual e permite que o aluno recomece do zero.";
       retryBtn.addEventListener("click", () => openResetAttempt(r));
 
@@ -239,10 +252,44 @@
     }
   }
 
+  function openResumeAttempt(row) {
+    resumeTarget = row;
+    $("resumeAttemptText").textContent =
+      `Liberar ${row.student_name} para continuar a tentativa atual de onde parou?`;
+    $("resumeAttemptModal").classList.remove("hidden");
+  }
+
+  function closeResumeAttempt() {
+    resumeTarget = null;
+    $("resumeAttemptModal").classList.add("hidden");
+  }
+
+  async function confirmResumeAttempt() {
+    if (!resumeTarget) return;
+    const target = resumeTarget;
+    $("btnConfirmResume").disabled = true;
+    try {
+      await teacherRpc("teacher_allow_resume_attempt", {
+        p_attempt_id: target.attempt_id
+      });
+      closeResumeAttempt();
+      await refreshDashboard();
+      $("dashboardMessage").textContent =
+        `Continuação liberada para ${target.student_name}. O aluno deve entrar novamente pelo nome.`;
+    } catch (err) {
+      $("resumeAttemptText").textContent =
+        String(err.message).includes("Tempo encerrado")
+          ? "O tempo original desta tentativa já terminou; não é possível retomá-la."
+          : "Não foi possível liberar a continuação. Atualize o painel e tente novamente.";
+    } finally {
+      $("btnConfirmResume").disabled = false;
+    }
+  }
+
   function openResetAttempt(row) {
     resetTarget = row;
     $("resetAttemptText").textContent =
-      `Deseja liberar uma nova tentativa para ${row.student_name}?`;
+      `Deseja iniciar uma nova tentativa do zero para ${row.student_name}?`;
     $("resetAttemptModal").classList.remove("hidden");
   }
 
@@ -262,7 +309,7 @@
       closeResetAttempt();
       await refreshDashboard();
       $("dashboardMessage").textContent =
-        `Nova tentativa liberada para ${target.student_name}.`;
+        `Nova tentativa do zero liberada para ${target.student_name}.`;
     } catch {
       $("resetAttemptText").textContent =
         "Não foi possível liberar a nova tentativa. Atualize o painel e tente novamente.";
@@ -307,6 +354,8 @@
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    $("btnCancelResume").addEventListener("click", closeResumeAttempt);
+    $("btnConfirmResume").addEventListener("click", confirmResumeAttempt);
     $("btnCancelReset").addEventListener("click", closeResetAttempt);
     $("btnConfirmReset").addEventListener("click", confirmResetAttempt);
     $("btnCloseDetail").addEventListener("click", () => $("detailModal").classList.add("hidden"));
