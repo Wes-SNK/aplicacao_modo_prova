@@ -76,6 +76,22 @@
         <div class="card stat"><span>Com ocorrências</span><strong id="statViolations">0</strong></div>
       </div>
 
+      <section class="card question-manager">
+        <div class="section-head">
+          <div>
+            <h1>Questões da avaliação</h1>
+            <p class="muted" id="questionsMeta">Cadastre e organize as questões que serão apresentadas aos alunos.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnPreviewQuestions" class="secondary">Pré-visualizar</button>
+            <button id="btnNewQuestion" class="primary">Nova questão</button>
+          </div>
+        </div>
+        <div id="questionsLockMessage" class="message warn hidden"></div>
+        <div id="questionsMessage" class="muted"></div>
+        <div id="questionList" class="question-list"></div>
+      </section>
+
       <section class="card">
         <div class="section-head">
           <div>
@@ -109,6 +125,86 @@
       </section>
     </section>
   </main>
+
+  <div id="questionEditorModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="questionEditorTitle">
+    <div class="overlay-card question-editor-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="questionEditorTitle">Nova questão</h2>
+          <p class="muted">Questões objetivas são corrigidas automaticamente. Questões abertas ficam disponíveis para conferência do professor.</p>
+        </div>
+        <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
+      </div>
+
+      <label for="questionTypeInput">Tipo</label>
+      <select id="questionTypeInput">
+        <option value="objective">Objetiva</option>
+        <option value="open">Aberta</option>
+      </select>
+
+      <label for="questionStemInput">Enunciado</label>
+      <textarea id="questionStemInput" rows="5" maxlength="4000" placeholder="Digite o enunciado da questão"></textarea>
+
+      <div id="objectiveFields">
+        <div class="option-editor-grid">
+          <label>A <input id="optionAInput" type="text" maxlength="1000"></label>
+          <label>B <input id="optionBInput" type="text" maxlength="1000"></label>
+          <label>C <input id="optionCInput" type="text" maxlength="1000"></label>
+          <label>D <input id="optionDInput" type="text" maxlength="1000"></label>
+        </div>
+
+        <label for="correctAnswerInput">Gabarito</label>
+        <select id="correctAnswerInput">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+        </select>
+
+        <label for="questionPointsInput">Valor</label>
+        <input id="questionPointsInput" type="number" min="0" max="100" step="0.1" value="1">
+      </div>
+
+      <label class="switch-row">
+        <input id="questionActiveInput" type="checkbox" checked>
+        <span>
+          <strong>Questão ativa</strong>
+          <small>Somente questões ativas aparecem na prova dos alunos.</small>
+        </span>
+      </label>
+
+      <div id="questionEditorMessage" class="message hidden"></div>
+      <div class="modal-actions">
+        <button id="btnCancelQuestionEdit" class="secondary">Cancelar</button>
+        <button id="btnSaveQuestion" class="primary">Salvar questão</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteQuestionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deleteQuestionTitle">
+    <div class="overlay-card">
+      <h2 id="deleteQuestionTitle">Excluir questão</h2>
+      <p id="deleteQuestionText" class="lead"></p>
+      <div class="message warn">A exclusão só é permitida enquanto ainda não houver tentativas registradas para esta avaliação.</div>
+      <div class="modal-actions">
+        <button id="btnCancelDeleteQuestion" class="secondary">Cancelar</button>
+        <button id="btnConfirmDeleteQuestion" class="danger">Excluir questão</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="questionPreviewModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="questionPreviewTitle">
+    <div class="overlay-card detail-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="questionPreviewTitle">Pré-visualização da avaliação</h2>
+          <p class="muted">Visão do professor. O gabarito aparece destacado apenas aqui.</p>
+        </div>
+        <button id="btnCloseQuestionPreview" class="small secondary">Fechar</button>
+      </div>
+      <div id="questionPreviewList" class="question-preview-list"></div>
+    </div>
+  </div>
 
   <div id="resumeAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resumeAttemptTitle">
     <div class="overlay-card">
