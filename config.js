@@ -1,14 +1,10 @@
 // CONFIGURAÇÃO DO MODO PROVA
-// 1) Crie um projeto no Supabase.
-// 2) Rode supabase/schema.sql e depois supabase/sample_data.sql.
-// 3) Em Project Settings > API, copie Project URL e anon public key.
-// 4) Cole abaixo.
-//
-// A chave "anon" é própria para uso no navegador. A segurança dos dados
-// depende das políticas/RPCs configuradas no banco, não de esconder essa chave.
+// No Supabase, abra o diálogo Connect ou Settings > API Keys.
+// Use a Project URL e a PUBLISHABLE KEY (sb_publishable_...).
+// Nunca coloque secret key/service_role neste arquivo.
 window.APP_CONFIG = {
   supabaseUrl: "COLE_AQUI_A_URL_DO_SUPABASE",
-  supabaseAnonKey: "COLE_AQUI_A_CHAVE_ANON",
+  supabasePublishableKey: "COLE_AQUI_A_PUBLISHABLE_KEY",
   examSlug: "4bim-1b-2026",
   appTitle: "Modo Prova — Técnico em Informática"
 };
