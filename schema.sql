@@ -347,7 +347,7 @@ begin
     'review_flags', coalesce(a.review_flags,'{}'::jsonb)
   );
 end;
-$;
+$$;
 
 create or replace function public.save_answer(
   p_session_token uuid,
@@ -398,7 +398,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   a public.attempts;
 begin
@@ -426,7 +426,7 @@ begin
 
   return jsonb_build_object('ok',true);
 end;
-$;
+$$;
 
 create or replace function public.record_violation(
   p_session_token uuid,
@@ -697,7 +697,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   e public.exams;
   arr jsonb;
@@ -733,7 +733,7 @@ begin
     'questions',arr
   );
 end;
-$;
+$$;
 
 create or replace function public.teacher_save_question(
   p_exam_slug text,
@@ -749,7 +749,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   e public.exams;
   q public.questions;
@@ -795,7 +795,7 @@ begin
 
   return jsonb_build_object('ok',true,'question_id',q.id);
 end;
-$;
+$$;
 
 create or replace function public.teacher_move_question(
   p_question_id uuid,
@@ -805,7 +805,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   q public.questions;
   other_q public.questions;
@@ -842,14 +842,14 @@ begin
 
   return jsonb_build_object('ok',true);
 end;
-$;
+$$;
 
 create or replace function public.teacher_delete_question(p_question_id uuid)
 returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   q public.questions;
 begin
@@ -880,7 +880,7 @@ begin
 
   return jsonb_build_object('ok',true);
 end;
-$;
+$$;
 
 create or replace function public.teacher_update_exam_settings(
   p_exam_slug text,
@@ -931,7 +931,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   a public.attempts;
   e public.exams;
@@ -970,14 +970,14 @@ begin
     'resume_allowed',true
   );
 end;
-$;
+$$;
 
 create or replace function public.teacher_reset_attempt(p_attempt_id uuid)
 returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $
+as $$
 declare
   a public.attempts;
   s public.students;
@@ -996,7 +996,7 @@ begin
     'student_name', s.name
   );
 end;
-$;
+$$;
 
 -- Execução das funções públicas pelo aluno.
 grant execute on function public.start_attempt_by_name(text,text,text) to anon, authenticated;
