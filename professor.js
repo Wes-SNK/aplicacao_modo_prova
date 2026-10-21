@@ -10,6 +10,7 @@
   let session = null;
   let dashboardData = null;
   let pollTimer = null;
+  let resetTarget = null;
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -91,6 +92,13 @@
     $("dashboardMeta").textContent =
       `${data.duration_minutes} min • limite de ${data.max_occurrences} ocorrência(s) • ${data.question_count} questão(ões)`;
 
+    $("examTitleInput").value = data.exam_title || "";
+    $("examDurationInput").value = data.duration_minutes ?? 50;
+    $("examOccurrencesInput").value = data.max_occurrences ?? 3;
+    $("examActiveInput").checked = !!data.is_active;
+    $("examActiveBadge").textContent = data.is_active ? "Ativa" : "Inativa";
+    $("examActiveBadge").className = data.is_active ? "pill ok" : "pill danger";
+
     const rows = data.attempts || [];
     $("statTotal").textContent = rows.length;
     $("statProgress").textContent = rows.filter(r => r.status === "in_progress").length;
@@ -129,11 +137,20 @@
       tdOcc.textContent = String(r.occurrences || 0);
 
       const tdAction = document.createElement("td");
+      tdAction.className = "row-actions";
+
       const btn = document.createElement("button");
       btn.className = "small secondary";
       btn.textContent = "Detalhes";
       btn.addEventListener("click", () => openDetail(r.attempt_id));
-      tdAction.appendChild(btn);
+
+      const retryBtn = document.createElement("button");
+      retryBtn.className = "small danger";
+      retryBtn.textContent = "Nova tentativa";
+      retryBtn.title = "Apaga a tentativa atual e permite que o aluno recomece do zero.";
+      retryBtn.addEventListener("click", () => openResetAttempt(r));
+
+      tdAction.append(btn, retryBtn);
 
       tr.append(tdName, tdClass, tdStatus, tdStart, tdSubmit, tdScore, tdOcc, tdAction);
       tbody.appendChild(tr);
@@ -184,6 +201,76 @@
     }
   }
 
+  async function saveExamSettings() {
+    const title = $("examTitleInput").value.trim();
+    const duration = Number($("examDurationInput").value);
+    const maxOccurrences = Number($("examOccurrencesInput").value);
+    const isActive = $("examActiveInput").checked;
+
+    if (!title) {
+      $("settingsMessage").textContent = "Informe um título para a avaliação.";
+      return;
+    }
+    if (!Number.isInteger(duration) || duration < 5 || duration > 300) {
+      $("settingsMessage").textContent = "A duração deve estar entre 5 e 300 minutos.";
+      return;
+    }
+    if (!Number.isInteger(maxOccurrences) || maxOccurrences < 1 || maxOccurrences > 20) {
+      $("settingsMessage").textContent = "O limite de ocorrências deve estar entre 1 e 20.";
+      return;
+    }
+
+    $("btnSaveSettings").disabled = true;
+    $("settingsMessage").textContent = "Salvando…";
+    try {
+      await teacherRpc("teacher_update_exam_settings", {
+        p_exam_slug: cfg.examSlug,
+        p_title: title,
+        p_duration_minutes: duration,
+        p_max_occurrences: maxOccurrences,
+        p_is_active: isActive
+      });
+      $("settingsMessage").textContent = "Configurações salvas.";
+      await refreshDashboard();
+    } catch (err) {
+      $("settingsMessage").textContent = "Não foi possível salvar as configurações.";
+    } finally {
+      $("btnSaveSettings").disabled = false;
+    }
+  }
+
+  function openResetAttempt(row) {
+    resetTarget = row;
+    $("resetAttemptText").textContent =
+      `Deseja liberar uma nova tentativa para ${row.student_name}?`;
+    $("resetAttemptModal").classList.remove("hidden");
+  }
+
+  function closeResetAttempt() {
+    resetTarget = null;
+    $("resetAttemptModal").classList.add("hidden");
+  }
+
+  async function confirmResetAttempt() {
+    if (!resetTarget) return;
+    const target = resetTarget;
+    $("btnConfirmReset").disabled = true;
+    try {
+      await teacherRpc("teacher_reset_attempt", {
+        p_attempt_id: target.attempt_id
+      });
+      closeResetAttempt();
+      await refreshDashboard();
+      $("dashboardMessage").textContent =
+        `Nova tentativa liberada para ${target.student_name}.`;
+    } catch {
+      $("resetAttemptText").textContent =
+        "Não foi possível liberar a nova tentativa. Atualize o painel e tente novamente.";
+    } finally {
+      $("btnConfirmReset").disabled = false;
+    }
+  }
+
   function csvEscape(v) {
     const s = String(v ?? "");
     return `"${s.replaceAll('"', '""')}"`;
@@ -219,6 +306,9 @@
     });
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
+    $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    $("btnCancelReset").addEventListener("click", closeResetAttempt);
+    $("btnConfirmReset").addEventListener("click", confirmResetAttempt);
     $("btnCloseDetail").addEventListener("click", () => $("detailModal").classList.add("hidden"));
 
     session = await validTeacherSession();
