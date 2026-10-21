@@ -113,6 +113,19 @@
     </section>
   </main>
 
+  <div id="submitOverlay" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="submitTitle">
+    <div class="overlay-card">
+      <h2 id="submitTitle">Conferir antes de finalizar</h2>
+      <p id="submitSummary" class="lead"></p>
+      <div id="submitWarnings" class="submit-warnings"></div>
+      <p class="muted">Após o envio, não será possível alterar as respostas.</p>
+      <div class="modal-actions">
+        <button id="btnCancelSubmit" class="secondary">Voltar à prova</button>
+        <button id="btnConfirmSubmit" class="danger">Finalizar prova</button>
+      </div>
+    </div>
+  </div>
+
   <div id="fullscreenOverlay" class="overlay hidden" role="dialog" aria-modal="true">
     <div class="overlay-card">
       <h2>Retorne à tela cheia</h2>
