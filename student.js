@@ -168,16 +168,16 @@
 
   async function enterWithName() {
     const studentName = $("studentNameInput").value.trim();
-    if (!code) {
-      setMessage($("loginMessage"), "Informe o código de acesso.", "warn");
+    if (!studentName) {
+      setMessage($("loginMessage"), "Informe seu nome completo.", "warn");
       return;
     }
     $("btnEnter").disabled = true;
     setMessage($("loginMessage"), "Localizando estudante…", "info");
     try {
-      const payload = await rpc("start_attempt", {
+      const payload = await rpc("start_attempt_by_name", {
         p_exam_slug: cfg.examSlug,
-        p_access_code: code,
+        p_student_name: studentName,
         p_user_agent: navigator.userAgent
       });
       hydrate(payload);
@@ -193,7 +193,8 @@
 
   function humanError(msg) {
     const m = String(msg || "");
-    if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";\n    if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
+    if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";
+    if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
     if (m.includes("Avaliação indisponível")) return "Esta avaliação não está disponível neste momento.";
     if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
     if (m.includes("configurada")) return m;
