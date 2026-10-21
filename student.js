@@ -531,9 +531,9 @@
     setConnectionBadge($("connectionBadge"));
     environmentChecks();
 
-    $("btnEnter").addEventListener("click", enterWithCode);
-    $("accessCode").addEventListener("keydown", e => {
-      if (e.key === "Enter") enterWithCode();
+    $("btnEnter").addEventListener("click", enterWithName);
+    $("studentNameInput").addEventListener("keydown", e => {
+      if (e.key === "Enter") enterWithName();
     });
 
     $("acceptRules").addEventListener("change", () => {
