@@ -1,23 +1,14 @@
-window.EXAM_CONFIG = {
-  examId: '4bim-2026-piloto',
-  title: 'Avaliação — 4º Bimestre',
-  subtitle: 'Técnico em Informática — 1º ano',
-  durationMinutes: 50,
-  questionCount: 8,
-  maxIncidents: 3,
-  actionOnIncidentLimit: 'submit', // 'submit' ou 'restart'
-  requireFullscreen: true,
-  shuffleQuestions: true,
-  shuffleOptions: true,
-  allowBackNavigation: true,
-  showScoreAfterSubmit: false,
-  teacherPin: '2026', // APENAS protótipo local. Troque antes de usar.
-  rules: [
-    'Permaneça nesta página durante toda a avaliação.',
-    'Não abra outras abas, janelas ou programas durante a prova.',
-    'Não copie, cole, imprima ou compartilhe questões.',
-    'As respostas são salvas automaticamente neste computador.',
-    'Saídas da tela da prova serão registradas.',
-    'Ao atingir o limite de ocorrências, a tentativa será encerrada automaticamente.'
-  ]
+// CONFIGURAÇÃO DO MODO PROVA
+// 1) Crie um projeto no Supabase.
+// 2) Rode supabase/schema.sql e depois supabase/sample_data.sql.
+// 3) Em Project Settings > API, copie Project URL e anon public key.
+// 4) Cole abaixo.
+//
+// A chave "anon" é própria para uso no navegador. A segurança dos dados
+// depende das políticas/RPCs configuradas no banco, não de esconder essa chave.
+window.APP_CONFIG = {
+  supabaseUrl: "COLE_AQUI_A_URL_DO_SUPABASE",
+  supabaseAnonKey: "COLE_AQUI_A_CHAVE_ANON",
+  examSlug: "4bim-1b-2026",
+  appTitle: "Modo Prova — Técnico em Informática"
 };

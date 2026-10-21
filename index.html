@@ -1,101 +1,130 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
   <title>Modo Prova</title>
-  <link rel="stylesheet" href="styles.css" />
+  <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
-  <noscript>Esta avaliação precisa de JavaScript habilitado.</noscript>
+  <noscript>
+    <div class="fatal">Esta avaliação exige JavaScript habilitado no navegador.</div>
+  </noscript>
 
-  <main class="app-shell" id="app">
-    <section class="card start-card" id="startScreen">
-      <div class="eyebrow">MODO PROVA</div>
-      <h1 id="examTitle"></h1>
-      <p class="subtitle" id="examSubtitle"></p>
+  <header class="topbar">
+    <div>
+      <strong id="appTitle">Modo Prova</strong>
+      <span class="muted" id="examLabel"></span>
+    </div>
+    <div class="topbar-actions">
+      <span id="connectionBadge" class="badge">Verificando conexão…</span>
+      <span id="timer" class="timer hidden" aria-live="polite">--:--</span>
+    </div>
+  </header>
 
-      <div class="student-grid">
-        <label>Nome completo
-          <input id="studentName" autocomplete="off" maxlength="100" />
-        </label>
-        <label>Turma
-          <input id="studentClass" autocomplete="off" maxlength="40" value="1º INF" />
-        </label>
+  <main class="shell">
+    <section id="screenLogin" class="card">
+      <h1>Avaliação</h1>
+      <p class="lead">Digite o código individual fornecido pelo professor.</p>
+
+      <label for="accessCode">Código de acesso</label>
+      <input id="accessCode" autocomplete="off" autocapitalize="characters" spellcheck="false"
+             maxlength="40" placeholder="Ex.: 1B-A001">
+
+      <div class="checks" id="environmentChecks">
+        <div><span id="checkJs" class="dot ok"></span> JavaScript</div>
+        <div><span id="checkStorage" class="dot"></span> Armazenamento local</div>
+        <div><span id="checkFullscreen" class="dot"></span> Tela cheia</div>
+        <div><span id="checkOnline" class="dot"></span> Conexão com a internet</div>
+        <div><span id="checkScreen" class="dot"></span> Tamanho de tela</div>
       </div>
 
-      <div class="rules-box">
-        <h2>Regras da avaliação</h2>
-        <ul id="rulesList"></ul>
-      </div>
+      <div id="loginMessage" class="message hidden"></div>
+      <button id="btnEnter" class="primary">Continuar</button>
+    </section>
 
-      <label class="check-line">
-        <input type="checkbox" id="acceptRules" />
-        <span>Li e compreendi as regras da avaliação.</span>
+    <section id="screenRules" class="card hidden">
+      <h1 id="studentGreeting">Regras da avaliação</h1>
+      <div class="rules">
+        <p>Ao iniciar, a avaliação solicitará <strong>tela cheia</strong>.</p>
+        <p>Não abra outras abas, janelas ou programas durante a prova.</p>
+        <p>Saídas da tela da prova serão registradas como ocorrências.</p>
+        <p>Após o limite definido pelo professor, a prova poderá ser encerrada automaticamente.</p>
+        <p>As respostas são salvas automaticamente e também mantidas temporariamente neste computador caso a conexão oscile.</p>
+        <p>Não copie, cole, imprima ou compartilhe as questões.</p>
+      </div>
+      <div class="summary-box">
+        <div><span>Tempo</span><strong id="ruleDuration">--</strong></div>
+        <div><span>Questões</span><strong id="ruleQuestionCount">--</strong></div>
+        <div><span>Limite de ocorrências</span><strong id="ruleMaxOccurrences">--</strong></div>
+      </div>
+      <label class="confirm">
+        <input type="checkbox" id="acceptRules">
+        Li e compreendi as regras.
       </label>
-
-      <div class="actions">
-        <button class="primary" id="startBtn">Iniciar avaliação</button>
-      </div>
-      <p class="small-note">A prova será iniciada em tela cheia. O sistema registra saídas da página e da tela cheia.</p>
+      <div id="ruleMessage" class="message hidden"></div>
+      <button id="btnStart" class="primary" disabled>Iniciar avaliação</button>
     </section>
 
-    <section class="card exam-card hidden" id="examScreen" aria-live="polite">
-      <header class="exam-header">
-        <div>
-          <div class="eyebrow" id="headerTitle"></div>
-          <div class="student-line" id="studentLine"></div>
+    <section id="screenExam" class="exam-layout hidden">
+      <aside class="card sidebar">
+        <div class="student-box">
+          <span class="muted">Estudante</span>
+          <strong id="studentName">—</strong>
         </div>
-        <div class="header-metrics">
-          <div class="metric"><span>Tempo</span><strong id="timer">--:--</strong></div>
-          <div class="metric"><span>Ocorrências</span><strong id="incidentCount">0</strong></div>
+        <div class="occurrence-box">
+          <span>Ocorrências</span>
+          <strong><span id="occurrenceCount">0</span>/<span id="occurrenceMax">0</span></strong>
         </div>
-      </header>
+        <div id="questionNav" class="question-nav" aria-label="Navegação entre questões"></div>
+        <div class="legend">
+          <span><i class="legend-dot answered"></i> Respondida</span>
+          <span><i class="legend-dot review"></i> Revisar</span>
+        </div>
+      </aside>
 
-      <div class="progress-row">
-        <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
-        <span id="progressText"></span>
-      </div>
+      <section class="card question-card">
+        <div class="question-head">
+          <div>
+            <span class="muted" id="questionNumber">Questão</span>
+            <h2 id="questionStem"></h2>
+          </div>
+          <label class="review-toggle">
+            <input type="checkbox" id="markReview"> Revisar depois
+          </label>
+        </div>
 
-      <article class="question-card" id="questionCard"></article>
+        <div id="answerArea" class="answer-area"></div>
+        <div id="saveStatus" class="save-status">Resposta não alterada.</div>
 
-      <footer class="exam-footer">
-        <button id="prevBtn" class="secondary">Anterior</button>
-        <button id="flagBtn" class="ghost">Marcar para revisar</button>
-        <button id="nextBtn" class="primary">Próxima</button>
-      </footer>
+        <div class="exam-actions">
+          <button id="btnPrev" class="secondary">Anterior</button>
+          <button id="btnNext" class="secondary">Próxima</button>
+          <button id="btnSubmit" class="danger">Finalizar prova</button>
+        </div>
+      </section>
     </section>
 
-    <section class="card hidden" id="submitScreen">
-      <div class="eyebrow">FINALIZAÇÃO</div>
-      <h1>Revisar e enviar</h1>
-      <p id="reviewSummary"></p>
-      <div id="reviewGrid" class="review-grid"></div>
-      <div class="actions split">
-        <button class="secondary" id="backToExamBtn">Voltar à prova</button>
-        <button class="danger" id="confirmSubmitBtn">Enviar avaliação</button>
-      </div>
-    </section>
-
-    <section class="card hidden" id="doneScreen">
-      <div class="success-icon">✓</div>
-      <h1>Avaliação enviada</h1>
-      <p id="doneMessage"></p>
-      <p class="small-note">Aguarde a orientação do professor antes de fechar esta página.</p>
+    <section id="screenFinished" class="card hidden">
+      <h1>Avaliação finalizada</h1>
+      <p id="finishedMessage" class="lead"></p>
+      <p>Você já pode chamar o professor.</p>
     </section>
   </main>
 
-  <div class="modal-backdrop hidden" id="incidentModal" role="dialog" aria-modal="true">
-    <div class="modal card">
-      <div class="warning-icon">!</div>
-      <h2>Saída da prova registrada</h2>
-      <p id="incidentMessage"></p>
-      <button class="primary" id="resumeBtn">Retomar prova</button>
+  <div id="fullscreenOverlay" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-card">
+      <h2>Retorne à tela cheia</h2>
+      <p>Foi detectada uma saída da tela da avaliação. A ocorrência foi registrada.</p>
+      <button id="btnReturnFullscreen" class="primary">Voltar à prova</button>
     </div>
   </div>
 
-  <script src="config.js"></script>
-  <script src="questions.js"></script>
-  <script src="app.js"></script>
+  <div id="violationToast" class="toast hidden" aria-live="assertive"></div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/student.js"></script>
 </body>
 </html>

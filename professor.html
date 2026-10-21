@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex,nofollow">
+  <title>Painel do Professor — Modo Prova</title>
+  <link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <strong>Painel do Professor</strong>
+      <span class="muted" id="teacherExamLabel"></span>
+    </div>
+    <div class="topbar-actions">
+      <span id="teacherConnectionBadge" class="badge">Verificando conexão…</span>
+      <button id="btnLogout" class="small secondary hidden">Sair</button>
+    </div>
+  </header>
+
+  <main class="shell wide">
+    <section id="teacherLogin" class="card">
+      <h1>Acesso do professor</h1>
+      <p class="lead">Use o e-mail e a senha cadastrados no Supabase Auth.</p>
+      <label for="teacherEmail">E-mail</label>
+      <input id="teacherEmail" type="email" autocomplete="username">
+      <label for="teacherPassword">Senha</label>
+      <input id="teacherPassword" type="password" autocomplete="current-password">
+      <div id="teacherLoginMessage" class="message hidden"></div>
+      <button id="btnTeacherLogin" class="primary">Entrar</button>
+    </section>
+
+    <section id="teacherDashboard" class="hidden">
+      <div class="dashboard-grid">
+        <div class="card stat"><span>Total</span><strong id="statTotal">0</strong></div>
+        <div class="card stat"><span>Em andamento</span><strong id="statProgress">0</strong></div>
+        <div class="card stat"><span>Finalizadas</span><strong id="statFinished">0</strong></div>
+        <div class="card stat"><span>Com ocorrências</span><strong id="statViolations">0</strong></div>
+      </div>
+
+      <section class="card">
+        <div class="section-head">
+          <div>
+            <h1 id="dashboardTitle">Avaliação</h1>
+            <p class="muted" id="dashboardMeta"></p>
+          </div>
+          <div class="toolbar">
+            <button id="btnRefresh" class="secondary">Atualizar</button>
+            <button id="btnExportCsv" class="secondary">Exportar CSV</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="attemptsTable">
+            <thead>
+              <tr>
+                <th>Estudante</th>
+                <th>Turma</th>
+                <th>Status</th>
+                <th>Início</th>
+                <th>Envio</th>
+                <th>Nota</th>
+                <th>Ocorrências</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="dashboardMessage" class="muted"></p>
+      </section>
+    </section>
+  </main>
+
+  <div id="detailModal" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-card detail-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="detailStudent">Detalhes</h2>
+          <p id="detailMeta" class="muted"></p>
+        </div>
+        <button id="btnCloseDetail" class="small secondary">Fechar</button>
+      </div>
+
+      <h3>Respostas</h3>
+      <div id="detailAnswers"></div>
+
+      <h3>Eventos registrados</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Horário</th><th>Evento</th><th>Contou?</th><th>Questão</th></tr>
+          </thead>
+          <tbody id="detailEvents"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script src="assets/config.js"></script>
+  <script src="assets/common.js"></script>
+  <script src="assets/professor.js"></script>
+</body>
+</html>

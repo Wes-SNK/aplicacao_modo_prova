@@ -1,89 +1,257 @@
-# Modo Prova — MVP local
+# Modo Prova Web — Ubuntu / Navegador
 
-Protótipo funcional de uma avaliação web para laboratório escolar.
+Aplicação 100% web para avaliações em laboratório. Não exige instalação no computador do aluno.
 
-## O que já faz
+## O que esta versão faz
 
-- identificação do estudante;
-- regras antes do início;
-- solicitação de tela cheia;
-- cronômetro configurável;
-- questões uma por vez;
-- ordem aleatória de questões;
-- ordem aleatória de alternativas;
-- navegação anterior/próxima;
-- marcação para revisão;
-- salvamento automático no navegador;
-- retomada após atualização/reabertura no mesmo computador;
-- bloqueio de copiar, colar, imprimir, botão direito e alguns atalhos enquanto a prova está ativa;
-- detecção de troca de aba/janela via `visibilitychange`;
-- detecção de saída da tela cheia;
-- registro do horário e da questão em cada ocorrência;
-- limite configurável de ocorrências;
-- encerramento automático ou reinício ao atingir o limite;
+- acesso por código individual;
+- funciona em Firefox/Chrome/Chromium no Ubuntu;
+- tela cheia;
+- cronômetro;
+- questões em ordem individualizada por tentativa;
+- uma questão por vez;
+- salvamento automático;
+- cache local quando a internet oscila;
+- sincronização quando a conexão retorna;
+- bloqueio de copiar/colar, menu de contexto e alguns atalhos;
+- detecção de saída de aba/tela cheia;
+- registro central de ocorrências;
+- encerramento automático ao atingir o limite;
 - correção automática de questões objetivas;
-- nota não exibida ao estudante por padrão;
-- painel local do professor (`teacher.html`);
-- exportação local em CSV e JSON.
+- painel web do professor;
+- exportação CSV;
+- nenhum programa precisa ser instalado no laboratório.
 
-## Como testar
+## Limitação técnica importante
 
-A forma mais confiável é servir a pasta por HTTP.
+Uma página web **não consegue impedir o Ubuntu de executar Alt+Tab, abrir outro programa ou usar outro dispositivo**.
+Ela consegue detectar a perda de visibilidade/tela cheia e registrar a ocorrência.
 
-No Windows, com Python instalado, dentro desta pasta:
+Por isso, a segurança depende da combinação:
 
-```bash
-python -m http.server 8000
+1. aplicação web;
+2. questões/alternativas variadas;
+3. tempo de prova;
+4. fiscalização;
+5. regras claras;
+6. registro de eventos.
+
+## Arquivos
+
+- `index.html` — prova do aluno
+- `professor.html` — painel do professor
+- `assets/config.js` — configuração do Supabase e da prova
+- `assets/student.js` — lógica da prova
+- `assets/professor.js` — painel
+- `assets/styles.css` — interface
+- `supabase/schema.sql` — banco e funções
+- `supabase/sample_data.sql` — dados de teste
+- `supabase/student_import_template.csv` — modelo de lista de estudantes
+
+## 1. Criar o banco no Supabase
+
+1. Crie um projeto em https://supabase.com
+2. Abra **SQL Editor**.
+3. Execute todo o conteúdo de `supabase/schema.sql`.
+4. Execute `supabase/sample_data.sql`.
+5. Em **Authentication > Users**, crie o usuário do professor com e-mail e senha.
+   - O painel aceita qualquer usuário autenticado do projeto.
+   - Não crie contas para os alunos: eles entram por código.
+
+## 2. Configurar a aplicação
+
+No Supabase, acesse **Project Settings > API**.
+
+Copie:
+- Project URL
+- `anon` public key
+
+Edite `assets/config.js`:
+
+```js
+window.APP_CONFIG = {
+  supabaseUrl: "https://SEU-PROJETO.supabase.co",
+  supabaseAnonKey: "SUA_CHAVE_ANON",
+  examSlug: "4bim-1b-2026",
+  appTitle: "Modo Prova — Técnico em Informática"
+};
 ```
 
-Depois abra:
+A chave `anon` pode aparecer no navegador. Ela não é uma senha administrativa.
+O esquema bloqueia acesso direto às tabelas e usa funções controladas.
 
-- prova: `http://localhost:8000/`
-- painel local: `http://localhost:8000/teacher.html`
+**Nunca coloque `service_role` no site.**
 
-PIN inicial do painel: `2026`.
+## 3. Testar antes de publicar
 
-## Configuração
+Você pode abrir `index.html` diretamente para testar a interface, mas as chamadas ao banco dependem de conexão.
 
-Edite `config.js`.
+Para um teste mais fiel, publique a pasta inteira em um serviço de hospedagem estática com HTTPS.
 
-Principais opções:
+Opções comuns:
+- GitHub Pages
+- Netlify
+- Cloudflare Pages
+- Vercel (site estático)
 
-- `durationMinutes`: duração da prova;
-- `questionCount`: quantidade de questões sorteadas;
-- `maxIncidents`: limite de saídas;
-- `actionOnIncidentLimit`: `submit` ou `restart`;
-- `shuffleQuestions`: embaralhar questões;
-- `shuffleOptions`: embaralhar alternativas;
-- `showScoreAfterSubmit`: nesta versão permanece sem exibição da nota ao estudante;
-- `teacherPin`: PIN do painel local.
+O aluno acessará apenas uma URL, por exemplo:
 
-As questões ficam em `questions.js`.
+`https://sua-prova.exemplo/`
 
-## Limitação importante deste MVP
+O professor acessará:
 
-Este protótipo é **front-end e local**. Isso significa que:
+`https://sua-prova.exemplo/professor.html`
 
-1. o navegador consegue detectar muitas saídas da prova, mas não consegue impedir completamente `Alt+Tab`, outro aplicativo ou outro dispositivo;
-2. bloqueios de copiar/atalhos dificultam ações comuns, mas não são segurança absoluta;
-3. o PIN do professor está em código cliente e, portanto, **não é autenticação segura**;
-4. os resultados ficam no `localStorage` de cada computador e não aparecem automaticamente em um painel central;
-5. um estudante tecnicamente experiente ainda pode contornar proteções de JavaScript;
-6. fotografia da tela com outro aparelho não pode ser impedida por uma página web.
+## 4. Teste de demonstração
 
-## Próxima versão recomendada para uso real
+Os códigos criados por `sample_data.sql` são:
 
-Transformar o MVP em aplicação com backend:
+- `1B-A001`
+- `1B-A002`
+- `1B-A003`
 
-- autenticação real do professor;
-- banco central de avaliações, questões, tentativas e ocorrências;
-- criação/edição de provas em painel;
-- acesso por código de prova;
-- sessão única por estudante;
-- resultados centralizados em tempo real;
-- exportação consolidada de notas;
-- auditoria de eventos;
-- HTTPS e controle de acesso;
-- opcionalmente, integração com modo quiosque/ambiente gerenciado do laboratório.
+Apague/substitua esses registros antes da prova real.
 
-O frontend atual pode ser mantido e ligado a esse backend.
+## 5. Cadastrar os estudantes
+
+Cada estudante precisa de:
+
+- `access_code`
+- `name`
+- `class_group`
+
+Exemplo SQL:
+
+```sql
+insert into public.students(access_code,name,class_group) values
+('1B-0001','Nome do estudante','1º INF'),
+('1B-0002','Outro estudante','1º INF');
+```
+
+Não use CPF, matrícula oficial ou outro identificador sensível como código.
+Prefira códigos aleatórios ou internos à avaliação.
+
+## 6. Cadastrar questões
+
+Cada questão pertence a uma prova.
+
+Questão objetiva:
+
+```sql
+insert into public.questions(
+  exam_id,position,type,stem,options,correct_answer,points
+)
+select
+  id, 1, 'objective',
+  'Enunciado da questão',
+  '[{"key":"A","text":"Alternativa A"},{"key":"B","text":"Alternativa B"}]'::jsonb,
+  'B',
+  1
+from public.exams
+where slug='4bim-1b-2026';
+```
+
+Questão aberta:
+
+```sql
+insert into public.questions(
+  exam_id,position,type,stem,options,correct_answer,points
+)
+select
+  id, 2, 'open',
+  'Explique...',
+  '[]'::jsonb,
+  null,
+  0
+from public.exams
+where slug='4bim-1b-2026';
+```
+
+Nesta versão, questões abertas aparecem no painel, mas não recebem nota automática.
+
+## 7. Configurar duração e ocorrências
+
+```sql
+update public.exams
+set duration_minutes = 50,
+    max_occurrences = 3,
+    is_active = true
+where slug = '4bim-1b-2026';
+```
+
+Para abrir/fechar por horário:
+
+```sql
+update public.exams
+set opens_at  = '2026-12-15 07:00:00-03',
+    closes_at = '2026-12-15 12:00:00-03'
+where slug = '4bim-1b-2026';
+```
+
+## 8. Como funciona uma ocorrência
+
+Enquanto a prova está ativa, são observados principalmente:
+
+- aba fica oculta (`visibilitychange`);
+- saída do modo tela cheia.
+
+Eventos que acontecem praticamente juntos são deduplicados para evitar que uma única troca de aba conte duas vezes.
+
+Exemplo:
+- 1ª ocorrência: registra e avisa;
+- 2ª ocorrência: registra e avisa;
+- 3ª ocorrência: encerra automaticamente, se `max_occurrences = 3`.
+
+O painel permite ver o horário e a questão em que o evento ocorreu.
+
+## 9. Internet instável
+
+Cada resposta é:
+1. guardada no navegador;
+2. enviada ao Supabase.
+
+Se a conexão cair, a aplicação mantém a resposta localmente e tenta sincronizar quando a internet voltar.
+
+Antes de usar em prova real, teste no laboratório:
+- acesso ao domínio do site;
+- acesso a `*.supabase.co`;
+- tela cheia no navegador;
+- estabilidade do Wi-Fi/rede cabeada;
+- relógio dos computadores.
+
+## 10. Recomendações para aplicação real
+
+Faça uma simulação curta com a turma antes da avaliação oficial.
+
+Sugestão:
+- 5 questões de treinamento;
+- 10 minutos;
+- aluno aprende a entrar, responder, voltar e finalizar;
+- demonstrar o que acontece quando sai da aba.
+
+Isso reduz ocorrências acidentais no dia da prova.
+
+## 11. Reiniciar tentativa de um aluno
+
+A versão MVP permite uma tentativa por estudante/prova.
+
+Para apagar uma tentativa de teste:
+
+```sql
+delete from public.attempts
+where id = 'UUID_DA_TENTATIVA';
+```
+
+As respostas e os eventos são removidos automaticamente (`ON DELETE CASCADE`).
+
+## 12. Próximas evoluções possíveis
+
+- editor de provas no próprio painel;
+- importação de estudantes por CSV;
+- banco de questões;
+- sorteio de N questões de um banco maior;
+- pontuação manual para questões abertas;
+- liberação individual de nova tentativa;
+- geração de relatório PDF;
+- múltiplas turmas e disciplinas;
+- histórico de avaliações.
