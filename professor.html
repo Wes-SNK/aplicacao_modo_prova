@@ -32,6 +32,43 @@
     </section>
 
     <section id="teacherDashboard" class="hidden">
+      <section class="card teacher-settings">
+        <div class="section-head">
+          <div>
+            <h1>Configurações da avaliação</h1>
+            <p class="muted">Altere as regras principais sem editar o banco manualmente.</p>
+          </div>
+          <span id="examActiveBadge" class="pill">—</span>
+        </div>
+
+        <div class="settings-grid">
+          <div class="field-span-2">
+            <label for="examTitleInput">Título da avaliação</label>
+            <input id="examTitleInput" type="text" maxlength="160">
+          </div>
+          <div>
+            <label for="examDurationInput">Duração (minutos)</label>
+            <input id="examDurationInput" type="number" min="5" max="300">
+          </div>
+          <div>
+            <label for="examOccurrencesInput">Limite de ocorrências</label>
+            <input id="examOccurrencesInput" type="number" min="1" max="20">
+          </div>
+          <label class="switch-row field-span-2">
+            <input id="examActiveInput" type="checkbox">
+            <span>
+              <strong>Avaliação ativa</strong>
+              <small>Quando desativada, novos alunos não conseguem iniciar a prova.</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="settings-actions">
+          <span id="settingsMessage" class="muted"></span>
+          <button id="btnSaveSettings" class="primary">Salvar configurações</button>
+        </div>
+      </section>
+
       <div class="dashboard-grid">
         <div class="card stat"><span>Total</span><strong id="statTotal">0</strong></div>
         <div class="card stat"><span>Em andamento</span><strong id="statProgress">0</strong></div>
@@ -72,6 +109,20 @@
       </section>
     </section>
   </main>
+
+  <div id="resetAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resetAttemptTitle">
+    <div class="overlay-card">
+      <h2 id="resetAttemptTitle">Permitir nova tentativa</h2>
+      <p id="resetAttemptText" class="lead"></p>
+      <div class="message warn">
+        Esta ação apaga a tentativa atual, incluindo respostas, nota e ocorrências. O cadastro do aluno será mantido.
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelReset" class="secondary">Cancelar</button>
+        <button id="btnConfirmReset" class="danger">Permitir nova tentativa</button>
+      </div>
+    </div>
+  </div>
 
   <div id="detailModal" class="overlay hidden" role="dialog" aria-modal="true">
     <div class="overlay-card detail-modal">
