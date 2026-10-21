@@ -15,12 +15,13 @@ on conflict(slug) do update set
   duration_minutes=excluded.duration_minutes,
   max_occurrences=excluded.max_occurrences;
 
-insert into public.students(access_code,name,class_group) values
-('1B-A001','Aluno de Teste 1','1º INF'),
-('1B-A002','Aluno de Teste 2','1º INF'),
-('1B-A003','Aluno de Teste 3','1º INF')
-on conflict(access_code) do update set
-  name=excluded.name, class_group=excluded.class_group, active=true;
+delete from public.students
+where name in ('Aluno de Teste 1','Aluno de Teste 2','Aluno de Teste 3');
+
+insert into public.students(name,class_group) values
+('Aluno de Teste 1','1º INF'),
+('Aluno de Teste 2','1º INF'),
+('Aluno de Teste 3','1º INF');
 
 do $$
 declare
