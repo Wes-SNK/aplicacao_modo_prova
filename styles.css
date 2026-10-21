@@ -292,3 +292,25 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .question-admin-head { flex-direction: column; }
   .option-editor-grid { grid-template-columns: 1fr; }
 }
+
+.field-help { margin: 5px 0 0; color: #64748b; font-size: .88rem; }
+
+.simulation-result {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+.result-score { font-size: 1.35rem; font-weight: 800; margin: 0 0 14px; }
+.result-question { padding: 14px 0; border-top: 1px solid #e2e8f0; }
+.result-question p { margin: 5px 0; }
+.result-ok { color: #166534; font-weight: 700; }
+.result-bad { color: #991b1b; font-weight: 700; }
+.teacher-settings select {
+  width: 100%;
+  border: 1px solid #bac5d3;
+  border-radius: 9px;
+  padding: 11px 12px;
+  background: white;
+  color: #111827;
+}
