@@ -25,7 +25,7 @@
 
   <main class="shell">
     <section id="screenLogin" class="card">
-      <h1>Avaliação</h1>
+      <h1 id="loginHeading">Avaliação</h1>
       <p class="lead">Digite seu nome completo conforme registrado pelo professor.</p>
 
       <label for="studentNameInput">Nome completo</label>
@@ -107,9 +107,10 @@
     </section>
 
     <section id="screenFinished" class="card hidden">
-      <h1>Avaliação finalizada</h1>
+      <h1 id="finishedHeading">Avaliação finalizada</h1>
       <p id="finishedMessage" class="lead"></p>
-      <p>Você já pode chamar o professor.</p>
+      <div id="simulationResult" class="simulation-result hidden"></div>
+      <p id="finishedInstruction">Você já pode chamar o professor.</p>
     </section>
   </main>
 
