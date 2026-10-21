@@ -47,7 +47,9 @@ begin
   select * into a from public.attempts
    where exam_id = e.id and student_id = s.id;
 
-  if a.id is not null and a.status in ('submitted','auto_submitted') then
+  if a.id is not null and a.status = 'in_progress' then
+    raise exception 'Avaliação já iniciada';
+  elsif a.id is not null and a.status in ('submitted','auto_submitted') then
     raise exception 'Avaliação já finalizada';
   end if;
 
