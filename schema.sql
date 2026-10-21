@@ -560,7 +560,7 @@ begin
       'correct_answer',q.correct_answer,
       'is_correct',(an.answer->>'value'=q.correct_answer),
       'points',q.points
-    ) order by q.position
+    ) order by md5(a.session_token::text || q.id::text)
   ),'[]'::jsonb)
   into arr
   from public.questions q
