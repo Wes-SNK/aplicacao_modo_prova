@@ -256,15 +256,18 @@
     refreshQuestionNav();
   }
 
+  function isQuestionAnswered(q) {
+    const ans = state.answers[q.id];
+    if (!ans) return false;
+    if (q.type === "objective") return ans.value !== undefined && ans.value !== "";
+    return ans.text !== undefined && ans.text.trim() !== "";
+  }
+
   function refreshQuestionNav() {
     document.querySelectorAll(".qnav").forEach((b, i) => {
       const q = state.questions[i];
-      const ans = state.answers[q.id];
       b.classList.toggle("current", i === state.index);
-      b.classList.toggle("answered", !!ans && (
-        (ans.value !== undefined && ans.value !== "") ||
-        (ans.text !== undefined && ans.text.trim() !== "")
-      ));
+      b.classList.toggle("answered", isQuestionAnswered(q));
       b.classList.toggle("review", !!state.review[q.id]);
     });
   }
@@ -433,9 +436,61 @@
     setTimeout(() => t.classList.add("hidden"), 3500);
   }
 
+  function openSubmitConfirmation() {
+    if (!state.active || state.submitting) return;
+
+    const unanswered = [];
+    const markedReview = [];
+
+    state.questions.forEach((q, i) => {
+      if (!isQuestionAnswered(q)) unanswered.push(i + 1);
+      if (state.review[q.id]) markedReview.push(i + 1);
+    });
+
+    const warnings = $("submitWarnings");
+    warnings.textContent = "";
+
+    const summaryParts = [];
+    summaryParts.push(`${state.questions.length - unanswered.length} de ${state.questions.length} questão(ões) respondida(s).`);
+    if (markedReview.length) {
+      summaryParts.push(`${markedReview.length} marcada(s) para revisão.`);
+    }
+    $("submitSummary").textContent = summaryParts.join(" ");
+
+    if (markedReview.length) {
+      const box = document.createElement("div");
+      box.className = "submit-warning";
+      const strong = document.createElement("strong");
+      strong.textContent = "Questões marcadas para revisão:";
+      const p = document.createElement("p");
+      p.textContent = markedReview.join(", ");
+      box.append(strong, p);
+      warnings.appendChild(box);
+    }
+
+    if (unanswered.length) {
+      const box = document.createElement("div");
+      box.className = "submit-warning danger-warning";
+      const strong = document.createElement("strong");
+      strong.textContent = "Questões sem resposta:";
+      const p = document.createElement("p");
+      p.textContent = unanswered.join(", ");
+      box.append(strong, p);
+      warnings.appendChild(box);
+    }
+
+    const hasWarnings = markedReview.length > 0 || unanswered.length > 0;
+    $("btnConfirmSubmit").textContent = hasWarnings ? "Finalizar mesmo assim" : "Confirmar finalização";
+    $("submitOverlay").classList.remove("hidden");
+  }
+
+  function closeSubmitConfirmation() {
+    $("submitOverlay").classList.add("hidden");
+  }
+
   async function submitExam(reason = "submitted", automatic = false) {
     if (state.submitting || !state.active) return;
-    if (!automatic && !confirm("Deseja realmente finalizar a prova? Depois do envio não será possível voltar.")) return;
+    closeSubmitConfirmation();
     state.submitting = true;
     await flushPendingAnswers();
 
@@ -451,7 +506,7 @@
         : "Suas respostas foram enviadas com sucesso.");
     } catch {
       state.submitting = false;
-      alert("Não foi possível enviar a prova agora. Verifique a conexão antes de tentar novamente.");
+      showViolationToast("Não foi possível enviar a prova agora. Verifique a conexão e tente novamente.");
     }
   }
 
@@ -478,6 +533,7 @@
     $("timer").classList.add("hidden");
     $("finishedMessage").textContent = message;
     $("fullscreenOverlay").classList.add("hidden");
+    $("submitOverlay").classList.add("hidden");
     showScreen("screenFinished");
     clearSessionCache();
     document.exitFullscreen?.().catch(() => {});
@@ -558,7 +614,9 @@
       refreshQuestionNav();
     });
 
-    $("btnSubmit").addEventListener("click", () => submitExam("submitted", false));
+    $("btnSubmit").addEventListener("click", openSubmitConfirmation);
+    $("btnCancelSubmit").addEventListener("click", closeSubmitConfirmation);
+    $("btnConfirmSubmit").addEventListener("click", () => submitExam("submitted", false));
     $("btnReturnFullscreen").addEventListener("click", requestFullscreen);
 
     window.addEventListener("online", async () => {
