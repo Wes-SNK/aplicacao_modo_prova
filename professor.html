@@ -54,6 +54,14 @@
             <label for="examOccurrencesInput">Limite de ocorrências</label>
             <input id="examOccurrencesInput" type="number" min="1" max="20">
           </div>
+          <div class="field-span-2">
+            <label for="examModeInput">Modo de aplicação</label>
+            <select id="examModeInput">
+              <option value="exam">Prova</option>
+              <option value="simulation">Simulado</option>
+            </select>
+            <p class="field-help">No Simulado, o aluno recebe nota, percentual de acertos e correção após finalizar.</p>
+          </div>
           <label class="switch-row field-span-2">
             <input id="examActiveInput" type="checkbox">
             <span>
@@ -131,16 +139,10 @@
       <div class="section-head">
         <div>
           <h2 id="questionEditorTitle">Nova questão</h2>
-          <p class="muted">Questões objetivas são corrigidas automaticamente. Questões abertas ficam disponíveis para conferência do professor.</p>
+          <p class="muted">Todas as questões são objetivas, com quatro alternativas e correção automática.</p>
         </div>
         <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
       </div>
-
-      <label for="questionTypeInput">Tipo</label>
-      <select id="questionTypeInput">
-        <option value="objective">Objetiva</option>
-        <option value="open">Aberta</option>
-      </select>
 
       <label for="questionStemInput">Enunciado</label>
       <textarea id="questionStemInput" rows="5" maxlength="4000" placeholder="Digite o enunciado da questão"></textarea>
@@ -169,7 +171,7 @@
         <input id="questionActiveInput" type="checkbox" checked>
         <span>
           <strong>Questão ativa</strong>
-          <small>Somente questões ativas aparecem na prova dos alunos.</small>
+          <small>Somente questões ativas aparecem para os alunos.</small>
         </span>
       </label>
 
