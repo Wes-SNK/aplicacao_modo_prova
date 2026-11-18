@@ -20,6 +20,11 @@
   </header>
 
   <main class="shell wide">
+    <nav class="assessment-nav" aria-label="Selecionar banco de questões">
+      <a href="professor.html?avaliacao=simulado">Simulado do bimestre</a>
+      <a href="professor.html?avaliacao=prova">Prova do bimestre</a>
+      <a href="professor.html">Avaliação anterior</a>
+    </nav>
     <section id="teacherLogin" class="card">
       <h1>Acesso do professor</h1>
       <p class="lead">Use o e-mail e a senha cadastrados no Supabase Auth.</p>
@@ -139,7 +144,7 @@
       <div class="section-head">
         <div>
           <h2 id="questionEditorTitle">Nova questão</h2>
-          <p class="muted">Todas as questões são objetivas, com quatro alternativas e correção automática.</p>
+          <p class="muted">Todas as questões são objetivas, com cinco alternativas (A–E) e correção automática.</p>
         </div>
         <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
       </div>
@@ -153,6 +158,7 @@
           <label>B <input id="optionBInput" type="text" maxlength="1000"></label>
           <label>C <input id="optionCInput" type="text" maxlength="1000"></label>
           <label>D <input id="optionDInput" type="text" maxlength="1000"></label>
+          <label>E <input id="optionEInput" type="text" maxlength="1000"></label>
         </div>
 
         <label for="correctAnswerInput">Gabarito</label>
@@ -161,11 +167,15 @@
           <option value="B">B</option>
           <option value="C">C</option>
           <option value="D">D</option>
+          <option value="E">E</option>
         </select>
 
         <label for="questionPointsInput">Valor</label>
         <input id="questionPointsInput" type="number" min="0" max="100" step="0.1" value="1">
       </div>
+
+      <label for="questionExplanationInput">Justificativa da resposta (exibida após concluir o simulado)</label>
+      <textarea id="questionExplanationInput" rows="3" maxlength="2500" placeholder="Explique o raciocínio ou conceito necessário para chegar à alternativa correta."></textarea>
 
       <label class="switch-row">
         <input id="questionActiveInput" type="checkbox" checked>
