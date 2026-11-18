@@ -263,4 +263,4 @@ As respostas e os eventos são removidos automaticamente (`ON DELETE CASCADE`).
 - As avaliações do quarto bimestre são **independentes** da prova de demonstração original. Os slugs são `simulado-4bim-1b-2026` e `prova-4bim-1b-2026`.
 - A aplicação usa `?avaliacao=simulado` ou `?avaliacao=prova` ao final da URL de `index.html`; o painel `professor.html` aceita os mesmos parâmetros. Sem parâmetro, continua abrindo a avaliação original `4bim-1b-2026`.
 - As novas avaliações são inicialmente criadas **inativas**, para revisão pedagógica e definição das janelas de aplicação. A prova não revela gabarito ao aluno; o simulado libera correção comentada somente após a finalização.
-- As perguntas são originais, com textos-base, interpretação, situação-problema e cinco alternativas. O banco de questões está versionado em `seed_simulado_4bim_2026_enem.sql` e `seed_prova_4bim_2026_enem.sql`.
+- As perguntas são originais, com textos-base, interpretação, situação-problema e cinco alternativas. Os 40 enunciados e respectivos gabaritos foram cadastrados diretamente no Supabase e não são publicados no repositório público.
