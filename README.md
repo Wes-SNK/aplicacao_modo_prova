@@ -264,3 +264,12 @@ As respostas e os eventos são removidos automaticamente (`ON DELETE CASCADE`).
 - A aplicação usa `?avaliacao=simulado` ou `?avaliacao=prova` ao final da URL de `index.html`; o painel `professor.html` aceita os mesmos parâmetros. Sem parâmetro, continua abrindo a avaliação original `4bim-1b-2026`.
 - As novas avaliações são inicialmente criadas **inativas**, para revisão pedagógica e definição das janelas de aplicação. A prova não revela gabarito ao aluno; o simulado libera correção comentada somente após a finalização.
 - As perguntas são originais, com textos-base, interpretação, situação-problema e cinco alternativas. Os 40 enunciados e respectivos gabaritos foram cadastrados diretamente no Supabase e não são publicados no repositório público.
+
+
+### Ajuste da prova por orientação da escola — 18/11/2026
+
+- **Prova bimestral:** 40 questões objetivas contextualizadas, com cinco alternativas e 10 questões por área (Lógica de Programação; HTML/CSS; Arquitetura e Manutenção; Planejamento de Carreira e IA).
+- **Simulado:** mantém 20 questões; o banco é independente da prova.
+- **Tempo provisório da prova:** 120 minutos para acomodar os enunciados interpretativos; confirmar com a coordenação escolar antes de ativar.
+- **Pontuação:** 1 ponto por questão (40 pontos brutos); revisar a conversão para a nota oficial conforme o critério da escola.
+- **Segurança:** prova e simulado permanecem inativos e seus enunciados e gabaritos são armazenados somente no Supabase, não neste repositório público.
