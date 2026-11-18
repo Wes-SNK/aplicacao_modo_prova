@@ -551,6 +551,12 @@
         : `Alternativa correta: ${q.correct_answer}`;
 
       box.append(h, answer, explanation);
+      if (q.explanation) {
+        const rationale = document.createElement("p");
+        rationale.className = "result-rationale";
+        rationale.textContent = `Por quê? ${q.explanation}`;
+        box.appendChild(rationale);
+      }
       area.appendChild(box);
     });
   }
