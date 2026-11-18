@@ -314,3 +314,6 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   background: white;
   color: #111827;
 }
+\n/* Questões contextualizadas: preservar quebras de linha e espaçamento de textos-base. */
+#questionStem, .result-question strong { white-space: pre-wrap; }
+.result-rationale { margin-top: 8px !important; color: #334155; }
