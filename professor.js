@@ -327,12 +327,13 @@
     editingQuestionId = q?.id || null;
     $("questionEditorTitle").textContent = q ? `Editar questão ${q.position}` : "Nova questão";
     $("questionStemInput").value = q?.stem || "";
+    $("questionExplanationInput").value = q?.explanation || "";
     $("questionActiveInput").checked = q?.active ?? true;
     $("questionPointsInput").value = Number(q?.points ?? 1);
 
     const optionMap = {};
     (q?.options || []).forEach(o => optionMap[o.key] = o.text);
-    ["A","B","C","D"].forEach(k => {
+    ["A","B","C","D","E"].forEach(k => {
       $(`option${k}Input`).value = optionMap[k] || "";
     });
     $("correctAnswerInput").value = q?.correct_answer || "A";
@@ -358,12 +359,12 @@
       return;
     }
 
-    options = ["A","B","C","D"].map(key => ({
+    options = ["A","B","C","D","E"].map(key => ({
       key,
       text: $(`option${key}Input`).value.trim()
     }));
     if (options.some(o => !o.text)) {
-      setMessage($("questionEditorMessage"), "Preencha as quatro alternativas A, B, C e D.", "warn");
+      setMessage($("questionEditorMessage"), "Preencha as cinco alternativas A, B, C, D e E.", "warn");
       return;
     }
     correct = $("correctAnswerInput").value;
@@ -376,7 +377,7 @@
     $("btnSaveQuestion").disabled = true;
     setMessage($("questionEditorMessage"), "Salvando…", "info");
     try {
-      await teacherRpc("teacher_save_question", {
+      await teacherRpc("teacher_save_question_v2", {
         p_exam_slug: cfg.examSlug,
         p_question_id: editingQuestionId,
         p_type: "objective",
@@ -384,7 +385,8 @@
         p_options: options,
         p_correct_answer: correct,
         p_points: points,
-        p_active: active
+        p_active: active,
+        p_explanation: $("questionExplanationInput").value.trim() || null
       });
       closeQuestionEditor();
       await loadQuestions();
@@ -461,6 +463,11 @@
           p.textContent = `${o.key}) ${o.text}${o.key === q.correct_answer ? " ✓" : ""}`;
           box.appendChild(p);
         });
+        if (q.explanation) {
+          const expl = document.createElement("p");
+          expl.textContent = `Justificativa: ${q.explanation}`;
+          box.appendChild(expl);
+        }
         area.appendChild(box);
       });
     }
