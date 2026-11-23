@@ -333,10 +333,124 @@
     });
   }
 
-  function openQuestionEditor(q = null) {
-    if (questionsLocked) return;
-    editingQuestionId = q?.id || null;
-    $("questionEditorTitle").textContent = q ? `Editar questão ${q.position}` : "Nova questão";
+
+  // Banco permanente: cada aplicação recebe uma cópia; o item original é preservado.
+  async function loadBankQuestions() {
+    const message = $("bankMessage");
+    message.textContent = "Consultando questões…";
+    try {
+      const data = await teacherRpc("teacher_bank_questions", {
+        p_subject: $("bankSubjectFilter").value || null,
+        p_search: $("bankSearchInput").value.trim() || null
+      });
+      bankQuestions = data.questions || [];
+      bankTotal = Number(data.total || 0);
+      renderBankQuestions();
+      message.textContent = "Exibindo " + bankQuestions.length + " de " + bankTotal + " questões preservadas.";
+    } catch (err) {
+      message.textContent = err.message || "Não foi possível consultar o banco.";
+    }
+  }
+
+  function renderBankQuestions() {
+    $("bankMeta").textContent = bankTotal + " questões disponíveis para reutilização";
+    const container = $("bankQuestionList");
+    container.textContent = "";
+    if (!bankQuestions.length) {
+      const p = document.createElement("p");
+      p.className = "muted";
+      p.textContent = "Nenhuma questão encontrada com estes filtros.";
+      container.appendChild(p);
+      return;
+    }
+    bankQuestions.forEach(q => {
+      const item = document.createElement("div");
+      item.className = "question-admin-item";
+      const header = document.createElement("div");
+      header.className = "question-admin-head";
+      const detail = document.createElement("div");
+      const heading = document.createElement("strong");
+      heading.textContent = q.subject + (q.topic ? " — " + q.topic : "");
+      const meta = document.createElement("p");
+      meta.className = "muted question-admin-meta";
+      meta.textContent = q.source_label + " • " + q.option_count + " alternativas • Gabarito: " + q.correct_answer;
+      detail.append(heading, meta);
+      const tools = document.createElement("div");
+      tools.className = "toolbar";
+      const preview = document.createElement("button");
+      preview.className = "small secondary";
+      preview.textContent = "Visualizar";
+      preview.addEventListener("click", () => openBankPreview(q));
+      const add = document.createElement("button");
+      add.className = "small primary";
+      const duplicate = questionsData.some(existing =>
+        existing.stem === q.stem && existing.correct_answer === q.correct_answer
+        && JSON.stringify(existing.options) === JSON.stringify(q.options)
+      );
+      add.disabled = questionsLocked || duplicate || q.option_count !== 5;
+      add.textContent = duplicate ? "Já incluída" : (q.option_count !== 5 ? "4 alternativas" : "Adicionar à avaliação");
+      if (questionsLocked) add.title = "A avaliação já possui tentativas; não pode ser modificada.";
+      if (q.option_count !== 5) add.title = "Questão antiga: crie uma nova versão com cinco alternativas.";
+      add.addEventListener("click", async () => {
+        add.disabled = true;
+        $("bankMessage").textContent = "Incluindo questão…";
+        try {
+          await teacherRpc("teacher_bank_add_to_exam", {
+            p_exam_slug: cfg.examSlug,
+            p_bank_question_id: q.id
+          });
+          await loadQuestions();
+          await refreshDashboard();
+          renderBankQuestions();
+          $("bankMessage").textContent = "Incluída na avaliação. O item original permanece no banco.";
+        } catch (err) {
+          renderBankQuestions();
+          $("bankMessage").textContent = err.message || "Não foi possível incluir.";
+        }
+      });
+      tools.append(preview, add);
+      header.append(detail, tools);
+      const stem = document.createElement("p");
+      stem.className = "question-admin-stem";
+      stem.textContent = q.stem;
+      item.append(header, stem);
+      container.appendChild(item);
+    });
+  }
+
+  function openBankPreview(q) {
+    $("questionPreviewTitle").textContent = "Questão do banco — " + q.subject;
+    const container = $("questionPreviewList");
+    container.textContent = "";
+    const heading = document.createElement("h3");
+    heading.textContent = q.stem;
+    container.appendChild(heading);
+    (q.options || []).forEach(option => {
+      const p = document.createElement("p");
+      p.textContent = option.key + ") " + option.text + (option.key === q.correct_answer ? " ✓" : "");
+      if (option.key === q.correct_answer) p.className = "preview-correct";
+      container.appendChild(p);
+    });
+    if (q.explanation) {
+      const p = document.createElement("p");
+      p.textContent = "Justificativa: " + q.explanation;
+      container.appendChild(p);
+    }
+    $("questionPreviewModal").classList.remove("hidden");
+  }
+
+  function openQuestionEditor(q = null, mode = "exam") {
+    if (questionsLocked && mode !== "bank") return;
+    editorMode = mode;
+    editingQuestionId = mode === "bank" ? null : (q?.id || null);
+    $("questionEditorTitle").textContent = mode === "bank"
+      ? "Nova questão no banco"
+      : (q ? "Editar questão " + q.position : "Nova questão da avaliação");
+    $("questionBankMetadata").classList.toggle("hidden", mode !== "bank");
+    $("questionActiveRow").classList.toggle("hidden", mode === "bank");
+    $("questionSubjectInput").value = $("bankSubjectFilter").value || "Lógica de Programação";
+    $("questionTopicInput").value = "";
+    $("btnSaveQuestion").textContent = mode === "bank" ? "Salvar no banco" : "Salvar questão";
     $("questionStemInput").value = q?.stem || "";
     $("questionExplanationInput").value = q?.explanation || "";
     $("questionActiveInput").checked = q?.active ?? true;
@@ -354,11 +468,12 @@
 
   function closeQuestionEditor() {
     editingQuestionId = null;
+    editorMode = "exam";
     $("questionEditorModal").classList.add("hidden");
   }
 
   async function saveQuestion() {
-    if (questionsLocked) return;
+    if (questionsLocked && editorMode !== "bank") return;
     const stem = $("questionStemInput").value.trim();
     const active = $("questionActiveInput").checked;
     let options = [];
@@ -388,21 +503,39 @@
     $("btnSaveQuestion").disabled = true;
     setMessage($("questionEditorMessage"), "Salvando…", "info");
     try {
-      await teacherRpc("teacher_save_question_v2", {
-        p_exam_slug: cfg.examSlug,
-        p_question_id: editingQuestionId,
-        p_type: "objective",
-        p_stem: stem,
-        p_options: options,
-        p_correct_answer: correct,
-        p_points: points,
-        p_active: active,
-        p_explanation: $("questionExplanationInput").value.trim() || null
-      });
-      closeQuestionEditor();
-      await loadQuestions();
-      await refreshDashboard();
-      $("questionsMessage").textContent = "Questão salva.";
+      if (editorMode === "bank") {
+        const result = await teacherRpc("teacher_bank_create", {
+          p_subject: $("questionSubjectInput").value,
+          p_topic: $("questionTopicInput").value.trim() || null,
+          p_stem: stem,
+          p_options: options,
+          p_correct_answer: correct,
+          p_explanation: $("questionExplanationInput").value.trim() || null,
+          p_points: points
+        });
+        closeQuestionEditor();
+        await loadBankQuestions();
+        $("bankMessage").textContent = result.existing
+          ? "Esta versão já existe no banco."
+          : "Questão criada no banco; adicione-a quando montar uma avaliação.";
+      } else {
+        await teacherRpc("teacher_save_question_v2", {
+          p_exam_slug: cfg.examSlug,
+          p_question_id: editingQuestionId,
+          p_type: "objective",
+          p_stem: stem,
+          p_options: options,
+          p_correct_answer: correct,
+          p_points: points,
+          p_active: active,
+          p_explanation: $("questionExplanationInput").value.trim() || null
+        });
+        closeQuestionEditor();
+        await loadQuestions();
+        await loadBankQuestions();
+        await refreshDashboard();
+        $("questionsMessage").textContent = "Questão salva e preservada no banco.";
+      }
     } catch (err) {
       setMessage($("questionEditorMessage"), err.message || "Não foi possível salvar a questão.", "error");
     } finally {
@@ -443,8 +576,9 @@
       await teacherRpc("teacher_delete_question", { p_question_id: target.id });
       closeDeleteQuestion();
       await loadQuestions();
+      await loadBankQuestions();
       await refreshDashboard();
-      $("questionsMessage").textContent = "Questão excluída.";
+      $("questionsMessage").textContent = "Questão retirada da avaliação, preservada no banco.";
     } catch (err) {
       $("deleteQuestionText").textContent = err.message || "Não foi possível excluir a questão.";
     } finally {
@@ -453,6 +587,7 @@
   }
 
   function openQuestionPreview() {
+    $("questionPreviewTitle").textContent = "Pré-visualização da avaliação";
     const area = $("questionPreviewList");
     area.textContent = "";
     const active = questionsData.filter(q => q.active);
