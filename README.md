@@ -273,3 +273,19 @@ As respostas e os eventos são removidos automaticamente (`ON DELETE CASCADE`).
 - **Tempo provisório da prova:** 120 minutos para acomodar os enunciados interpretativos; confirmar com a coordenação escolar antes de ativar.
 - **Pontuação:** 1 ponto por questão (40 pontos brutos); revisar a conversão para a nota oficial conforme o critério da escola.
 - **Segurança:** prova e simulado permanecem inativos e seus enunciados e gabaritos são armazenados somente no Supabase, não neste repositório público.
+
+
+## Simulado de revisão — 1º de dezembro de 2026
+
+O **Modo Simulado** usa a mesma interface da prova, com banco de questões e tentativas independentes.
+
+- **Aluno:** `https://wes-snk.github.io/aplicacao_modo_prova/?avaliacao=simulado`
+- **Professor:** `https://wes-snk.github.io/aplicacao_modo_prova/professor.html?avaliacao=simulado`
+- **20 questões objetivas**, todas com cinco alternativas (A–E), uma por página.
+- **Distribuição:** 5 de Lógica, 5 de HTML/CSS, 5 de Arquitetura e Manutenção e 5 de Planejamento de Carreira/IA.
+- **Duração:** 60 minutos, com registro de ocorrências conforme as configurações do professor.
+- **Correção pedagógica:** somente após a finalização, com pontuação total, percentual de acertos, gabaritos, justificativas e resumo por disciplina.
+- **Controle de aplicação:** simulado permanece **desativado** até revisão e liberação pelo professor para 01/12/2026. A data no título **não ativa automaticamente** a aplicação.
+- **Sigilo:** não incluir enunciados, alternativas, gabaritos ou tokens de estudantes no repositório público. Os dados avaliativos são mantidos no Supabase.
+
+O módulo simulado não altera o banco da prova de 40 questões em 03/12/2026.
