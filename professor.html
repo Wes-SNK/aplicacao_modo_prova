@@ -52,8 +52,23 @@
             <input id="examTitleInput" type="text" maxlength="160">
           </div>
           <div>
-            <label for="examDurationInput">Duração (minutos)</label>
-            <input id="examDurationInput" type="number" min="5" max="300">
+            <label for="examDurationPreset">Duração da avaliação</label>
+            <select id="examDurationPreset">
+              <option value="30">30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">60 minutos</option>
+              <option value="90">90 minutos</option>
+              <option value="120">120 minutos</option>
+              <option value="180">180 minutos</option>
+              <option value="240">240 minutos</option>
+              <option value="none">Sem limite de tempo</option>
+              <option value="custom">Outro tempo…</option>
+            </select>
+            <div id="examDurationCustomGroup" class="hidden">
+              <label for="examDurationInput">Tempo personalizado (5 a 300 minutos)</label>
+              <input id="examDurationInput" type="number" min="5" max="300" step="1">
+            </div>
+            <p class="field-help">Sem limite: não há cronômetro nem encerramento por tempo. As regras de ocorrência permanecem ativas.</p>
           </div>
           <div>
             <label for="examOccurrencesInput">Limite de ocorrências</label>
@@ -105,6 +120,38 @@
         <div id="questionList" class="question-list"></div>
       </section>
 
+      <section class="card question-manager" id="questionBankPanel">
+        <div class="section-head">
+          <div>
+            <h1>Banco de questões</h1>
+            <p class="muted" id="bankMeta">Questões preservadas para reutilização, independentemente da avaliação.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnBankRefresh" class="secondary">Atualizar banco</button>
+            <button id="btnBankNewQuestion" class="primary">Nova questão no banco</button>
+          </div>
+        </div>
+        <div class="settings-grid bank-filters">
+          <div>
+            <label for="bankSubjectFilter">Disciplina</label>
+            <select id="bankSubjectFilter">
+              <option value="">Todas as disciplinas</option>
+              <option value="Lógica de Programação">Lógica de Programação</option>
+              <option value="HTML/CSS">HTML/CSS</option>
+              <option value="Arquitetura e Manutenção">Arquitetura e Manutenção</option>
+              <option value="Planejamento de Carreira e IA">Planejamento de Carreira e IA</option>
+              <option value="Geral">Geral / questões anteriores</option>
+            </select>
+          </div>
+          <div>
+            <label for="bankSearchInput">Pesquisar no banco</label>
+            <input id="bankSearchInput" type="search" placeholder="Palavra do enunciado, tema ou origem">
+          </div>
+        </div>
+        <p id="bankMessage" class="muted" aria-live="polite"></p>
+        <div id="bankQuestionList" class="question-list bank-question-list"></div>
+      </section>
+
       <section class="card">
         <div class="section-head">
           <div>
@@ -149,6 +196,20 @@
         <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
       </div>
 
+      <div id="questionBankMetadata" class="hidden">
+        <label for="questionSubjectInput">Disciplina da questão</label>
+        <select id="questionSubjectInput">
+          <option value="Lógica de Programação">Lógica de Programação</option>
+          <option value="HTML/CSS">HTML/CSS</option>
+          <option value="Arquitetura e Manutenção">Arquitetura e Manutenção</option>
+          <option value="Planejamento de Carreira e IA">Planejamento de Carreira e IA</option>
+          <option value="Geral">Geral</option>
+        </select>
+        <label for="questionTopicInput">Assunto ou tema (opcional)</label>
+        <input id="questionTopicInput" type="text" maxlength="160" placeholder="Ex.: conversão de números binários">
+        <p class="field-help">A questão será guardada para reutilização. Para aplicá-la, adicione-a a uma prova ou simulado.</p>
+      </div>
+
       <label for="questionStemInput">Enunciado</label>
       <textarea id="questionStemInput" rows="5" maxlength="4000" placeholder="Digite o enunciado da questão"></textarea>
 
@@ -177,7 +238,7 @@
       <label for="questionExplanationInput">Justificativa da resposta (exibida após concluir o simulado)</label>
       <textarea id="questionExplanationInput" rows="3" maxlength="2500" placeholder="Explique o raciocínio ou conceito necessário para chegar à alternativa correta."></textarea>
 
-      <label class="switch-row">
+      <label class="switch-row" id="questionActiveRow">
         <input id="questionActiveInput" type="checkbox" checked>
         <span>
           <strong>Questão ativa</strong>
@@ -197,7 +258,7 @@
     <div class="overlay-card">
       <h2 id="deleteQuestionTitle">Excluir questão</h2>
       <p id="deleteQuestionText" class="lead"></p>
-      <div class="message warn">A exclusão só é permitida enquanto ainda não houver tentativas registradas para esta avaliação.</div>
+      <div class="message info">A questão será retirada somente desta avaliação. A versão registrada no banco de questões será preservada. A remoção não é permitida quando houver tentativas registradas.</div>
       <div class="modal-actions">
         <button id="btnCancelDeleteQuestion" class="secondary">Cancelar</button>
         <button id="btnConfirmDeleteQuestion" class="danger">Excluir questão</button>
