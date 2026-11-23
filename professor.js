@@ -16,6 +16,10 @@
   let questionsLocked = false;
   let editingQuestionId = null;
   let deleteQuestionTarget = null;
+  let bankQuestions = [];
+  let bankTotal = 0;
+  let bankFilterTimer = null;
+  let editorMode = "exam";
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -52,6 +56,7 @@
       showDashboard();
       await refreshDashboard();
       await loadQuestions();
+      await loadBankQuestions();
       startPolling();
     } catch (err) {
       setMessage($("teacherLoginMessage"), "Falha no login. Verifique as credenciais.", "error");
@@ -95,11 +100,17 @@
   function renderDashboard(data) {
     $("teacherExamLabel").textContent = data.exam_title ? ` — ${data.exam_title}` : "";
     $("dashboardTitle").textContent = data.exam_title || "Avaliação";
+    const durationText = data.duration_minutes == null ? "Sem limite de tempo" : data.duration_minutes + " min";
     $("dashboardMeta").textContent =
-      `${data.assessment_mode === "simulation" ? "Simulado" : "Prova"} • ${data.duration_minutes} min • limite de ${data.max_occurrences} ocorrência(s) • ${data.question_count} questão(ões)`;
-
+      (data.assessment_mode === "simulation" ? "Simulado" : "Prova") + " • " + durationText +
+      " • limite de " + data.max_occurrences + " ocorrência(s) • " + data.question_count + " questão(ões)";
     $("examTitleInput").value = data.exam_title || "";
-    $("examDurationInput").value = data.duration_minutes ?? 50;
+    const presetValues = ["30","45","60","90","120","180","240"];
+    const durationPreset = data.duration_minutes == null ? "none"
+      : (presetValues.includes(String(data.duration_minutes)) ? String(data.duration_minutes) : "custom");
+    $("examDurationPreset").value = durationPreset;
+    $("examDurationCustomGroup").classList.toggle("hidden", durationPreset !== "custom");
+    $("examDurationInput").value = data.duration_minutes ?? 60;
     $("examOccurrencesInput").value = data.max_occurrences ?? 3;
     $("examActiveInput").checked = !!data.is_active;
     $("examModeInput").value = data.assessment_mode || "exam";
@@ -476,7 +487,9 @@
 
   async function saveExamSettings() {
     const title = $("examTitleInput").value.trim();
-    const duration = Number($("examDurationInput").value);
+    const selectedDuration = $("examDurationPreset").value;
+    const duration = selectedDuration === "none" ? null
+      : (selectedDuration === "custom" ? Number($("examDurationInput").value) : Number(selectedDuration));
     const maxOccurrences = Number($("examOccurrencesInput").value);
     const isActive = $("examActiveInput").checked;
     const assessmentMode = $("examModeInput").value;
@@ -485,8 +498,8 @@
       $("settingsMessage").textContent = "Informe um título para a avaliação.";
       return;
     }
-    if (!Number.isInteger(duration) || duration < 5 || duration > 300) {
-      $("settingsMessage").textContent = "A duração deve estar entre 5 e 300 minutos.";
+    if (duration !== null && (!Number.isInteger(duration) || duration < 5 || duration > 300)) {
+      $("settingsMessage").textContent = "Escolha uma duração válida ou selecione Sem limite de tempo.";
       return;
     }
     if (!Number.isInteger(maxOccurrences) || maxOccurrences < 1 || maxOccurrences > 20) {
@@ -616,6 +629,16 @@
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    $("examDurationPreset").addEventListener("change", () => {
+      $("examDurationCustomGroup").classList.toggle("hidden", $("examDurationPreset").value !== "custom");
+    });
+    $("btnBankRefresh").addEventListener("click", loadBankQuestions);
+    $("bankSubjectFilter").addEventListener("change", loadBankQuestions);
+    $("bankSearchInput").addEventListener("input", () => {
+      if (bankFilterTimer) clearTimeout(bankFilterTimer);
+      bankFilterTimer = setTimeout(loadBankQuestions, 300);
+    });
+    $("btnBankNewQuestion").addEventListener("click", () => openQuestionEditor(null, "bank"));
     $("btnNewQuestion").addEventListener("click", () => openQuestionEditor());
     $("btnPreviewQuestions").addEventListener("click", openQuestionPreview);
     $("btnCloseQuestionEditor").addEventListener("click", closeQuestionEditor);
@@ -635,6 +658,7 @@
       showDashboard();
       await refreshDashboard();
       await loadQuestions();
+      await loadBankQuestions();
       startPolling();
     } else {
       showLogin();
