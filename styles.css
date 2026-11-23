@@ -322,3 +322,17 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
 .assessment-nav { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 16px; }
 .assessment-nav a { text-decoration: none; padding: 9px 12px; border: 1px solid #d7dee8; background: #fff; border-radius: 8px; font-size: .92rem; }
 .assessment-nav a:hover { text-decoration: underline; }
+
+/* Banco de questões: busca, prévia e inclusão sem tornar a tela extensa demais. */
+.bank-question-list { max-height: 600px; overflow-y: auto; padding-right: 5px; }
+.bank-filters { margin-top: 8px; }
+.bank-filters select, .bank-filters input, #questionBankMetadata select, #questionBankMetadata input {
+  width: 100%; border: 1px solid #bac5d3; border-radius: 9px;
+  padding: 11px 12px; background: #fff; color: #111827;
+}
+#examDurationCustomGroup { margin-top: 10px; }
+.bank-question-list .question-admin-head .toolbar { flex-wrap: wrap; }
+@media (max-width: 800px) {
+  .bank-question-list { max-height: 480px; }
+  .bank-question-list .toolbar { width: 100%; }
+}
