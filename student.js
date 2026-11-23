@@ -235,7 +235,9 @@
     $("btnStart").textContent = isSimulation ? "Iniciar simulado" : "Iniciar avaliação";
     $("btnSubmit").textContent = isSimulation ? "Finalizar simulado" : "Finalizar prova";
     $("submitTitle").textContent = isSimulation ? "Conferir antes de finalizar o simulado" : "Conferir antes de finalizar";
-    $("ruleDuration").textContent = `${state.durationMinutes} min`;
+    $("ruleDuration").textContent = state.durationMinutes == null
+      ? "Sem limite"
+      : state.durationMinutes + " min";
     $("ruleQuestionCount").textContent = String(state.questions.length);
     $("ruleMaxOccurrences").textContent = String(state.maxOccurrences);
     $("acceptRules").checked = false;
@@ -402,6 +404,11 @@
 
   function startTimer() {
     const timerEl = $("timer");
+    if (!state.endsAt) {
+      // Avaliação configurada sem limite: não há cronômetro nem expiração automática.
+      timerEl.classList.add("hidden");
+      return;
+    }
     timerEl.classList.remove("hidden");
 
     const tick = async () => {
