@@ -289,3 +289,35 @@ O **Modo Simulado** usa a mesma interface da prova, com banco de questões e ten
 - **Sigilo:** não incluir enunciados, alternativas, gabaritos ou tokens de estudantes no repositório público. Os dados avaliativos são mantidos no Supabase.
 
 O módulo simulado não altera o banco da prova de 40 questões em 03/12/2026.
+
+
+## Banco reutilizável de questões e controle de tempo — novembro/2026
+
+Migração: `migration_007_banco_questoes_tempo.sql` (já aplicada ao projeto de provas, não ao CulturaFlow).
+
+### Banco de questões
+
+- A seção **Banco de questões**, no painel autenticado do professor, permite **pesquisar por palavras**, **filtrar por disciplina**, **visualizar enunciado/gabarito**, **cadastrar questões próprias** e **adicionar cópias a qualquer avaliação editável**.
+- A biblioteca foi inicializada com **65 questões objetivas existentes**: 15 por cada uma das quatro áreas e 5 questões anteriores na categoria Geral.
+- Os itens permanecem na biblioteca mesmo que sejam removidos das avaliações. O gatilho de auditoria registra também o conteúdo **antes e depois** de edições, como versões independentes, sem sobrescrever os registros anteriores.
+- Os bancos de aplicação e o banco reutilizável têm finalidades distintas: a **prova/simulado** contém suas próprias cópias e tentativas; a **biblioteca** guarda as versões para usos futuros.
+- Questões antigas com quatro alternativas são preservadas, mas precisam de uma nova versão com cinco alternativas antes de serem importadas para uma avaliação atual.
+- Se já houver uma tentativa registrada, a composição daquela avaliação permanece bloqueada, mas ainda é possível cadastrar novas questões diretamente no banco.
+- O banco contém enunciados, alternativas, gabaritos e justificativas **somente no Supabase**. Não publicar dados de questões no GitHub; as funções de consulta/reutilização exigem uma sessão autenticada e não disponibilizam SELECT direto nas tabelas.
+
+### Tempo de aplicação
+
+No painel, **Configurações da avaliação > Duração da avaliação**, escolher:
+
+- 30, 45, **60**, **90**, **120**, 180 ou 240 minutos;
+- **Sem limite de tempo** (duração NULL, sem cronômetro e sem encerramento automático por prazo);
+- **Outro tempo**, entre 5 e 300 minutos.
+
+O aluno recebe a duração correta nas regras iniciais; quando não existe limite, o cronômetro fica oculto. A detecção de ocorrências e a finalização manual continuam funcionando. Depois que uma avaliação receber tentativas, sua duração e seu modo ficam bloqueados para preservar as condições de aplicação.
+
+### Precauções
+
+- Os bancos atuais das avaliações foram preservados. A alteração de duração só é feita quando o professor clica em **Salvar configurações**; as alterações não salvas não são descartadas pela atualização automática.
+- A publicação de código e a aplicação da migração **não ativam** o simulado nem a prova, que permanecem inativos até revisão final.
+- Os testes de inclusão e ausência de prazo foram realizados dentro de transações revertidas, sem gerar tentativas ou acrescentar questões às avaliações reais.
+- Antes da aplicação com a turma, realizar a homologação funcional no navegador e confirmar o tempo disponível com a escola.
