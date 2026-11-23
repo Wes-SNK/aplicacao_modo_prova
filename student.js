@@ -119,7 +119,11 @@
       type: q.type,
       stem: q.stem,
       // A ordem muda entre tentativas, mas permanece estável ao recarregar.
-      options: shuffledOptions(options, `${state.sessionToken || ""}:${q.id}`)
+      // No simulado, mantém A–E em ordem para que as letras da correção
+      // correspondam às alternativas vistas pelos estudantes.
+      options: state.assessmentMode === "simulation"
+        ? options
+        : shuffledOptions(options, `${state.sessionToken || ""}:${q.id}`)
     };
   }
 
@@ -532,6 +536,38 @@
     score.textContent = `Resultado: ${Number(data.score || 0).toFixed(1)} / ${Number(data.max_score || 0).toFixed(1)} • ${Number(data.percentage || 0).toFixed(1)}% de acertos`;
     area.appendChild(score);
 
+    // A prova e o simulado usam bancos independentes. Neste simulado de revisão,
+    // as questões têm cinco posições consecutivas por disciplina. O resumo utiliza
+    // a posição persistida no banco, mesmo quando a ordem da prova é embaralhada.
+    if (cfg.examSlug === "simulado-4bim-1b-2026" && (data.questions || []).length === 20) {
+      const subjects = [
+        { title: "Lógica de Programação", from: 1, to: 5 },
+        { title: "HTML/CSS", from: 6, to: 10 },
+        { title: "Arquitetura e Manutenção", from: 11, to: 15 },
+        { title: "Planejamento de Carreira e IA", from: 16, to: 20 }
+      ];
+      const grouped = subjects.map(subject => {
+        const questions = data.questions.filter(q => q.position >= subject.from && q.position <= subject.to);
+        return { ...subject, count: questions.length, correct: questions.filter(q => q.is_correct).length };
+      });
+      if (grouped.every(group => group.count === 5)) {
+        const h = document.createElement("h2");
+        h.textContent = "Seu desempenho por disciplina";
+        area.appendChild(h);
+        const list = document.createElement("ul");
+        list.className = "result-subjects";
+        grouped.forEach(group => {
+          const item = document.createElement("li");
+          const nextStep = group.correct <= 2
+            ? "Retome os exemplos dos slides e refaça os exercícios."
+            : (group.correct <= 4 ? "Revise as questões que errou." : "Continue praticando novos exemplos.");
+          item.textContent = `${group.title}: ${group.correct}/5 acertos — ${nextStep}`;
+          list.appendChild(item);
+        });
+        area.appendChild(list);
+      }
+    }
+
     (data.questions || []).forEach((q, idx) => {
       const box = document.createElement("div");
       box.className = "result-question";
@@ -674,7 +710,12 @@
   }
 
   function installUiHandlers() {
-    $("appTitle").textContent = cfg.appTitle || "Modo Prova";
+    const isSimulado = cfg.examSlug === "simulado-4bim-1b-2026";
+    $("appTitle").textContent = isSimulado
+      ? "Modo Simulado — Técnico em Informática"
+      : (cfg.appTitle || "Modo Prova");
+    $("loginHeading").textContent = isSimulado ? "Simulado" : "Avaliação";
+    document.title = isSimulado ? "Modo Simulado — 4º Bimestre" : "Modo Prova";
     setConnectionBadge($("connectionBadge"));
     environmentChecks();
 
