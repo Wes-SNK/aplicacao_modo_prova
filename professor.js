@@ -20,6 +20,7 @@
   let bankTotal = 0;
   let bankFilterTimer = null;
   let editorMode = "exam";
+  let settingsDirty = false;
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -104,16 +105,19 @@
     $("dashboardMeta").textContent =
       (data.assessment_mode === "simulation" ? "Simulado" : "Prova") + " • " + durationText +
       " • limite de " + data.max_occurrences + " ocorrência(s) • " + data.question_count + " questão(ões)";
-    $("examTitleInput").value = data.exam_title || "";
-    const presetValues = ["30","45","60","90","120","180","240"];
-    const durationPreset = data.duration_minutes == null ? "none"
-      : (presetValues.includes(String(data.duration_minutes)) ? String(data.duration_minutes) : "custom");
-    $("examDurationPreset").value = durationPreset;
-    $("examDurationCustomGroup").classList.toggle("hidden", durationPreset !== "custom");
-    $("examDurationInput").value = data.duration_minutes ?? 60;
-    $("examOccurrencesInput").value = data.max_occurrences ?? 3;
-    $("examActiveInput").checked = !!data.is_active;
-    $("examModeInput").value = data.assessment_mode || "exam";
+    // A atualização automática não deve sobrescrever alterações não salvas pelo professor.
+    if (!settingsDirty) {
+      $("examTitleInput").value = data.exam_title || "";
+      const presetValues = ["30","45","60","90","120","180","240"];
+      const durationPreset = data.duration_minutes == null ? "none"
+        : (presetValues.includes(String(data.duration_minutes)) ? String(data.duration_minutes) : "custom");
+      $("examDurationPreset").value = durationPreset;
+      $("examDurationCustomGroup").classList.toggle("hidden", durationPreset !== "custom");
+      $("examDurationInput").value = data.duration_minutes ?? 60;
+      $("examOccurrencesInput").value = data.max_occurrences ?? 3;
+      $("examActiveInput").checked = !!data.is_active;
+      $("examModeInput").value = data.assessment_mode || "exam";
+    }
     $("examActiveBadge").textContent = data.is_active ? "Ativa" : "Inativa";
     $("examActiveBadge").className = data.is_active ? "pill ok" : "pill danger";
 
@@ -653,6 +657,7 @@
         p_is_active: isActive,
         p_assessment_mode: assessmentMode
       });
+      settingsDirty = false;
       $("settingsMessage").textContent = "Configurações salvas.";
       await refreshDashboard();
     } catch (err) {
@@ -764,6 +769,12 @@
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    ["examTitleInput","examDurationPreset","examDurationInput","examOccurrencesInput",
+      "examModeInput","examActiveInput"].forEach(id => {
+      const el = $(id);
+      el.addEventListener("input", () => { settingsDirty = true; });
+      el.addEventListener("change", () => { settingsDirty = true; });
+    });
     $("examDurationPreset").addEventListener("change", () => {
       $("examDurationCustomGroup").classList.toggle("hidden", $("examDurationPreset").value !== "custom");
     });
