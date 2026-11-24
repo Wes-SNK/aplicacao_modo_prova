@@ -5,6 +5,12 @@
   "use strict";
   const mp = window.ModeProva;
   const readRpc = mp.rpc;
+  // Fail closed: mesmo que a validação da URL falhe, student.js não poderá
+  // executar endpoints reais de aluno nesta página.
+  mp.teacherPreview = true;
+  mp.rpc = async () => {
+    throw new Error("Prévia indisponível. Volte ao painel do professor.");
+  };
   const $ = id => document.getElementById(id);
   const query = new URLSearchParams(window.location.search).get("avaliacao");
   const allowed = {
@@ -14,7 +20,11 @@
   };
   const currentSlug = allowed[query] || allowed.simulado;
   if (mp.cfg.examSlug !== currentSlug) {
-    throw new Error("Avaliação inválida na prévia. Volte ao painel do professor.");
+    $("btnEnter").disabled = true;
+    mp.setMessage($("loginMessage"),
+      "Endereço de prévia inválido. Volte ao painel e use o botão Testar como aluno.",
+      "error");
+    return;
   }
 
   $("previewBackToTeacher").href =
@@ -213,7 +223,6 @@
   }
 
   mp.rpc = previewRpc;
-  mp.teacherPreview = true;
 
   // Se não houver sessão do professor, a página exibe uma instrução clara.
   mp.validTeacherSession().then(session => {
