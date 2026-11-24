@@ -336,3 +336,32 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .bank-question-list { max-height: 480px; }
   .bank-question-list .toolbar { width: 100%; }
 }
+
+/* Filtro de dificuldade das questões incluídas na prova ou no simulado. */
+.assessment-question-filter {
+  margin-top: 16px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.assessment-question-filter label {
+  margin: 0;
+  color: #475569;
+  font-weight: 600;
+}
+.assessment-question-filter select {
+  width: min(300px, 100%);
+  border: 1px solid #bac5d3;
+  border-radius: 9px;
+  padding: 10px 12px;
+  color: #111827;
+  background: #fff;
+}
+@media (max-width: 600px) {
+  .assessment-question-filter {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .assessment-question-filter select { width: 100%; }
+}
