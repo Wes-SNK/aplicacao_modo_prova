@@ -36,6 +36,7 @@
     $("teacherLogin").classList.remove("hidden");
     $("teacherDashboard").classList.add("hidden");
     $("btnLogout").classList.add("hidden");
+    $("btnTestStudentMode").classList.add("hidden");
     if (pollTimer) clearInterval(pollTimer);
   }
 
@@ -43,6 +44,7 @@
     $("teacherLogin").classList.add("hidden");
     $("teacherDashboard").classList.remove("hidden");
     $("btnLogout").classList.remove("hidden");
+    $("btnTestStudentMode").classList.remove("hidden");
   }
 
   async function teacherRpc(name, args = {}) {
@@ -74,6 +76,13 @@
     } finally {
       $("btnTeacherLogin").disabled = false;
     }
+  }
+
+  // Apenas uma prévia no navegador: sem liberar a avaliação aos estudantes.
+  function openStudentPreview() {
+    const assessment = cfg.examSlug === "simulado-4bim-1b-2026" ? "simulado"
+      : (cfg.examSlug === "prova-4bim-1b-2026" ? "prova" : "anterior");
+    window.open("preview-aluno.html?avaliacao=" + assessment, "_blank", "noopener");
   }
 
   function statusLabel(status) {
@@ -887,6 +896,7 @@
   async function boot() {
     setConnectionBadge($("teacherConnectionBadge"));
     $("btnTeacherLogin").addEventListener("click", login);
+    $("btnTestStudentMode").addEventListener("click", openStudentPreview);
     $("teacherPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
     $("btnLogout").addEventListener("click", () => {
       clearTeacherSession();
