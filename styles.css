@@ -365,3 +365,40 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   }
   .assessment-question-filter select { width: 100%; }
 }
+
+/* Preset de publicação rápida do simulado, sem alterar o formulário detalhado. */
+.simulado-quick-publish {
+  border-color: #b9c9dc;
+  margin-bottom: 16px;
+}
+.simulado-quick-publish .section-head { margin-bottom: 8px; }
+.simulado-quick-publish .section-head h1 { margin-bottom: 8px; }
+.simulado-quick-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin: 16px 0 8px;
+}
+.simulado-student-link {
+  display: inline-block;
+  border: 1px solid #bac5d3;
+  padding: 10px 14px;
+  background: #fff;
+  border-radius: 9px;
+  text-decoration: none;
+  font-weight: 600;
+  color: #1f2937;
+}
+.simulado-student-link:hover,
+.simulado-student-link:focus-visible {
+  background: #eef2f7;
+}
+@media (max-width: 600px) {
+  .simulado-quick-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .simulado-quick-actions button,
+  .simulado-quick-actions .simulado-student-link { width: 100%; text-align: center; }
+}
