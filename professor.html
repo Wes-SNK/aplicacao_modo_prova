@@ -147,6 +147,16 @@
             <label for="bankSearchInput">Pesquisar no banco</label>
             <input id="bankSearchInput" type="search" placeholder="Palavra do enunciado, tema ou origem">
           </div>
+          <div>
+            <label for="bankDifficultyFilter">Nível de dificuldade</label>
+            <select id="bankDifficultyFilter">
+              <option value="">Todos os níveis</option>
+              <option value="facil">Fácil</option>
+              <option value="media">Média</option>
+              <option value="dificil">Difícil</option>
+              <option value="sem_classificacao">Ainda não classificada</option>
+            </select>
+          </div>
         </div>
         <p id="bankMessage" class="muted" aria-live="polite"></p>
         <div id="bankQuestionList" class="question-list bank-question-list"></div>
@@ -191,7 +201,7 @@
       <div class="section-head">
         <div>
           <h2 id="questionEditorTitle">Nova questão</h2>
-          <p class="muted">Todas as questões são objetivas, com cinco alternativas (A–E) e correção automática.</p>
+          <p class="muted">Questões objetivas com quatro alternativas (A–D) ou cinco (A–E) e correção automática.</p>
         </div>
         <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
       </div>
@@ -210,16 +220,29 @@
         <p class="field-help">A questão será guardada para reutilização. Para aplicá-la, adicione-a a uma prova ou simulado.</p>
       </div>
 
-      <label for="questionStemInput">Enunciado</label>
+      <label for="questionDifficultyInput">Nível de dificuldade</label>
+      <select id="questionDifficultyInput" class="editor-select">
+        <option value="">Não classificada</option>
+        <option value="facil">Fácil</option>
+        <option value="media">Média</option>
+        <option value="dificil">Difícil</option>
+      </select>
+
+      <label for="questionStemInput">Texto-base e comando da questão</label>
       <textarea id="questionStemInput" rows="5" maxlength="4000" placeholder="Digite o enunciado da questão"></textarea>
 
       <div id="objectiveFields">
+        <label for="questionOptionCount">Quantidade de alternativas</label>
+        <select id="questionOptionCount" class="editor-select">
+          <option value="4">Quatro (A–D) — novo padrão</option>
+          <option value="5">Cinco (A–E) — compatibilidade</option>
+        </select>
         <div class="option-editor-grid">
           <label>A <input id="optionAInput" type="text" maxlength="1000"></label>
           <label>B <input id="optionBInput" type="text" maxlength="1000"></label>
           <label>C <input id="optionCInput" type="text" maxlength="1000"></label>
           <label>D <input id="optionDInput" type="text" maxlength="1000"></label>
-          <label>E <input id="optionEInput" type="text" maxlength="1000"></label>
+          <label id="optionERow" class="hidden">E <input id="optionEInput" type="text" maxlength="1000"></label>
         </div>
 
         <label for="correctAnswerInput">Gabarito</label>
@@ -228,7 +251,7 @@
           <option value="B">B</option>
           <option value="C">C</option>
           <option value="D">D</option>
-          <option value="E">E</option>
+          <option value="E" id="optionECorrect" class="hidden">E</option>
         </select>
 
         <label for="questionPointsInput">Valor</label>
