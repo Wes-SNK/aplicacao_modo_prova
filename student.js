@@ -1,6 +1,13 @@
 (() => {
   "use strict";
 
+  // Segurança: nunca permitir que a página de prévia execute fluxos reais de
+  // estudante caso o interceptador preview-aluno.js não tenha carregado.
+  if (/\/preview-aluno\.html$/.test(window.location.pathname)
+      && window.ModeProva.teacherPreview !== true) {
+    throw new Error("A prévia está indisponível; nenhuma tentativa foi iniciada.");
+  }
+
   const { cfg, rpc, setMessage, setConnectionBadge } = window.ModeProva;
 
   const $ = (id) => document.getElementById(id);
