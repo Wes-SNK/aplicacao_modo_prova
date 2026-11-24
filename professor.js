@@ -630,10 +630,16 @@
   }
 
   function openQuestionPreview() {
-    $("questionPreviewTitle").textContent = "Pré-visualização da avaliação";
+    const difficultyFilter = $("assessmentDifficultyFilter").value;
+    const previewLabel = difficultyFilter === "sem_classificacao"
+      ? "Sem classificação"
+      : (difficultyLabels[difficultyFilter] || "Todas as dificuldades");
+    $("questionPreviewTitle").textContent = "Pré-visualização da avaliação — " + previewLabel;
     const area = $("questionPreviewList");
     area.textContent = "";
-    const active = questionsData.filter(q => q.active);
+    const active = questionsData.filter(q => q.active &&
+      (!difficultyFilter || (difficultyFilter === "sem_classificacao"
+        ? !q.difficulty : q.difficulty === difficultyFilter)));
     if (!active.length) {
       const p = document.createElement("p");
       p.className = "muted";
