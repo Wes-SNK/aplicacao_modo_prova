@@ -321,3 +321,38 @@ O aluno recebe a duração correta nas regras iniciais; quando não existe limit
 - A publicação de código e a aplicação da migração **não ativam** o simulado nem a prova, que permanecem inativos até revisão final.
 - Os testes de inclusão e ausência de prazo foram realizados dentro de transações revertidas, sem gerar tentativas ou acrescentar questões às avaliações reais.
 - Antes da aplicação com a turma, realizar a homologação funcional no navegador e confirmar o tempo disponível com a escola.
+
+
+## Questões contextualizadas com leitura e dificuldade — novembro/2026
+
+A migração `migration_008_quatro_alternativas_dificuldade.sql` foi aplicada ao Supabase da aplicação Modo Prova.
+
+### Padrão pedagógico
+
+- Questões autorais, com texto-base e comando interpretativo ou problema aplicado, inspiradas **na estrutura de questões do ENEM**, sem copiar trechos protegidos de provas ou atribuir fontes inexistentes.
+- O editor e o banco agora permitem **4 alternativas (A–D)**, novo padrão, ou **5 alternativas (A–E)** para preservar a compatibilidade.
+- Campo de dificuldade: **Fácil**, **Média** e **Difícil**; questões anteriores permanecem sem classificação, pois não foram reavaliadas retroativamente.
+- Filtros por disciplina, texto e nível de dificuldade; contagem por nível no painel das questões ativas da avaliação.
+- Uma questão selecionada do banco mantém seu nível de dificuldade ao ser copiada para uma avaliação.
+
+### Primeiro conjunto de revisão
+
+Foram incluídas **20 questões autorais** no banco, com distribuição:
+
+| Área | Fácil | Média | Difícil | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Lógica de Programação | 2 | 2 | 1 | 5 |
+| HTML/CSS | 2 | 2 | 1 | 5 |
+| Arquitetura e Manutenção | 2 | 2 | 1 | 5 |
+| Planejamento de Carreira e IA | 2 | 3 | 0 | 5 |
+| **Total** | **8** | **9** | **3** | **20** |
+
+O novo conjunto tem cinco gabaritos em cada letra A, B, C e D, questões com justificativa e textos-base próprios. Os 65 itens anteriores foram mantidos, totalizando **85 questões** no banco.
+
+As novas questões foram **adicionadas apenas ao banco**, para revisão pedagógica antes da seleção. O simulado continua com suas 20 questões anteriores e a prova oficial com suas 40 questões, ambos inativos. A publicação do código não libera nenhuma avaliação.
+
+### Orientação de uso
+
+Acesse `professor.html?avaliacao=simulado`, entre com a conta de professor, procure no Banco de questões por **“Questões autorais — estilo ENEM (revisão 2026)”**, utilize os filtros de disciplina e dificuldade e pré-visualize as alternativas. Ao decidir quais itens serão usados, utilize **Adicionar à avaliação**. A seleção copia o item; a biblioteca permanece intacta.
+
+**Cuidado:** não publicar enunciados e gabaritos no repositório público; o conjunto reside exclusivamente no Supabase. Testes de inclusão e edição realizados em transações revertidas não alteraram as avaliações existentes.
