@@ -254,8 +254,19 @@
   }
 
   function renderQuestionList() {
+    const activeQuestions = questionsData.filter(q => q.active);
+    const difficultyCounts = {
+      facil: activeQuestions.filter(q => q.difficulty === "facil").length,
+      media: activeQuestions.filter(q => q.difficulty === "media").length,
+      dificil: activeQuestions.filter(q => q.difficulty === "dificil").length
+    };
+    const classified = difficultyCounts.facil + difficultyCounts.media + difficultyCounts.dificil;
+    const difficultySummary = classified
+      ? " • Fácil: " + difficultyCounts.facil +
+        " • Média: " + difficultyCounts.media + " • Difícil: " + difficultyCounts.dificil
+      : "";
     $("questionsMeta").textContent =
-      `${questionsData.filter(q => q.active).length} ativa(s) • ${questionsData.length} cadastrada(s)`;
+      activeQuestions.length + " ativa(s) • " + questionsData.length + " cadastrada(s)" + difficultySummary;
 
     const lock = $("questionsLockMessage");
     if (questionsLocked) {
@@ -337,7 +348,9 @@
 
       const meta = document.createElement("p");
       meta.className = "muted question-admin-meta";
-      meta.textContent = `Gabarito: ${q.correct_answer || "—"} • ${Number(q.points || 0).toFixed(1)} ponto(s)`;
+      meta.textContent = "Gabarito: " + (q.correct_answer || "—") +
+        " • " + Number(q.points || 0).toFixed(1) + " ponto(s)" +
+        (q.difficulty ? " • " + (difficultyLabels[q.difficulty] || q.difficulty) : "");
 
       card.append(head, stem, meta);
       list.appendChild(card);
