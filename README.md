@@ -281,9 +281,9 @@ O **Modo Simulado** usa a mesma interface da prova, com banco de questões e ten
 
 - **Aluno:** `https://wes-snk.github.io/aplicacao_modo_prova/?avaliacao=simulado`
 - **Professor:** `https://wes-snk.github.io/aplicacao_modo_prova/professor.html?avaliacao=simulado`
-- **20 questões objetivas**, todas com cinco alternativas (A–E), uma por página.
+- **20 questões objetivas**, com quatro alternativas (A–D), uma por página.
 - **Distribuição:** 5 de Lógica, 5 de HTML/CSS, 5 de Arquitetura e Manutenção e 5 de Planejamento de Carreira/IA.
-- **Duração:** 60 minutos, com registro de ocorrências conforme as configurações do professor.
+- **Duração:** 120 minutos, com limite de 4 ocorrências, conforme as configurações mais recentes do professor; ambas podem ser ajustadas antes de haver tentativas.
 - **Correção pedagógica:** somente após a finalização, com pontuação total, percentual de acertos, gabaritos, justificativas e resumo por disciplina.
 - **Controle de aplicação:** simulado permanece **desativado** até revisão e liberação pelo professor para 01/12/2026. A data no título **não ativa automaticamente** a aplicação.
 - **Sigilo:** não incluir enunciados, alternativas, gabaritos ou tokens de estudantes no repositório público. Os dados avaliativos são mantidos no Supabase.
@@ -301,7 +301,7 @@ Migração: `migration_007_banco_questoes_tempo.sql` (já aplicada ao projeto de
 - A biblioteca foi inicializada com **65 questões objetivas existentes**: 15 por cada uma das quatro áreas e 5 questões anteriores na categoria Geral.
 - Os itens permanecem na biblioteca mesmo que sejam removidos das avaliações. O gatilho de auditoria registra também o conteúdo **antes e depois** de edições, como versões independentes, sem sobrescrever os registros anteriores.
 - Os bancos de aplicação e o banco reutilizável têm finalidades distintas: a **prova/simulado** contém suas próprias cópias e tentativas; a **biblioteca** guarda as versões para usos futuros.
-- Questões antigas com quatro alternativas são preservadas, mas precisam de uma nova versão com cinco alternativas antes de serem importadas para uma avaliação atual.
+- Questões com quatro alternativas (A–D) ou cinco (A–E) são preservadas e podem ser reutilizadas nas avaliações atuais.
 - Se já houver uma tentativa registrada, a composição daquela avaliação permanece bloqueada, mas ainda é possível cadastrar novas questões diretamente no banco.
 - O banco contém enunciados, alternativas, gabaritos e justificativas **somente no Supabase**. Não publicar dados de questões no GitHub; as funções de consulta/reutilização exigem uma sessão autenticada e não disponibilizam SELECT direto nas tabelas.
 
@@ -349,7 +349,7 @@ Foram incluídas **20 questões autorais** no banco, com distribuição:
 
 O novo conjunto tem cinco gabaritos em cada letra A, B, C e D, questões com justificativa e textos-base próprios. Os 65 itens anteriores foram mantidos, totalizando **85 questões** no banco.
 
-As novas questões foram **adicionadas apenas ao banco**, para revisão pedagógica antes da seleção. O simulado continua com suas 20 questões anteriores e a prova oficial com suas 40 questões, ambos inativos. A publicação do código não libera nenhuma avaliação.
+Na criação desse primeiro lote, as questões ficaram apenas no banco para revisão. A seleção definitiva do simulado de 01/12/2026 é documentada na seção de preparação final abaixo. A prova oficial permanece com suas 40 questões, sem alterações, e continua inativa.
 
 ### Orientação de uso
 
@@ -384,3 +384,39 @@ O painel agora oferece os níveis **Fáceis / Médias / Difíceis / Sem classifi
 O formulário também permite informar a dificuldade ao criar uma questão. As questões antigas não são classificadas automaticamente. A distribuição de níveis deve ser revisada pelo professor antes da aplicação, pois se trata de classificação pedagógica inicial.
 
 O novo lote foi validado quanto a alternativas A–D, gabarito, justificativas, níveis, distribuição por disciplina e balanceamento das respostas. A homologação funcional no navegador segue recomendada antes da publicação para estudantes.
+
+
+## Preparação final do simulado de 01/12/2026 — ponderação de dificuldade
+
+**Situação:** composição concluída e testada; **não ativar antes da aplicação com a turma**.
+
+### Distribuição
+
+| Disciplina | Fáceis | Médias | Difíceis | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Lógica de Programação | 2 | 2 | 1 | 5 |
+| HTML/CSS | 2 | 2 | 1 | 5 |
+| Arquitetura e Manutenção | 2 | 2 | 1 | 5 |
+| Planejamento de Carreira e IA | 2 | 3 | 0 | 5 |
+| **Total** | **8** | **9** | **3** | **20** |
+
+- **Proporções:** 40% fáceis, 45% médias, 15% difíceis. A ponderação se refere à quantidade de questões, não à pontuação diferenciada.
+- **Pontuação:** 1 ponto por questão; resultado de 0 a 20 pontos, percentual de acertos e correção por disciplina.
+- **Alternativas:** A–D, uma resposta correta por questão; cinco respostas corretas em cada letra no conjunto total. Enunciados, gabaritos e justificativas residem apenas no Supabase.
+- **Ordem e temas:** posições 1–5: Lógica (binário, sequência, variáveis, planilhas e decisões); 6–10: HTML/CSS (estrutura, cores, estilo inline, imagens e interpretação de código); 11–15: Hardware (RAM/SSD, drivers, cabos, paginação e diagnóstico de GPU); 16–20: Carreiras/IA (jogos, apresentações, forense, imagens sintéticas e impactos ambientais).
+- **Tempo e ocorrências:** **120 minutos e limite de 4 ocorrências**, preservados conforme última configuração já encontrada no banco. O professor pode alterar esses valores em **Configurações da avaliação** antes que haja tentativas.
+- **Ativação:** o simulado **continua desativado**, sem abertura automática, apesar da data no título. Para liberar no dia 01/12, entrar no painel do professor, confirmar tempo e demais regras, marcar **Avaliação ativa** e **Salvar configurações**. Depois da aplicação, desativar quando apropriado.
+- **Avaliação oficial:** prova bimestral de 40 questões, 120 minutos e configurações próprias; **nenhuma questão ou configuração da prova oficial foi alterada**.
+
+### Preservação e testes
+
+- As 20 perguntas que ocupavam anteriormente o simulado continuam no **banco de questões**; as questões atualmente aplicadas foram selecionadas dentre os dois lotes autorais. Nenhuma questão foi transferida por exclusão do banco.
+- O banco contém **105 questões distintas**. A migração `migration_009_normalizacao_fingerprint.sql` corrige a normalização de pontos (1 versus 1,00) nos identificadores de conteúdo; 20 cópias redundantes geradas na substituição foram consolidadas, sem perda de conteúdo distinto.
+- **Teste transacional de ponta a ponta pelo backend:** autenticação do aluno fictício, recebimento de 20 itens A–D, início do cronômetro, registro de resposta, envio e resultado comentado de 1/20 concluídos com sucesso. Todos os dados e a ativação provisória do teste foram revertidos (**ROLLBACK**). Não foram deixadas tentativas cadastradas.
+- **Homologação visual no navegador:** ainda recomendada antes da aplicação. Evitar realizar teste completo no próprio simulado com um aluno real, pois uma tentativa registrada bloqueia o ajuste posterior da composição.
+
+**Links de aplicação:**
+- Professor: https://wes-snk.github.io/aplicacao_modo_prova/professor.html?avaliacao=simulado
+- Aluno: https://wes-snk.github.io/aplicacao_modo_prova/?avaliacao=simulado
+
+O limite e a duração atuais podem ser modificados no painel. A escolha de 120 minutos foi preservada, não definida automaticamente pela nova ponderação.
