@@ -402,3 +402,39 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .simulado-quick-actions button,
   .simulado-quick-actions .simulado-student-link { width: 100%; text-align: center; }
 }
+
+
+/* Prévia visual: usa a mesma estrutura e os estilos do modo aluno. */
+.teacher-preview-banner {
+  position: sticky;
+  top: 0;
+  z-index: 35;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 20px;
+  background: #e8eff9;
+  color: #14324f;
+  border-bottom: 2px solid #88a9c8;
+}
+.teacher-preview-banner div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.teacher-preview-banner strong { font-size: 0.9rem; }
+.teacher-preview-banner span { font-size: 0.83rem; }
+.teacher-preview-banner a {
+  color: #153f69;
+  text-decoration: underline;
+  white-space: nowrap;
+  font-weight: 600;
+}
+.teacher-preview-body .topbar { top: 57px; }
+@media (max-width: 700px) {
+  .teacher-preview-banner { flex-direction: column; align-items: flex-start; padding: 10px 16px; }
+  .teacher-preview-banner a { white-space: normal; }
+  .teacher-preview-body .topbar { top: 0; }
+  .topbar-actions { flex-wrap: wrap; }
+}
