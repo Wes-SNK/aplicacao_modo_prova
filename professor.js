@@ -21,6 +21,13 @@
   let bankFilterTimer = null;
   let editorMode = "exam";
   let settingsDirty = false;
+  const difficultyLabels = { facil: "Fácil", media: "Média", dificil: "Difícil" };
+  function syncOptionFields() {
+    const five = $("questionOptionCount").value === "5";
+    $("optionERow").classList.toggle("hidden", !five);
+    $("optionECorrect").disabled = !five;
+    if (!five && $("correctAnswerInput").value === "E") $("correctAnswerInput").value = "A";
+  }
 
   function showLogin() {
     $("teacherLogin").classList.remove("hidden");
@@ -343,9 +350,10 @@
     const message = $("bankMessage");
     message.textContent = "Consultando questões…";
     try {
-      const data = await teacherRpc("teacher_bank_questions", {
+      const data = await teacherRpc("teacher_bank_questions_v2", {
         p_subject: $("bankSubjectFilter").value || null,
-        p_search: $("bankSearchInput").value.trim() || null
+        p_search: $("bankSearchInput").value.trim() || null,
+        p_difficulty: $("bankDifficultyFilter").value || null
       });
       bankQuestions = data.questions || [];
       bankTotal = Number(data.total || 0);
@@ -377,7 +385,8 @@
       heading.textContent = q.subject + (q.topic ? " — " + q.topic : "");
       const meta = document.createElement("p");
       meta.className = "muted question-admin-meta";
-      meta.textContent = q.source_label + " • " + q.option_count + " alternativas • Gabarito: " + q.correct_answer;
+      meta.textContent = q.source_label + " • " + (difficultyLabels[q.difficulty] || "Não classificada") +
+        " • " + q.option_count + " alternativas • Gabarito: " + q.correct_answer;
       detail.append(heading, meta);
       const tools = document.createElement("div");
       tools.className = "toolbar";
@@ -391,10 +400,10 @@
         existing.stem === q.stem && existing.correct_answer === q.correct_answer
         && JSON.stringify(existing.options) === JSON.stringify(q.options)
       );
-      add.disabled = questionsLocked || duplicate || q.option_count !== 5;
-      add.textContent = duplicate ? "Já incluída" : (q.option_count !== 5 ? "4 alternativas" : "Adicionar à avaliação");
+      add.disabled = questionsLocked || duplicate || ![4,5].includes(q.option_count);
+      add.textContent = duplicate ? "Já incluída" : "Adicionar à avaliação";
       if (questionsLocked) add.title = "A avaliação já possui tentativas; não pode ser modificada.";
-      if (q.option_count !== 5) add.title = "Questão antiga: crie uma nova versão com cinco alternativas.";
+      if (![4,5].includes(q.option_count)) add.title = "Formato inválido de alternativas.";
       add.addEventListener("click", async () => {
         add.disabled = true;
         $("bankMessage").textContent = "Incluindo questão…";
@@ -454,6 +463,9 @@
     $("questionActiveRow").classList.toggle("hidden", mode === "bank");
     $("questionSubjectInput").value = $("bankSubjectFilter").value || "Lógica de Programação";
     $("questionTopicInput").value = "";
+    $("questionDifficultyInput").value = q?.difficulty || "";
+    $("questionOptionCount").value = String(q?.options?.length === 5 ? 5 : 4);
+    syncOptionFields();
     $("btnSaveQuestion").textContent = mode === "bank" ? "Salvar no banco" : "Salvar questão";
     $("questionStemInput").value = q?.stem || "";
     $("questionExplanationInput").value = q?.explanation || "";
@@ -489,12 +501,11 @@
       return;
     }
 
-    options = ["A","B","C","D","E"].map(key => ({
-      key,
-      text: $(`option${key}Input`).value.trim()
-    }));
+    const optionKeys = $("questionOptionCount").value === "5"
+      ? ["A","B","C","D","E"] : ["A","B","C","D"];
+    options = optionKeys.map(key => ({ key, text: $("option" + key + "Input").value.trim() }));
     if (options.some(o => !o.text)) {
-      setMessage($("questionEditorMessage"), "Preencha as cinco alternativas A, B, C, D e E.", "warn");
+      setMessage($("questionEditorMessage"), "Preencha todas as alternativas do formato escolhido.", "warn");
       return;
     }
     correct = $("correctAnswerInput").value;
@@ -508,14 +519,15 @@
     setMessage($("questionEditorMessage"), "Salvando…", "info");
     try {
       if (editorMode === "bank") {
-        const result = await teacherRpc("teacher_bank_create", {
+        const result = await teacherRpc("teacher_bank_create_v2", {
           p_subject: $("questionSubjectInput").value,
           p_topic: $("questionTopicInput").value.trim() || null,
           p_stem: stem,
           p_options: options,
           p_correct_answer: correct,
           p_explanation: $("questionExplanationInput").value.trim() || null,
-          p_points: points
+          p_points: points,
+          p_difficulty: $("questionDifficultyInput").value || null
         });
         closeQuestionEditor();
         await loadBankQuestions();
@@ -523,7 +535,7 @@
           ? "Esta versão já existe no banco."
           : "Questão criada no banco; adicione-a quando montar uma avaliação.";
       } else {
-        await teacherRpc("teacher_save_question_v2", {
+        await teacherRpc("teacher_save_question_v3", {
           p_exam_slug: cfg.examSlug,
           p_question_id: editingQuestionId,
           p_type: "objective",
@@ -532,7 +544,8 @@
           p_correct_answer: correct,
           p_points: points,
           p_active: active,
-          p_explanation: $("questionExplanationInput").value.trim() || null
+          p_explanation: $("questionExplanationInput").value.trim() || null,
+          p_difficulty: $("questionDifficultyInput").value || null
         });
         closeQuestionEditor();
         await loadQuestions();
@@ -778,8 +791,10 @@
     $("examDurationPreset").addEventListener("change", () => {
       $("examDurationCustomGroup").classList.toggle("hidden", $("examDurationPreset").value !== "custom");
     });
+    $("questionOptionCount").addEventListener("change", syncOptionFields);
     $("btnBankRefresh").addEventListener("click", loadBankQuestions);
     $("bankSubjectFilter").addEventListener("change", loadBankQuestions);
+    $("bankDifficultyFilter").addEventListener("change", loadBankQuestions);
     $("bankSearchInput").addEventListener("input", () => {
       if (bankFilterTimer) clearTimeout(bankFilterTimer);
       bankFilterTimer = setTimeout(loadBankQuestions, 300);
