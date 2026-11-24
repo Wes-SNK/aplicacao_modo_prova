@@ -264,6 +264,10 @@
       if (result.is_active !== willActivate) {
         throw new Error("O servidor não confirmou o estado de publicação solicitado.");
       }
+      // Sincroniza a interface mesmo quando existem ajustes de formulário não salvos.
+      dashboardData = { ...dashboardData, is_active: result.is_active };
+      $("examActiveInput").checked = result.is_active;
+      renderQuickSimulado(dashboardData);
       await refreshDashboard();
       $("quickSimuladoMessage").textContent = willActivate
         ? "Simulado liberado. O link do aluno já pode ser utilizado."
