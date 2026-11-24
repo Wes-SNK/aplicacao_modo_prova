@@ -356,3 +356,31 @@ As novas questões foram **adicionadas apenas ao banco**, para revisão pedagóg
 Acesse `professor.html?avaliacao=simulado`, entre com a conta de professor, procure no Banco de questões por **“Questões autorais — estilo ENEM (revisão 2026)”**, utilize os filtros de disciplina e dificuldade e pré-visualize as alternativas. Ao decidir quais itens serão usados, utilize **Adicionar à avaliação**. A seleção copia o item; a biblioteca permanece intacta.
 
 **Cuidado:** não publicar enunciados e gabaritos no repositório público; o conjunto reside exclusivamente no Supabase. Testes de inclusão e edição realizados em transações revertidas não alteraram as avaliações existentes.
+
+
+## Segundo lote de questões contextualizadas — novembro/2026
+
+O banco permanente recebeu **mais 20 questões originais** em estilo interpretativo e contextualizado, classificadas pela origem `Questões autorais — estilo ENEM (revisão 2026, lote 2)`. Os enunciados e gabaritos permanecem exclusivamente no Supabase, não neste repositório público.
+
+| Disciplina | Fáceis | Médias | Difíceis | Total |
+| --- | ---: | ---: | ---: | ---: |
+| Lógica de Programação | 2 | 2 | 1 | 5 |
+| HTML/CSS | 2 | 2 | 1 | 5 |
+| Arquitetura e Manutenção | 2 | 3 | 0 | 5 |
+| Planejamento de Carreira e IA | 2 | 2 | 1 | 5 |
+| **Total** | **8** | **9** | **3** | **20** |
+
+Os assuntos complementam o primeiro lote: tipagem e identificadores, sequenciamento e planilhas, conversão numérica e decisões; navegação, semântica e correções de HTML/CSS; recursos on-board e off-board, fonte de alimentação, cabeamento, CPU/GPU e paginação; carreiras, jogos digitais, computação forense e verificação de imagens sintéticas.
+
+**Total atual do banco: 105 questões** (65 anteriores + 20 do primeiro lote + 20 do segundo). Questões já utilizadas em avaliações não foram alteradas. Ambas as avaliações oficiais permanecem desativadas até liberação do professor.
+
+### Filtros de dificuldade no painel
+
+O painel agora oferece os níveis **Fáceis / Médias / Difíceis / Sem classificação** em dois contextos:
+
+- **Questões da avaliação**: filtro visual da lista e da pré-visualização das questões ativas; não remove nem altera as questões e preserva sua posição original.
+- **Banco de questões**: filtro de busca na biblioteca, combinável com disciplina e texto; selecionar uma questão e adicioná-la à avaliação apenas cria uma cópia.
+
+O formulário também permite informar a dificuldade ao criar uma questão. As questões antigas não são classificadas automaticamente. A distribuição de níveis deve ser revisada pelo professor antes da aplicação, pois se trata de classificação pedagógica inicial.
+
+O novo lote foi validado quanto a alternativas A–D, gabarito, justificativas, níveis, distribuição por disciplina e balanceamento das respostas. A homologação funcional no navegador segue recomendada antes da publicação para estudantes.
