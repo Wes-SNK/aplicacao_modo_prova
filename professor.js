@@ -25,6 +25,7 @@
   function syncOptionFields() {
     const five = $("questionOptionCount").value === "5";
     $("optionERow").classList.toggle("hidden", !five);
+    $("optionECorrect").classList.toggle("hidden", !five);
     $("optionECorrect").disabled = !five;
     if (!five && $("correctAnswerInput").value === "E") $("correctAnswerInput").value = "A";
   }
