@@ -405,7 +405,7 @@ O novo lote foi validado quanto a alternativas A–D, gabarito, justificativas, 
 - **Alternativas:** A–D, uma resposta correta por questão; cinco respostas corretas em cada letra no conjunto total. Enunciados, gabaritos e justificativas residem apenas no Supabase.
 - **Ordem e temas:** posições 1–5: Lógica (binário, sequência, variáveis, planilhas e decisões); 6–10: HTML/CSS (estrutura, cores, estilo inline, imagens e interpretação de código); 11–15: Hardware (RAM/SSD, drivers, cabos, paginação e diagnóstico de GPU); 16–20: Carreiras/IA (jogos, apresentações, forense, imagens sintéticas e impactos ambientais).
 - **Tempo e ocorrências:** **120 minutos e limite de 4 ocorrências**, preservados conforme última configuração já encontrada no banco. O professor pode alterar esses valores em **Configurações da avaliação** antes que haja tentativas.
-- **Ativação:** o simulado **continua desativado**, sem abertura automática, apesar da data no título. Para liberar no dia 01/12, entrar no painel do professor, confirmar tempo e demais regras, marcar **Avaliação ativa** e **Salvar configurações**. Depois da aplicação, desativar quando apropriado.
+- **Ativação:** o simulado **continua desativado**, sem abertura automática, apesar da data no título. No painel do professor, escolher **Simulado 01/12 (preset)** e usar **Colocar simulado online**, confirmando a ação. Após a aplicação, usar **Tirar simulado do ar**. A opção antiga de marcar **Avaliação ativa** e salvar também continua disponível.
 - **Avaliação oficial:** prova bimestral de 40 questões, 120 minutos e configurações próprias; **nenhuma questão ou configuração da prova oficial foi alterada**.
 
 ### Preservação e testes
@@ -420,3 +420,19 @@ O novo lote foi validado quanto a alternativas A–D, gabarito, justificativas, 
 - Aluno: https://wes-snk.github.io/aplicacao_modo_prova/?avaliacao=simulado
 
 O limite e a duração atuais podem ser modificados no painel. A escolha de 120 minutos foi preservada, não definida automaticamente pela nova ponderação.
+
+## Preset de publicação rápida do simulado — 24/11/2026
+
+O menu do painel do professor passou a destacar **Simulado 01/12 (preset)**. Ao selecioná-lo e autenticar-se, aparece uma seção **Publicação rápida** com:
+- estado atualizado **Fora do ar / Online para alunos**;
+- quantidade de questões, tempo e limite de ocorrências salvos no banco;
+- botão único de alternância **Colocar simulado online / Tirar simulado do ar**, com confirmação antes da mudança;
+- link **Abrir link do aluno**, sem revelar respostas ou configurações internas.
+
+O botão usa a função `public.teacher_set_simulado_online(boolean)`, cuja migração é `migration_010_preset_publicacao_simulado.sql`. Essa função altera **somente `exams.is_active` do slug `simulado-4bim-1b-2026`**, sem editar parâmetros, questões, respostas, tentativas ou a prova oficial. Exige sessão autenticada de professor conforme o mecanismo existente. A liberação é recusada se a composição do preset não corresponder às **20 questões ativas e objetivas de A–D, com justificativa, peso 1, distribuição 8/9/3 e cinco gabaritos em cada alternativa**.
+
+Valores do preset armazenados no banco na implementação: **20 questões, 120 minutos, 4 ocorrências**. O botão usa o tempo e limite já configurados e **não os redefine**, de modo que alterações salvas previamente no formulário permanecem respeitadas. Alterações não salvas são sinalizadas ao professor antes da ação. O formulário é sincronizado com o novo estado para evitar que um salvamento posterior reverta a publicação inadvertidamente.
+
+**Operação no dia 1º de dezembro:** entrar em `professor.html?avaliacao=simulado`, escolher o preset (caso ainda não selecionado) e clicar em **Colocar simulado online**, confirmando. Enviar o link de aluno `index.html?avaliacao=simulado`. Encerrada a aplicação, usar o mesmo botão, agora com o texto **Tirar simulado do ar**.
+
+**Validação:** publicação e desativação por RPC autenticada em transação com ROLLBACK, confirmando preservação da prova de 40 questões, título, tempo, limite e tentativas. O simulado **permaneceu inativo** após os testes. A ativação automática por data não foi solicitada nem implementada; a homologação visual pelo professor continua recomendada.
