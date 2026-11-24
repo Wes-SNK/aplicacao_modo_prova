@@ -21,6 +21,8 @@
   let bankFilterTimer = null;
   let editorMode = "exam";
   let settingsDirty = false;
+  let quickToggleBusy = false;
+  const SIMULADO_PRESET_SLUG = "simulado-4bim-1b-2026";
   const difficultyLabels = { facil: "Fácil", media: "Média", dificil: "Difícil" };
   function syncOptionFields() {
     const five = $("questionOptionCount").value === "5";
@@ -107,6 +109,7 @@
   }
 
   function renderDashboard(data) {
+    renderQuickSimulado(data);
     $("teacherExamLabel").textContent = data.exam_title ? ` — ${data.exam_title}` : "";
     $("dashboardTitle").textContent = data.exam_title || "Avaliação";
     const durationText = data.duration_minutes == null ? "Sem limite de tempo" : data.duration_minutes + " min";
@@ -197,6 +200,81 @@
       tr.append(tdName, tdClass, tdStatus, tdStart, tdSubmit, tdScore, tdOcc, tdAction);
       tbody.appendChild(tr);
     });
+  }
+
+  // Preset de publicação: altera SOMENTE o estado online no banco.
+  // Duração, ocorrências e questões permanecem conforme já foram salvas.
+  function renderQuickSimulado(data) {
+    const panel = $("simuladoQuickPublish");
+    const isPreset = cfg.examSlug === SIMULADO_PRESET_SLUG;
+    panel.classList.toggle("hidden", !isPreset);
+    if (!isPreset || !data) return;
+
+    const online = !!data.is_active;
+    const badge = $("quickSimuladoBadge");
+    badge.textContent = online ? "Online para alunos" : "Fora do ar";
+    badge.className = online ? "pill ok" : "pill danger";
+    const duration = data.duration_minutes == null
+      ? "sem limite de tempo" : data.duration_minutes + " minutos";
+    $("quickSimuladoInfo").textContent =
+      data.question_count + " questões • " + duration +
+      " • limite de " + data.max_occurrences + " ocorrências" +
+      " • ponderação do preset: 8 fáceis, 9 médias e 3 difíceis";
+    const button = $("btnToggleSimuladoOnline");
+    button.textContent = quickToggleBusy
+      ? "Atualizando publicação…"
+      : (online ? "Tirar simulado do ar" : "Colocar simulado online");
+    button.className = online ? "danger" : "primary";
+    button.disabled = quickToggleBusy ||
+      data.assessment_mode !== "simulation" || (!online && data.question_count !== 20);
+    button.title = (!online && data.question_count !== 20)
+      ? "O preset exige 20 questões ativas; revise a avaliação antes de publicar."
+      : "";
+  }
+
+  async function toggleSimuladoOnline() {
+    if (cfg.examSlug !== SIMULADO_PRESET_SLUG || !dashboardData || quickToggleBusy) return;
+    const willActivate = !dashboardData.is_active;
+    if (settingsDirty && !window.confirm(
+      "Existem alterações não salvas nas configurações. A publicação rápida utiliza apenas os valores que já estão salvos, sem aplicar essas alterações. Continuar?"
+    )) return;
+
+    const currentDuration = dashboardData.duration_minutes == null
+      ? "sem limite de tempo" : dashboardData.duration_minutes + " minutos";
+    const inProgress = (dashboardData.attempts || [])
+      .filter(row => row.status === "in_progress").length;
+    const confirmation = willActivate
+      ? "Colocar o simulado de 01/12 ONLINE agora para os alunos?\n\n" +
+        "20 questões • " + currentDuration + " • " +
+        dashboardData.max_occurrences + " ocorrências.\n\n" +
+        "O botão não altera a prova oficial."
+      : "Tirar o simulado de 01/12 do ar agora?\n\n" +
+        "Novos acessos serão bloqueados. " +
+        (inProgress ? "Há " + inProgress + " tentativa(s) em andamento. " : "") +
+        "As tentativas já registradas não serão excluídas.";
+    if (!window.confirm(confirmation)) return;
+
+    quickToggleBusy = true;
+    renderQuickSimulado(dashboardData);
+    $("quickSimuladoMessage").textContent = "Atualizando o estado do simulado…";
+    try {
+      const result = await teacherRpc("teacher_set_simulado_online", {
+        p_online: willActivate
+      });
+      if (result.is_active !== willActivate) {
+        throw new Error("O servidor não confirmou o estado de publicação solicitado.");
+      }
+      await refreshDashboard();
+      $("quickSimuladoMessage").textContent = willActivate
+        ? "Simulado liberado. O link do aluno já pode ser utilizado."
+        : "Simulado retirado do ar. Tentativas e resultados foram preservados.";
+    } catch (err) {
+      $("quickSimuladoMessage").textContent =
+        err.message || "Não foi possível alterar a publicação. Verifique o painel e tente novamente.";
+    } finally {
+      quickToggleBusy = false;
+      renderQuickSimulado(dashboardData);
+    }
   }
 
   async function openDetail(attemptId) {
@@ -814,6 +892,7 @@
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
+    $("btnToggleSimuladoOnline").addEventListener("click", toggleSimuladoOnline);
     ["examTitleInput","examDurationPreset","examDurationInput","examOccurrencesInput",
       "examModeInput","examActiveInput"].forEach(id => {
       const el = $(id);
