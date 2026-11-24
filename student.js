@@ -29,8 +29,12 @@
     pendingSync: {}
   };
 
-  const CACHE_KEY = `modoProva:${cfg.examSlug}:session`;
-  const ANSWER_CACHE_KEY = `modoProva:${cfg.examSlug}:answers`;
+  // A prévia usa chaves locais próprias e nunca reutiliza uma tentativa de aluno.
+  // Todos os RPCs de aluno na prévia são substituídos por preview-aluno.js.
+  const isTeacherPreview = !!window.ModeProva.teacherPreview;
+  const cachePrefix = `modoProva:${cfg.examSlug}${isTeacherPreview ? ":teacherPreview" : ""}`;
+  const CACHE_KEY = cachePrefix + ":session";
+  const ANSWER_CACHE_KEY = cachePrefix + ":answers";
 
   function showScreen(id) {
     screens.forEach(s => $(s).classList.toggle("hidden", s !== id));
