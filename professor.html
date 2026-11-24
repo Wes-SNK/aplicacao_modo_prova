@@ -115,8 +115,18 @@
             <button id="btnNewQuestion" class="primary">Nova questão</button>
           </div>
         </div>
+        <div class="assessment-question-filter">
+          <label for="assessmentDifficultyFilter">Filtrar questões da avaliação por dificuldade</label>
+          <select id="assessmentDifficultyFilter">
+            <option value="">Todas as dificuldades</option>
+            <option value="facil">Fáceis</option>
+            <option value="media">Médias</option>
+            <option value="dificil">Difíceis</option>
+            <option value="sem_classificacao">Sem classificação</option>
+          </select>
+        </div>
         <div id="questionsLockMessage" class="message warn hidden"></div>
-        <div id="questionsMessage" class="muted"></div>
+        <div id="questionsMessage" class="muted" aria-live="polite"></div>
         <div id="questionList" class="question-list"></div>
       </section>
 
