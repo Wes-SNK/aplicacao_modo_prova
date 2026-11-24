@@ -18,8 +18,9 @@
     prova: "prova-4bim-1b-2026",
     anterior: "4bim-1b-2026"
   };
-  const currentSlug = allowed[query] || allowed.simulado;
-  if (mp.cfg.examSlug !== currentSlug) {
+  const currentSlug = Object.prototype.hasOwnProperty.call(allowed, query)
+    ? allowed[query] : null;
+  if (!currentSlug || mp.cfg.examSlug !== currentSlug) {
     $("btnEnter").disabled = true;
     mp.setMessage($("loginMessage"),
       "Endereço de prévia inválido. Volte ao painel e use o botão Testar como aluno.",
