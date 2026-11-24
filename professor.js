@@ -280,15 +280,27 @@
 
     const list = $("questionList");
     list.textContent = "";
-    if (!questionsData.length) {
+    const difficultyFilter = $("assessmentDifficultyFilter").value;
+    const visibleQuestions = questionsData.filter(q =>
+      !difficultyFilter ||
+      (difficultyFilter === "sem_classificacao" ? !q.difficulty : q.difficulty === difficultyFilter)
+    );
+    if (!visibleQuestions.length) {
       const empty = document.createElement("p");
       empty.className = "muted";
-      empty.textContent = "Nenhuma questão cadastrada.";
+      empty.textContent = questionsData.length
+        ? "Nenhuma questão corresponde a este filtro."
+        : "Nenhuma questão cadastrada.";
       list.appendChild(empty);
+      $("questionsMessage").textContent = "";
       return;
     }
+    $("questionsMessage").textContent = difficultyFilter
+      ? visibleQuestions.length + " de " + questionsData.length + " questão(ões) exibida(s)."
+      : "";
 
-    questionsData.forEach((q, index) => {
+    visibleQuestions.forEach(q => {
+      const index = questionsData.findIndex(item => item.id === q.id);
       const card = document.createElement("div");
       card.className = "question-admin-item";
 
@@ -815,6 +827,7 @@
     });
     $("btnBankNewQuestion").addEventListener("click", () => openQuestionEditor(null, "bank"));
     $("btnNewQuestion").addEventListener("click", () => openQuestionEditor());
+    $("assessmentDifficultyFilter").addEventListener("change", renderQuestionList);
     $("btnPreviewQuestions").addEventListener("click", openQuestionPreview);
     $("btnCloseQuestionEditor").addEventListener("click", closeQuestionEditor);
     $("btnCancelQuestionEdit").addEventListener("click", closeQuestionEditor);
