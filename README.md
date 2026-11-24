@@ -436,3 +436,20 @@ Valores do preset armazenados no banco na implementação: **20 questões, 120 m
 **Operação no dia 1º de dezembro:** entrar em `professor.html?avaliacao=simulado`, escolher o preset (caso ainda não selecionado) e clicar em **Colocar simulado online**, confirmando. Enviar o link de aluno `index.html?avaliacao=simulado`. Encerrada a aplicação, usar o mesmo botão, agora com o texto **Tirar simulado do ar**.
 
 **Validação:** publicação e desativação por RPC autenticada em transação com ROLLBACK, confirmando preservação da prova de 40 questões, título, tempo, limite e tentativas. O simulado **permaneceu inativo** após os testes. A ativação automática por data não foi solicitada nem implementada; a homologação visual pelo professor continua recomendada.
+
+
+## Prévia completa do modo aluno — professor (24/11/2026)
+
+No painel autenticado do professor, o botão **Testar como aluno** fica à direita do indicador de conexão, perto de **Sair**. Ele abre uma nova aba:
+
+- `preview-aluno.html?avaliacao=simulado` — prévia do simulado de 01/12/2026;
+- `preview-aluno.html?avaliacao=prova` — prévia da prova bimestral;
+- `preview-aluno.html?avaliacao=anterior` — prévia da avaliação legada.
+
+**Como usar:** entrar no painel do professor, clicar **Testar como aluno**, manter o nome fictício `PROFESSOR — TESTE`, clicar **Continuar**, aceitar as regras e iniciar. Testar a tela cheia, o cronômetro, a navegação, as alternativas, **Revisar depois**, o resumo de questões pendentes e o botão **Finalizar**. No simulado, a correção e as justificativas também são exibidas após o envio **simulado**.
+
+**Segurança / isolamento:** a página de prévia replica a estrutura HTML do aluno, carrega o mesmo `student.js` e utiliza os estilos compartilhados; o módulo `preview-aluno.js` intercepta **todas as chamadas de aluno** (iniciar, salvar, marcar revisão, registrar ocorrência, enviar e corrigir) e as executa exclusivamente em memória no navegador. As **únicas chamadas reais ao Supabase** são `teacher_dashboard` e `teacher_questions`, exigindo autenticação do professor. A prévia pode ser realizada com a avaliação **inativa**, não consome tentativas, não afeta relatórios nem altera a prova oficial.
+
+A prévia tem um aviso permanente identificando que não é uma aplicação real. Seus dados usam um namespace de cache separado no navegador; o cache de tentativas e respostas reais de estudantes nunca é reutilizado. Atualizar a aba reinicia a simulação. As ocorrências, notas e o tempo são calculados localmente — a experiência visual e a navegação são reais, **mas não se trata de um teste de conectividade, persistência ou controle de aplicação com o backend do aluno**. O desempenho pode diferir de uma tentativa real em laboratório. Recomenda-se homologação em navegador antes de disponibilizar aos estudantes.
+
+O botão só aparece depois do login do professor. As telas de prévia não liberam o simulado nem executam qualquer rotina de publicação; o preset **Colocar simulado online** continua separado.
