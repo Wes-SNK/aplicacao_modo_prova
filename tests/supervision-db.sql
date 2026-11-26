@@ -40,7 +40,8 @@ BEGIN
  BEGIN
   PERFORM public.student_lobby_enter((SELECT value::uuid FROM public.ci_state WHERE key='alice_token'),'ci-test');
  EXCEPTION WHEN OTHERS THEN
-  denied:=position('Aguarde autorização' IN SQLERRM)>0;
+  denied:=position('Aguarde autorização' IN SQLERRM)>0
+   OR position('Avaliação indisponível' IN SQLERRM)>0;
  END;
  IF NOT denied THEN RAISE EXCEPTION 'Ingresso sem autorização foi permitido';END IF;
 END;$test$;
@@ -55,6 +56,17 @@ BEGIN
  BEGIN PERFORM public.start_attempt_by_name('ci-supervised','Aluno Alice','ci');
  EXCEPTION WHEN OTHERS THEN denied:=position('sala de espera' IN SQLERRM)>0; END;
  IF NOT denied THEN RAISE EXCEPTION 'Atalho direto por nome permitiu iniciar';END IF;
+END;$test$;
+
+-- Com a prova ativa, a entrada continua bloqueada especificamente pela autorização.
+DO $test$
+DECLARE denied boolean:=false;
+BEGIN
+ BEGIN
+  PERFORM public.student_lobby_enter(
+   (SELECT value::uuid FROM public.ci_state WHERE key='alice_token'),'ci-test');
+ EXCEPTION WHEN OTHERS THEN denied:=position('Aguarde autorização' IN SQLERRM)>0;END;
+ IF NOT denied THEN RAISE EXCEPTION 'Aluno recebeu a prova sem autorização';END IF;
 END;$test$;
 
 -- Testa admissão individual, liberação coletiva e ausência de nomes no mapa.
