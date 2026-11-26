@@ -101,7 +101,7 @@ function environment({rpcFailure=false}={}){
   };
   const intervals=[];
   const context={
-    window:fakeWindow,document,Date,Promise,Set,Option:(label,val)=>{
+    window:fakeWindow,document,Date,Promise,Set,Option:function(label,val){
       const o=new FakeElement("option");o.textContent=label;o.value=val;return o;
     },
     setInterval:fn=>{intervals.push(fn);return intervals.length;},
