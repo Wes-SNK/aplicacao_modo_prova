@@ -99,10 +99,13 @@
     mp.setMessage($("lobbyApprovalMessage"),message,kind);
   }
   function resetRoom() {
+    // A comunicação não persiste durante a avaliação, nem mantém polling ativo.
+    mp.lobbyChat?.close();
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
     movementSender?.close();movementSender=null;
     pollBusy=false;
+    for(const node of avatarNodes.values())clearTimeout(node.bubbleTimer);
     $("lobbyAvatars").textContent="";avatarNodes.clear();
     roomTimer = null; onScreen = false; approved = false;
     releaseAnnounced=false;
@@ -136,6 +139,7 @@
     resetCuriosities();
     updateAccessView();
     status("Conectando à sala de espera…");
+    mp.lobbyChat?.open(token);
   }
   function makeAvatar() {
     const a=document.createElement("div");
@@ -146,8 +150,10 @@
     const feet=document.createElement("span");feet.className="avatar-feet";
     const label=document.createElement("small");
     const emote=document.createElement("span");emote.className="avatar-emote";
-    a.append(head,body,feet,label,emote);
-    return {a,label,emote};
+    const bubble=document.createElement("span");
+    bubble.className="avatar-chat-bubble hidden";
+    a.append(head,body,feet,label,emote,bubble);
+    return {a,label,emote,bubble,bubbleTimer:null};
   }
   function drawAvatars() {
     const root=$("lobbyAvatars");
@@ -170,6 +176,7 @@
       const y=movingLocally?pos.y:Number(p.y);
       node.a.style.left=Math.min(96,Math.max(4,x||12))+"%";
       node.a.style.top=Math.min(91,Math.max(8,y||65))+"%";
+      node.a.dataset.chatPeer=key;
       node.a.setAttribute("aria-label",p.self?
         "Seu personagem":"Outro estudante aguardando");
       node.label.textContent=p.self?"Você":"Colega";
@@ -180,12 +187,23 @@
     });
     for(const [key,node] of avatarNodes){
       if(present.has(key))continue;
+      clearTimeout(node.bubbleTimer);
       node.a.remove?.();
       avatarNodes.delete(key);
     }
     $("lobbySimpleStatus").textContent=
       "Você está aguardando com "+Math.max(0,peers.length-1)+" colega(s). "+
       (approved?"Prova liberada.":"Aguardando liberação da prova.");
+  }
+  function showBubble(senderId,message){
+    // Só mensagens públicas aparecem sobre avatares. Privadas são
+    // exibidas exclusivamente no painel do destinatário e do professor.
+    const node=avatarNodes.get(String(senderId));
+    if(!node)return;
+    clearTimeout(node.bubbleTimer);
+    node.bubble.textContent=String(message).slice(0,75);
+    node.bubble.classList.remove("hidden");
+    node.bubbleTimer=setTimeout(()=>node.bubble.classList.add("hidden"),5000);
   }
   function updateAccessView() {
     const inMap=true;
@@ -240,6 +258,7 @@
     showRoom(studentName);
     updateAccessView();
     beginPoll();
+    mp.lobbyChat?.open(token);
   }
   async function join(name,onEntry) {
     // Na prévia, o interceptador não tem acesso a dados reais de estudante.
@@ -270,6 +289,7 @@
     token=stored.token;
     showRoom(stored.studentName);
     beginPoll();
+    mp.lobbyChat?.open(token);
     return true;
   }
   async function enter() {
@@ -390,5 +410,5 @@
     });
   }
   setup();
-  mp.lobbyBridge={join,resume,reset:resetRoom};
+  mp.lobbyBridge={join,resume,reset:resetRoom,showBubble};
 })();

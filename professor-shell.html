@@ -188,6 +188,41 @@
           </table>
         </div>
         <p class="field-help">A entrada na sala de espera é automática após a identificação. Use Liberar prova para autorizar o início. Uma perda de conexão não é uma infração.</p>
+
+      </section>
+
+      <!-- Chat supervisionado independente das permissões da avaliação. -->
+      <section id="teacherChatSection" data-page-area="painel" class="card teacher-chat-section">
+        <div class="section-head">
+          <div><h2>Mensagens da sala de espera</h2>
+          <p class="muted">Acompanhe mensagens gerais, menções e comunicação reservada ao professor.</p></div>
+          <span id="teacherChatBadge" class="pill">Não habilitado</span>
+        </div>
+        <div class="teacher-chat-settings">
+          <label class="switch-row"><input id="teacherChatEnabled" type="checkbox">
+            <span>Permitir mensagens na sala de espera</span></label>
+          <label class="switch-row"><input id="teacherChatPeers" type="checkbox">
+            <span>Permitir mensagens entre colegas</span></label>
+          <button id="teacherChatSaveSettings" type="button" class="secondary">Salvar comunicação</button>
+        </div>
+        <p id="teacherChatStatus" class="field-help" role="status">Carregando comunicação…</p>
+        <div id="teacherChatMessages" class="teacher-chat-messages"
+          role="log" aria-live="off" aria-label="Mensagens da turma"></div>
+        <div class="teacher-chat-compose">
+          <label for="teacherChatRecipient">Destinatário</label>
+          <select id="teacherChatRecipient"><option value="">Toda a turma</option></select>
+          <label for="teacherChatInput">Comunicado (máximo 150 caracteres)</label>
+          <textarea id="teacherChatInput" maxlength="150" rows="2"
+            placeholder="Ex.: A avaliação será liberada em instantes."></textarea>
+          <button id="teacherChatSend" type="button" class="primary">Enviar comunicado</button>
+        </div>
+        <div class="teacher-chat-moderation">
+          <label for="teacherChatMuteStudent">Silenciar participante</label>
+          <select id="teacherChatMuteStudent"><option value="">Selecione um aluno…</option></select>
+          <button id="teacherChatMute" type="button" class="secondary">Silenciar</button>
+          <button id="teacherChatUnmute" type="button" class="secondary">Remover silêncio</button>
+        </div>
+        <p class="field-help">O professor vê todas as mensagens, inclusive as direcionadas. O chat é interrompido ao iniciar a prova.</p>
       </section>
 
       <!-- Cadastro de alunos, separado do banco e das tentativas da prova. -->

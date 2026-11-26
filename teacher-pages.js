@@ -86,6 +86,11 @@
     for(const src of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
       await loadScript(src);
     }
+    // Chat só é carregado na área de supervisão, depois de validar a sessão.
+    if(page==="painel"){
+      await loadScript("lobby-chat-utils.js");
+      await loadScript("chat-professor.js");
+    }
     // Diagnóstico: falhas assíncronas devem aparecer no próprio painel.
     // Carregamento completo do shell não é garantia de RPC bem-sucedida.
     // Permite que os presets personalizados também sejam selecionados no

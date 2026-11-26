@@ -581,3 +581,33 @@ A primeira rodada de otimização prioriza tráfego de presença e movimentaçã
 3. homologação com usuários reais em computador e tablet, verificando acesso, tela cheia, rede Wi-Fi da escola, salvamento de respostas, retomada de tentativa e finalização.
 
 Os testes simulados validam limites de código e comportamento, **não demonstram** a capacidade real da rede da escola, nem o desempenho efetivo do Supabase durante uma turma simultânea. O servidor continua validando a autorização de início.
+
+
+## Chat supervisionado no pátio — protótipo isolado (branch feature/chat-supervisionado-sala-espera)
+
+Esta funcionalidade **não foi publicada na `main`**. O PR #13 permanece em rascunho. A implantação requer migração SQL 021 e homologação específica antes de qualquer uso em turma real.
+
+**Aluno na sala de espera:** mensagens rápidas predefinidas, mensagem livre com 150 caracteres, lista `@Professor` e `@Aluno-XXXXXX` (pseudônimos dos colegas presentes), sugestões ao digitar `@`, painel recolhível e balões de mensagens públicas sobre avatares. Mensagens direcionadas nunca aparecem em balões públicos; o professor visualiza todas. A entrada na prova desliga as conversas. Não há arquivos, links clicáveis, HTML formatado ou comunicação entre estudantes durante a avaliação.
+
+**Professor:** ativa/desativa o chat por avaliação, permite/bloqueia mensagens entre colegas, envia comunicados públicos ou individuais, visualiza histórico por turma e silencia/remova silêncio de cada aluno. O chat inicia **desativado** no banco, e nenhuma alteração de supervisão ocorre automaticamente.
+
+**Segurança:** as tabelas `lobby_chat_settings`, `lobby_chat_mutes` e `lobby_chat_messages` possuem RLS e não têm permissão de leitura ou escrita direta para `anon`/`authenticated`. Todas as operações passam por RPCs `SECURITY DEFINER` com validação de token de lobby, avaliação, turma e estado da tentativa. As mensagens têm limite de 150 caracteres, intervalo mínimo de três segundos por estudante e consultas incrementais. O envio após início de prova é negado pelo servidor. A identificação pelo nome no Modo Prova continua não sendo uma autenticação forte; é necessária supervisão presencial.
+
+**Arquivos e responsabilidades:** `lobby-chat-utils.js` valida conteúdo e formata mensagens; `lobby-chat.js` controla a interface do estudante; `chat-professor.js` implementa os controles autenticados; `migrations/021_chat_sala_espera.sql` contém todo o contrato de banco; `tests/chat-regression.test.cjs` e `tests/chat-supervised.sql` validam os fluxos, além da suíte de regressão já existente.
+
+**Homologação antes de publicar:** verificar configuração, envio geral/direto, menções, silenciamento, funcionamento com 30 tablets, uso em tela cheia, autorização e início da prova, bloqueio pós-início, indisponibilidade de rede e estado de chat desativado. O teste de CI aplica a migração em PostgreSQL isolado, não no Supabase de produção. Definir também política de retenção das mensagens antes de usar com estudantes.
+
+
+## Comunicação supervisionada da sala de espera — PR #13 (homologação, sem publicar)
+
+A implementação foi isolada na branch `feature/chat-supervisionado-sala-espera`, com PR em rascunho. **Não aplicar** a migração 021 ao Supabase de produção e não fazer merge até a aprovação dos testes em laboratório.
+
+**Aluno:** botões de mensagens rápidas, caixa de texto limitada a 150 caracteres, sugestões de destinatários ao digitar `@`, mensagem geral, menção reservada ao professor e mensagem direcionada a participante presente. A interface utiliza apelidos temporários, sem revelar nomes completos de colegas. Balões sobre os avatares exibem somente mensagens públicas. O modo simples e a opção de tela cheia continuam disponíveis.
+
+**Professor:** configuração da comunicação por avaliação (desativada por padrão), escolha sobre mensagens entre colegas, comunicados para a turma ou indivíduo, histórico supervisionado e silenciamento de estudantes. A autorização para iniciar a prova permanece independente.
+
+**Persistência e segurança:** `migrations/021_chat_sala_espera.sql` contém tabelas protegidas por RLS, operações por RPC com validação de turma e sessão, antispam e bloqueio de mensagens assim que uma tentativa é criada (inclusive na tela de regras). O histórico não é exposto por acesso direto às tabelas. Proibir HTML e URLs executáveis na renderização (somente `textContent`). Nenhuma chamada de chat altera respostas, questões ou tentativas.
+
+**Arquitetura:** `lobby-chat-utils.js` (funções puras e validações), `lobby-chat.js` (aluno), `chat-professor.js` (professor), `lobby.js` (integração com avatar, ciclo de vida) e estilos em `styles.css`. A leitura usa polling incremental independente para limitar o tráfego com aproximadamente 30 alunos.
+
+**Verificação:** testes automatizados `tests/chat-regression.test.cjs`, `tests/chat-supervised.sql` e toda a suíte `tests/*.test.cjs`. Homologar em laboratório a privacidade das menções, comunicação em tablets, moderação e entrada na prova; testar também 30 clientes conectados e a rede escolar. Os ensaios simulados não substituem o teste de capacidade real.
