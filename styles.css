@@ -438,3 +438,84 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .teacher-preview-body .topbar { top: 0; }
   .topbar-actions { flex-wrap: wrap; }
 }
+
+
+/* Módulo de presets: visual independente dos controles da avaliação. */
+.presets-manager { margin-bottom: 18px; }
+.presets-manager .section-head { margin-bottom: 14px; }
+.preset-create-form {
+  margin: 14px 0;
+  padding: 18px;
+  background: #f5f8fc;
+  border: 1px solid #cbd5e1;
+  border-radius: 12px;
+}
+.preset-create-form h2 { margin-top: 0; }
+.preset-create-form .toolbar { margin-top: 16px; }
+.preset-list { display: grid; gap: 12px; margin-top: 16px; }
+.preset-entry {
+  border: 1px solid #d4dce7;
+  background: #fbfcff;
+  border-radius: 12px;
+  padding: 16px;
+}
+.preset-entry.preset-selected {
+  border-color: #3d78af;
+  box-shadow: inset 3px 0 0 #3d78af;
+}
+.preset-entry-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.preset-entry-heading strong { overflow-wrap: anywhere; }
+.preset-entry p { margin: 9px 0 6px; }
+.preset-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+.preset-action-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: 33px;
+  padding: 6px 10px;
+  border: 1px solid #b8c6d6;
+  border-radius: 7px;
+  color: #1b4772;
+  background: white;
+  text-decoration: none;
+  font-size: .9rem;
+  font-weight: 600;
+}
+.preset-action-link:hover,
+.preset-action-link:focus-visible { background: #e9f0f8; }
+.preset-autofill {
+  margin-top: 18px;
+  border-top: 1px solid #d4dce7;
+  padding-top: 16px;
+}
+.preset-autofill h2 { margin-top: 0; }
+.preset-autofill .toolbar { margin-top: 14px; }
+.preset-distribution { min-width: 550px; }
+.preset-distribution th,
+.preset-distribution td { vertical-align: middle; }
+.preset-distribution th:not(:first-child),
+.preset-distribution td:not(:first-child) { text-align: center; }
+.preset-count-input {
+  width: 74px;
+  min-width: 0;
+  padding: 8px;
+  text-align: center;
+}
+.preset-subtotal { font-weight: 700; }
+@media (max-width: 680px) {
+  .presets-manager .section-head,
+  .preset-entry-heading { align-items: flex-start; }
+  .preset-create-form { padding: 12px; }
+  .preset-actions > button,
+  .preset-actions > .preset-action-link { flex: 1 1 auto; justify-content: center; }
+}
