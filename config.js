@@ -1,13 +1,17 @@
 // CONFIGURAÇÃO DO MODO PROVA
-// No Supabase, abra o diálogo Connect ou Settings > API Keys.
-// Use a Project URL e a PUBLISHABLE KEY (sb_publishable_...).
-// Nunca coloque secret key/service_role neste arquivo.
+// Use somente a chave pública (publishable) no cliente.
+// Presets criados no painel utilizam o parâmetro ?exame=preset-<uuid>.
+const MODOPROVA_QUERY = new URLSearchParams(window.location.search);
+const MODOPROVA_LEGACY = {
+  simulado: "simulado-4bim-1b-2026",
+  prova: "prova-4bim-1b-2026"
+};
+const MODOPROVA_CUSTOM = MODOPROVA_QUERY.get("exame");
 window.APP_CONFIG = {
   supabaseUrl: "https://lqfchjfyftfopgzdwggi.supabase.co",
   supabasePublishableKey: "sb_publishable_bmpIRHQSvcGrU6QV62rYvA_w0rec269",
-  // A URL escolhe apenas avaliações cadastradas explicitamente; nunca aceita slugs arbitrários.
-  examSlug: ({ simulado: "simulado-4bim-1b-2026", prova: "prova-4bim-1b-2026" })[
-    new URLSearchParams(window.location.search).get("avaliacao")
-  ] || "4bim-1b-2026",
+  examSlug: MODOPROVA_CUSTOM && /^preset-[0-9a-f]{32}$/.test(MODOPROVA_CUSTOM)
+    ? MODOPROVA_CUSTOM
+    : MODOPROVA_LEGACY[MODOPROVA_QUERY.get("avaliacao")] || "4bim-1b-2026",
   appTitle: "Modo Prova — Técnico em Informática"
 };
