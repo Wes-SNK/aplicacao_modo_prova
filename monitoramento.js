@@ -158,6 +158,14 @@
     $("supervisionStatusBadge").textContent="Consultando turma…";
     announce("Carregando estudantes de "+($("supervisionClass").value||"turma selecionada")+"…");
   }
+  async function withTimeout(promise,ms=12000){
+    let id;
+    try{
+      return await Promise.race([promise,new Promise((_,reject)=>{
+        id=setTimeout(()=>reject(new Error("Tempo limite de consulta excedido.")),ms);
+      })]);
+    }finally{clearTimeout(id);}
+  }
   async function refresh(force=false){
     if(document.body.dataset.teacherPage!=="painel" ||
        changing || $("teacherDashboard").classList.contains("hidden"))return;
@@ -168,14 +176,10 @@
     $("supervisionStatusBadge").textContent="Consultando turmas…";
     announce("Consultando os alunos cadastrados…");
     try{
-      const result=await Promise.race([
-        trpc("teacher_supervision_roster_by_class",{
-          p_exam_slug:mp.cfg.examSlug,
-          p_class_group:selectedGroup||null
-        }),
-        new Promise((_,reject)=>setTimeout(
-          ()=>reject(new Error("Tempo limite de consulta excedido.")),12000))
-      ]);
+      const result=await withTimeout(trpc("teacher_supervision_roster_by_class",{
+        p_exam_slug:mp.cfg.examSlug,
+        p_class_group:selectedGroup||null
+      }));
       if(version!==requestVersion)return;
       if(!result || !Array.isArray(result.students))throw new Error("Resposta inesperada");
       data=result;render();
