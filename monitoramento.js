@@ -121,7 +121,8 @@
         students.filter(s=>isRecent(s.last_seen,Date.now())),data.enabled);
   }
   async function refresh(){
-    if(loading || changing || $("teacherDashboard").classList.contains("hidden"))return;
+    if(document.body.dataset.teacherPage!=="painel" ||
+       loading || changing || $("teacherDashboard").classList.contains("hidden"))return;
     loading=true;
     try{
       const result=await trpc("teacher_supervision_roster",{
