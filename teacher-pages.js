@@ -38,6 +38,9 @@
     const fragment=await response.text();
     mount.innerHTML=fragment;
     const $=id=>document.getElementById(id);
+    // A sessão já foi validada; não exibir o formulário de login ao
+    // carregar as páginas internas, nem por alguns instantes.
+    $("teacherLogin").classList.add("hidden");
     $("teacherMainNav").classList.remove("hidden");
     $("teacherPageHeader").classList.remove("hidden");
     $("teacherPageTitle").textContent=entry.title;
