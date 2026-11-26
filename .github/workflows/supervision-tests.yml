@@ -25,7 +25,7 @@ jobs:
           node-version: "22"
       - name: Validate JavaScript syntax
         run: |
-          for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby.js monitoramento.js; do
+          for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby.js monitoramento.js alunos.js; do
             node --check "$file"
           done
       - name: Run automated tests
@@ -35,3 +35,4 @@ jobs:
           test -s migrations/013_supervisao_sala_espera.sql
           test -s migrations/014_gates_inicio_avaliacao.sql
           test -s migrations/015_ajuda_auditoria.sql
+          test -s migrations/016_turma_codigos.sql
