@@ -64,11 +64,11 @@
  async function perform(callback){
   if(busy)return;
   busy=true;
-  try{await callback();await refreshDirect();}
+  try{await callback();}
   catch(e){notice(e.message||"Falha no chat.");}
   finally{busy=false;}
+  await refresh();
  }
- async function refreshDirect(){const was=active;active=true;await refresh();active=was;}
  function save(){
   perform(async()=>{
    const result=await rpc("teacher_lobby_chat_settings",{
