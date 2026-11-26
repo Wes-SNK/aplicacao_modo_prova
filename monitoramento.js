@@ -38,20 +38,9 @@
     b.addEventListener("click",fn);
     return b;
   }
-  function deriveState(s,now){
-    if(["submitted","auto_submitted"].includes(s.status))return "Finalizado";
-    if(s.status==="in_progress")return "Realizando";
-    if(s.status==="ready")return "Pronto para iniciar";
-    if(s.waiting && s.authorized)return "Autorizado";
-    if(s.waiting)return "Aguardando autorização";
-    return "Ainda não entrou";
-  }
-  function connectionText(s,now){
-    if(!s.waiting && !["in_progress","ready"].includes(s.status))return "—";
-    if(!s.last_seen)return "Sem sinal";
-    const age=Math.round(secSince(s.last_seen,now));
-    return age<=25?"Conectado":age<=120?"Sinal instável ("+age+"s)":"Sem conexão recente";
-  }
+  const deriveState=s=>window.SupervisionUtils.studentStatus(s);
+  const connectionText=(s,now)=>window.SupervisionUtils.connectionStatus(
+    s.last_seen,s.waiting,["in_progress","ready"].includes(s.status),now);
   function progressCell(row,s){
     const outer=cell(row,null,"supervision-progress-cell");
     const total=Number(s.total)||0;
@@ -66,7 +55,7 @@
     track.setAttribute("aria-valuemax",String(total||1));
     track.setAttribute("aria-valuenow",String(answered));
     const bar=document.createElement("div");
-    bar.style.width=(total?answered/total*100:0)+"%";
+    bar.style.width=window.SupervisionUtils.progressPercent(answered,total)+"%";
     track.appendChild(bar);outer.append(label,track);
   }
   function render(){
@@ -126,8 +115,8 @@
         ?"Nenhum estudante corresponde ao filtro.":"Selecione uma turma e salve as configurações.");
       td.colSpan=6;body.appendChild(empty);
     }
-    $("supervisionAuthorizeAll").disabled=!data.enabled || changing ||
-      !students.some(s=>s.waiting && !s.authorized);
+    $("supervisionAuthorizeAll").disabled=changing ||
+      !window.SupervisionUtils.canRequestExam(students,data.enabled);
   }
   async function refresh(){
     if(loading || changing || $("teacherDashboard").classList.contains("hidden"))return;
