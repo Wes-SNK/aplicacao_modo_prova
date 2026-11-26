@@ -121,7 +121,7 @@
       payload=>mp.rpc("student_lobby_move",{
         p_lobby_token:token,p_x:payload.x,p_y:payload.y,p_emote:payload.emote
       }),{
-        minIntervalMs:550,
+        minIntervalMs:750,
         onError:()=>status("Reconectando movimentação…")
       }
     )||null;
@@ -163,15 +163,20 @@
       }
       node.a.className="lobby-avatar avatar-style-"+Number(p.style||0)+
         (p.self?" own-avatar":"");
-      node.a.style.left=Math.min(96,Math.max(4,Number(p.x)||12))+"%";
-      node.a.style.top=Math.min(91,Math.max(8,Number(p.y)||65))+"%";
+      // Não recuar o próprio avatar para uma coordenada antiga enquanto
+      // a atualização otimizada ainda está em trânsito.
+      const movingLocally=p.self && !!movementSender?.pending;
+      const x=movingLocally?pos.x:Number(p.x);
+      const y=movingLocally?pos.y:Number(p.y);
+      node.a.style.left=Math.min(96,Math.max(4,x||12))+"%";
+      node.a.style.top=Math.min(91,Math.max(8,y||65))+"%";
       node.a.setAttribute("aria-label",p.self?
         "Seu personagem":"Outro estudante aguardando");
       node.label.textContent=p.self?"Você":"Colega";
       const emote=({wave:"Olá!",question:"?",ready:"OK"})[p.emote]||"";
       node.emote.textContent=emote;
       node.emote.classList.toggle("hidden",!emote);
-      if(p.self)pos={x:Number(p.x),y:Number(p.y)};
+      if(p.self && !movingLocally)pos={x:Number(p.x),y:Number(p.y)};
     });
     for(const [key,node] of avatarNodes){
       if(present.has(key))continue;
