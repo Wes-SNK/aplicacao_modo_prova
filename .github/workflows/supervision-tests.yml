@@ -56,10 +56,12 @@ jobs:
           test -s migrations/014_gates_inicio_avaliacao.sql
           test -s migrations/015_ajuda_auditoria.sql
           test -s migrations/016_turma_codigos.sql
+          test -s migrations/017_autorizacao_antecipada.sql
       - name: Apply migrations to isolated PostgreSQL and test real authorization rules
         run: |
           psql -v ON_ERROR_STOP=1 -f tests/bootstrap-postgres.sql
-          for migration in migrations/013_supervisao_sala_espera.sql migrations/014_gates_inicio_avaliacao.sql migrations/015_ajuda_auditoria.sql migrations/016_turma_codigos.sql; do
+          for migration in migrations/013_supervisao_sala_espera.sql migrations/014_gates_inicio_avaliacao.sql migrations/015_ajuda_auditoria.sql migrations/016_turma_codigos.sql migrations/017_autorizacao_antecipada.sql; do
             psql -v ON_ERROR_STOP=1 -f "$migration"
           done
           psql -v ON_ERROR_STOP=1 -f tests/supervision-db.sql
+          psql -v ON_ERROR_STOP=1 -f tests/supervision-preauth.sql
