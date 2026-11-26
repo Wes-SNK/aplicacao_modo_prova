@@ -64,7 +64,7 @@ test("Política de otimização não pode alterar correção nem criar ocorrênc
     assert.ok(page.indexOf('src="client-performance.js?v=20261126-turma30"') <
       page.indexOf('src="lobby.js?v=20261126-turma30"'));
     assert.match(page,/id="lobbySimpleMode"/);
-    assert.match(page,/styles\\.css\\?v=20261126-turma30/);
+    assert.match(page,/styles\.css\?v=20261126-turma30/);
   }
   const css=read("styles.css");
   assert.match(css,/@media \(pointer: coarse\)/);
