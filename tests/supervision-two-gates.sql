@@ -8,6 +8,7 @@ INSERT INTO public.questions(exam_id,position,type,stem,options,correct_answer,p
 VALUES('aaaa2222-aaaa-4222-8222-aaaaaaaa2222',1,'objective','Questão verificável',
 '[{"key":"A","text":"A"},{"key":"B","text":"B"},{"key":"C","text":"C"},{"key":"D","text":"D"}]'::jsonb,'B',1,true);
 CREATE TABLE ci_temporary_gate(token uuid NOT NULL);
+GRANT INSERT,SELECT ON ci_temporary_gate TO anon,authenticated;
 SET LOCAL ROLE authenticated;
 SELECT set_config('request.jwt.claim.sub','99999999-9999-4999-8999-999999999999',true);
 DO $test$
