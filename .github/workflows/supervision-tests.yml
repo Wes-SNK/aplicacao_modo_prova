@@ -15,7 +15,27 @@ jobs:
   supervision-tests:
     name: Node tests and static contracts
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: supervision_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: supervision_ci
     steps:
       - name: Checkout feature branch
         uses: actions/checkout@v4
@@ -36,3 +56,10 @@ jobs:
           test -s migrations/014_gates_inicio_avaliacao.sql
           test -s migrations/015_ajuda_auditoria.sql
           test -s migrations/016_turma_codigos.sql
+      - name: Apply migrations to isolated PostgreSQL and test real authorization rules
+        run: |
+          psql -v ON_ERROR_STOP=1 -f tests/bootstrap-postgres.sql
+          for migration in migrations/013_supervisao_sala_espera.sql migrations/014_gates_inicio_avaliacao.sql migrations/015_ajuda_auditoria.sql migrations/016_turma_codigos.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+          psql -v ON_ERROR_STOP=1 -f tests/supervision-db.sql
