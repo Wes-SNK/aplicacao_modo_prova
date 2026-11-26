@@ -153,14 +153,6 @@
             <span><strong>Exigir autorização para iniciar</strong>
             <small>Quando habilitada, os estudantes entram na sala de espera antes de receber a prova.</small></span>
           </label>
-          <label class="switch-row">
-            <input id="supervisionRequireCode" type="checkbox">
-            <span><strong>Exigir código individual na sala de espera</strong>
-            <small>Opcional. Gere e distribua os códigos previamente, de forma privada.</small></span>
-          </label>
-          <div class="toolbar">
-            <button id="supervisionIssueCodes" type="button" class="secondary">Gerar códigos da turma (CSV)</button>
-          </div>
           <div class="toolbar">
             <button id="supervisionSave" type="button" class="primary">Salvar supervisão</button>
             <button id="supervisionRefresh" type="button" class="secondary">Atualizar monitoramento</button>
@@ -175,7 +167,7 @@
             <button id="supervisionCopyLink" type="button" class="secondary">Copiar link do aluno</button>
             <a class="preset-action-link" href="avaliacoes.html">Configurar publicação da avaliação</a>
           </div>
-          <p class="field-help">Autorizar um aluno não inicia o cronômetro. A avaliação começa quando ele entra e confirma as regras.</p>
+          <p class="field-help">Permitir a entrada no pátio e liberar a prova não iniciam o cronômetro. Ele começa quando o estudante confirma as regras.</p>
         </div>
         <p id="supervisionMessage" class="field-help" role="status" aria-live="polite"></p>
         <div class="supervision-stats" aria-label="Resumo da aplicação">
@@ -189,7 +181,7 @@
             <label for="supervisionFilter">Procurar aluno</label>
             <input id="supervisionFilter" type="search" placeholder="Nome do estudante…">
           </div>
-          <button id="supervisionAuthorizeAll" type="button" class="primary" disabled>Autorizar todos os presentes</button>
+          <button id="supervisionAuthorizeAll" type="button" class="primary" disabled>Liberar prova para todos os presentes</button>
         </div>
         <div class="table-wrap">
           <table class="supervision-table">
@@ -199,7 +191,7 @@
             <tbody id="supervisionRows"></tbody>
           </table>
         </div>
-        <p class="field-help">Conexão estimada pela última comunicação; a ausência de sinal não é considerada infração. Progresso representa respostas registradas, não acertos.</p>
+        <p class="field-help">Use **Permitir sala de espera** para autorizar a entrada no pátio e **Liberar prova** para disponibilizar as questões. As duas permissões são independentes. Uma perda de conexão não é uma infração.</p>
       </section>
 
       <!-- Cadastro de alunos, separado do banco e das tentativas da prova. -->
