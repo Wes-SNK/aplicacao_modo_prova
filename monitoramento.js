@@ -17,6 +17,28 @@
   const secSince=(date,now=Date.now())=>date ? Math.max(0,(now-Date.parse(date))/1000) : Infinity;
   const isRecent=(date,now)=>secSince(date,now)<=25;
   function announce(s){$("supervisionMessage").textContent=s;}
+  const studentPage = () => {
+    const slug=mp.cfg.examSlug;
+    const qs=/^preset-[0-9a-f]{32}$/.test(slug)
+      ? "?exame="+encodeURIComponent(slug)
+      : slug==="simulado-4bim-1b-2026" ? "?avaliacao=simulado"
+        : slug==="prova-4bim-1b-2026" ? "?avaliacao=prova" : "";
+    return new URL("index.html"+qs,window.location.href).href;
+  };
+  function syncStudentLink(){
+    $("supervisionStudentLink").href=studentPage();
+    const a=document.querySelector(".supervision-guide a[href='avaliacoes.html']");
+    if(a) a.href="avaliacoes.html"+window.location.search;
+  }
+  function renderInstructions(){
+    if(!data)return;
+    const msg=!data.enabled
+      ? "1. Selecione a turma. 2. Marque Exigir autorização para iniciar. 3. Clique Salvar supervisão. Depois escolha os alunos que poderão realizar a avaliação."
+      : !data.is_active
+        ? "A sala de espera pode receber alunos, mas a avaliação ainda está fora do ar. Autorize os estudantes e publique a avaliação em Avaliações e presets quando desejar iniciar."
+        : "Supervisão ativa. Autorize um aluno pelo nome, mesmo que ele ainda não tenha chegado, ou use Autorizar todos os presentes. Compartilhe o link para abrir o pátio virtual. O estudante inicia a prova ao clicar em Entrar na avaliação.";
+    $("supervisionInstructions").textContent=msg;
+  }
   async function trpc(name,args={}){
     const session=await mp.validTeacherSession();
     if(!session?.access_token)throw new Error("Entre novamente como professor.");
@@ -62,6 +84,7 @@
     if(!data)return;
     $("supervisionStatusBadge").textContent=data.enabled?"Supervisão ligada":"Supervisão desativada";
     $("supervisionStatusBadge").className=data.enabled?"pill ok":"pill";
+    renderInstructions();
     if(!dirty){
       const sel=$("supervisionClass");
       const old=sel.value;
@@ -102,8 +125,11 @@
         connection.classList.add("supervision-offline");
       const td=cell(tr,null,"supervision-actions");
       const hasStarted=["in_progress","submitted","auto_submitted"].includes(s.status);
-      if(data.enabled && s.waiting && !hasStarted){
-        td.appendChild(action(s.authorized?"Revogar":"Autorizar",
+      // O professor pode autorizar antes da chegada ao pátio. Nesse caso
+      // o aluno NÃO consta como presente até abrir sua sala de espera.
+      if(data.enabled && !hasStarted){
+        td.appendChild(action(s.authorized?"Revogar autorização":
+            (s.waiting?"Autorizar início":"Autorizar antecipadamente"),
           ()=>authorize(s,!s.authorized),s.authorized?"secondary":"primary"));
       }
       if(s.help_pending)td.appendChild(action("Atendido",()=>resolveHelp(s)));
@@ -228,6 +254,16 @@
       rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n"),"text/csv;charset=utf-8");
   }
   $("supervisionSave").addEventListener("click",save);
+  $("supervisionCopyLink").addEventListener("click",async()=>{
+    const url=studentPage();
+    try {
+      await navigator.clipboard.writeText(url);
+      announce("Link da avaliação copiado. Envie aos estudantes da turma.");
+    } catch {
+      window.prompt("Copie o link da sala de espera:",url);
+    }
+  });
+  syncStudentLink();
   $("supervisionIssueCodes").addEventListener("click",issueCodes);
   $("supervisionRefresh").addEventListener("click",refresh);
   $("supervisionAuthorizeAll").addEventListener("click",authorizeAll);
