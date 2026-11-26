@@ -623,3 +623,22 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
 @media(prefers-reduced-motion:reduce){
  .lobby-avatar{transition:none;}
 }
+
+
+/* Gestão de alunos e pedido de ajuda durante a avaliação. */
+.exam-help-button{width:100%;margin:8px 0 12px;text-align:center;}
+.student-manager{margin-bottom:18px;}
+.student-manager-form{
+ display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(140px,1fr) auto;
+ align-items:end;gap:12px;margin:16px 0;
+}
+.student-manager-form>div{min-width:0;}
+.student-manager-form label{display:block;margin-bottom:5px;}
+.student-manager-form .toolbar{gap:7px;}
+.student-manager-table{min-width:650px;}
+.student-admin-actions{white-space:nowrap;}
+.student-admin-actions button{margin:2px;}
+@media(max-width:700px){
+ .student-manager-form{grid-template-columns:1fr;}
+ .student-manager-form .toolbar{display:flex;flex-wrap:wrap;}
+}
