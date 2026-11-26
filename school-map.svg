@@ -1,0 +1,159 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 720" width="1200" height="720" role="img" aria-label="Escola virtual ilustrada com portaria, pátio arborizado, quadra, laboratório de informática, biblioteca e corredor.">
+<defs>
+<pattern id="grass" width="42" height="42" patternUnits="userSpaceOnUse"><rect width="42" height="42" fill="#98bd91"/><path d="M0 21h42M21 0v42" stroke="#a9c99c" stroke-width="1.5"/><path d="M7 10l4 -5 4 5M31 33l4 -5 3 5" fill="none" stroke="#6c9c75" stroke-width="2"/></pattern>
+<pattern id="tiles" width="38" height="38" patternUnits="userSpaceOnUse"><rect width="38" height="38" fill="#e6dcc2"/><path d="M38 0H0V38" fill="none" stroke="#c8bda6" stroke-width="2"/><rect x="2" y="2" width="34" height="34" fill="#ece1ca" opacity=".48"/></pattern>
+<pattern id="labTiles" width="44" height="44" patternUnits="userSpaceOnUse"><rect width="44" height="44" fill="#c6dae2"/><path d="M44 0H0V44" fill="none" stroke="#a9c1cc" stroke-width="2"/></pattern>
+<pattern id="woodTiles" width="46" height="34" patternUnits="userSpaceOnUse"><rect width="46" height="34" fill="#cfb48e"/><path d="M0 16H46M23 0V16M0 16V34" fill="none" stroke="#ad8e67" stroke-width="2"/></pattern>
+<pattern id="court" width="50" height="50" patternUnits="userSpaceOnUse"><rect width="50" height="50" fill="#669d98"/><path d="M0 0H50V50H0z" fill="none" stroke="#77ada6" stroke-width="2"/></pattern>
+<filter id="shadow" x="-20%" y="-20%" width="140%" height="140%"><feDropShadow dx="3" dy="5" stdDeviation="0.5" flood-color="#1f3444" flood-opacity=".23"/></filter>
+</defs>
+<rect x="0" y="0" width="1200" height="720" rx="0" fill="#30465b" stroke="#30465b" stroke-width="10"/>
+<rect x="15" y="15" width="1170" height="690" rx="5" fill="url(#grass)" stroke="#6b8890" stroke-width="6"/>
+<rect x="42" y="45" width="1130" height="628" rx="2" fill="none" stroke="#44617a" stroke-width="12"/>
+<rect x="63" y="55" width="593" height="555" rx="8" fill="url(#tiles)" stroke="#344b5e" stroke-width="12"/>
+<rect x="66" y="520" width="176" height="140" rx="5" fill="#dfd2b1" stroke="#344b5e" stroke-width="6"/>
+<rect x="224" y="560" width="453" height="96" rx="0" fill="url(#tiles)" stroke="#d4c4a5" stroke-width="2"/>
+<rect x="616" y="49" width="80" height="570" rx="3" fill="url(#tiles)" stroke="#375067" stroke-width="9"/>
+<rect x="688" y="48" width="462" height="314" rx="6" fill="url(#labTiles)" stroke="#2e4960" stroke-width="12"/>
+<rect x="688" y="378" width="462" height="285" rx="6" fill="url(#woodTiles)" stroke="#2e4960" stroke-width="12"/>
+<rect x="705" y="355" width="84" height="26" rx="2" fill="url(#tiles)" stroke="#d6c4aa" stroke-width="3"/>
+<rect x="705" y="372" width="84" height="22" rx="2" fill="url(#tiles)" stroke="#d6c4aa" stroke-width="3"/>
+<rect x="614" y="220" width="36" height="90" rx="2" fill="url(#tiles)" stroke="#e6dcc2" stroke-width="3"/>
+<rect x="670" y="210" width="39" height="100" rx="2" fill="url(#tiles)" stroke="#e6dcc2" stroke-width="3"/>
+<rect x="671" y="462" width="39" height="88" rx="2" fill="url(#tiles)" stroke="#e6dcc2" stroke-width="3"/>
+<rect x="95" y="88" width="470" height="55" rx="5" fill="#a6d5cb" stroke="#527f7d" stroke-width="4"/>
+<text x="330" y="123" font-size="25" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#254b60">ESCOLA VIRTUAL • MODO PROVA</text>
+<rect x="92" y="176" width="190" height="186" rx="4" fill="url(#court)" stroke="#38596d" stroke-width="7"/>
+<rect x="104" y="188" width="166" height="162" rx="0" fill="none" stroke="#e8f1df" stroke-width="4"/>
+<path d="M187 189v160M104 269h166" fill="none" stroke="#e8f1df" stroke-width="3"/>
+<circle cx="187" cy="269" r="32" fill="none" stroke="#e8f1df" stroke-width="3"/>
+<text x="188" y="386" font-size="16" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#385b6f">QUADRA</text>
+<rect x="316" y="176" width="256" height="284" rx="6" fill="#b3cfac" stroke="#648d78" stroke-width="5"/>
+<rect x="342" y="207" width="204" height="223" rx="7" fill="#b9d6b1" stroke="#91b58d" stroke-width="3"/>
+<rect x="406" y="191" width="70" height="250" rx="0" fill="#dbcda9" stroke="#b6a77f" stroke-width="3"/>
+<rect x="324" y="303" width="250" height="52" rx="0" fill="#dbcda9" stroke="#b6a77f" stroke-width="3"/>
+<text x="444" y="471" font-size="23" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#35566a">PÁTIO</text>
+<g transform="translate(363 258) scale(1)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(512 256) scale(0.86)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(360 399) scale(0.75)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(526 402) scale(0.85)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(1100 700) scale(0.7)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(82 668) scale(0.64)" filter="url(#shadow)">
+<rect x="-5" y="3" width="11" height="28" rx="1" fill="#8f6a50" stroke="#6b4f42" stroke-width="3"/>
+<circle cx="-15" cy="-16" r="19" fill="#457b60" stroke="#2c5b52" stroke-width="4"/><circle cx="12" cy="-23" r="22" fill="#659e73" stroke="#2c5b52" stroke-width="4"/><circle cx="0" cy="-35" r="22" fill="#7eb483" stroke="#376956" stroke-width="4"/>
+<circle cx="-4" cy="-39" r="5" fill="#b4d9a4"/><circle cx="14" cy="-30" r="4" fill="#b4d9a4"/></g>
+<g transform="translate(110 443)" filter="url(#shadow)"><rect x="0" y="0" width="78" height="24" rx="3" fill="#ba8865" stroke="#614a40" stroke-width="4"/><path d="M13 1v22M33 1v22M54 1v22M74 1v22" stroke="#dfb38a" stroke-width="3"/><rect x="6" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/><rect x="64" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/></g>
+<g transform="translate(260 492)" filter="url(#shadow)"><rect x="0" y="0" width="78" height="24" rx="3" fill="#ba8865" stroke="#614a40" stroke-width="4"/><path d="M13 1v22M33 1v22M54 1v22M74 1v22" stroke="#dfb38a" stroke-width="3"/><rect x="6" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/><rect x="64" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/></g>
+<g transform="translate(508 492)" filter="url(#shadow)"><rect x="0" y="0" width="78" height="24" rx="3" fill="#ba8865" stroke="#614a40" stroke-width="4"/><path d="M13 1v22M33 1v22M54 1v22M74 1v22" stroke="#dfb38a" stroke-width="3"/><rect x="6" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/><rect x="64" y="24" width="7" height="13" rx="2" fill="#506073" stroke="#354354" stroke-width="2"/></g>
+<ellipse cx="188" cy="465" rx="39" ry="21" fill="#7cb8c1" stroke="#47667f" stroke-width="6"/><ellipse cx="188" cy="461" rx="24" ry="11" fill="#d4eff0"/><path d="M188 460v-29M181 451l7-20 7 20" fill="none" stroke="#d7f6fb" stroke-width="4"/>
+<rect x="82" y="541" width="134" height="57" rx="3" fill="#ab8259" stroke="#5f4e44" stroke-width="5"/>
+<rect x="96" y="548" width="107" height="24" rx="2" fill="#d9b68d" stroke="#765c4c" stroke-width="3"/>
+<text x="149" y="588" font-size="13" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#f7f3e9">PORTARIA</text>
+<rect x="100" y="614" width="108" height="24" rx="2" fill="#b7d5d5" stroke="#496476" stroke-width="3"/>
+<text x="154" y="631" font-size="12" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#2e4f5e">ENTRADA</text>
+<rect x="613" y="61" width="76" height="40" rx="5" fill="#416e8b" stroke="#2d4559" stroke-width="5"/>
+<text x="651" y="86" font-size="13" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#ffffff">HALL</text>
+<rect x="740" y="66" width="367" height="40" rx="4" fill="#2f6886" stroke="#244a65" stroke-width="4"/>
+<text x="921" y="92" font-size="19" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#f8f7ef">LABORATÓRIO DE INFORMÁTICA</text>
+<rect x="744" y="393" width="366" height="37" rx="4" fill="#866c66" stroke="#534d58" stroke-width="4"/>
+<text x="927" y="419" font-size="18" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#fff1da">BIBLIOTECA / CONVIVÊNCIA</text>
+<g transform="translate(733 133)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<g transform="translate(860 133)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<g transform="translate(987 133)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<g transform="translate(733 247)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<g transform="translate(860 247)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<g transform="translate(987 247)" filter="url(#shadow)">
+<rect x="0" y="0" width="88" height="64" rx="4" fill="#ae8664" stroke="#65534b" stroke-width="4"/>
+<rect x="18" y="8" width="54" height="35" rx="3" fill="#354b5c" stroke="#253745" stroke-width="3"/>
+<rect x="23" y="12" width="44" height="23" rx="1" fill="#86c7c8" stroke="#45617b" stroke-width="2"/>
+<path d="M29 30L40 18L54 27L62 18" stroke="#3d8396" stroke-width="3" fill="none"/>
+<rect x="42" y="43" width="9" height="6" rx="0" fill="#d5dfdf" stroke="#5e666b" stroke-width="1"/>
+<rect x="24" y="49" width="40" height="6" rx="1" fill="#c2c7be" stroke="#79776e" stroke-width="1"/>
+<rect x="36" y="66" width="21" height="15" rx="2" fill="#6f98bb" stroke="#405d7c" stroke-width="4"/>
+</g>
+<rect x="1083" y="248" width="57" height="73" rx="2" fill="#b99476" stroke="#68574e" stroke-width="4"/>
+<rect x="1089" y="259" width="45" height="27" rx="2" fill="#568c7b" stroke="#366e62" stroke-width="3"/>
+<text x="1109" y="334" font-size="12" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#304f65">PROF.</text>
+<g transform="translate(739,459) " filter="url(#shadow)"><rect x="0" y="0" width="116" height="38" rx="2" fill="#815b4b" stroke="#4f454a" stroke-width="4"/><rect x="6" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="14" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="22" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="30" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="38" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="46" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="54" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="62" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="70" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="78" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="86" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="94" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="102" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/></g>
+<g transform="translate(1002,459) " filter="url(#shadow)"><rect x="0" y="0" width="116" height="38" rx="2" fill="#815b4b" stroke="#4f454a" stroke-width="4"/><rect x="6" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="14" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="22" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="30" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="38" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="46" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="54" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="62" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="70" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="78" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="86" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="94" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="102" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/></g>
+<g transform="translate(739,570) " filter="url(#shadow)"><rect x="0" y="0" width="116" height="38" rx="2" fill="#815b4b" stroke="#4f454a" stroke-width="4"/><rect x="6" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="14" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="22" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="30" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="38" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="46" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="54" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="62" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="70" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="78" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="86" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="94" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="102" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/></g>
+<g transform="translate(1002,570) " filter="url(#shadow)"><rect x="0" y="0" width="116" height="38" rx="2" fill="#815b4b" stroke="#4f454a" stroke-width="4"/><rect x="6" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="14" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="22" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="30" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="38" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="46" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="54" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="62" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="70" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/><rect x="78" y="7" width="6" height="25" rx="2" fill="#b47e74" stroke="#6e665c" stroke-width="1"/><rect x="86" y="7" width="6" height="25" rx="2" fill="#d0b579" stroke="#6e665c" stroke-width="1"/><rect x="94" y="7" width="6" height="25" rx="2" fill="#6c8ca4" stroke="#6e665c" stroke-width="1"/><rect x="102" y="7" width="6" height="25" rx="2" fill="#87ac9f" stroke="#6e665c" stroke-width="1"/></g>
+<rect x="876" y="482" width="90" height="87" rx="4" fill="#b48d6a" stroke="#70594d" stroke-width="5"/>
+<rect x="889" y="497" width="66" height="59" rx="2" fill="#d7bc8e" stroke="#a18b70" stroke-width="2"/>
+<text x="921" y="535" font-size="15" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#5e5a51">LEIA</text>
+<rect x="873" y="582" width="100" height="39" rx="4" fill="#86aba7" stroke="#486d71" stroke-width="4"/>
+<text x="924" y="607" font-size="15" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#244f60">LEITURA</text>
+<rect x="640" y="120" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="640" y="203" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="640" y="286" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="640" y="369" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="640" y="452" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="640" y="535" width="30" height="43" rx="2" fill="#c7dfdf" stroke="#a7b6b5" stroke-width="2"/>
+<rect x="667" y="102" width="16" height="70" rx="2" fill="#719ba0" stroke="#456774" stroke-width="3"/>
+<rect x="667" y="545" width="16" height="70" rx="2" fill="#719ba0" stroke="#456774" stroke-width="3"/>
+<text x="653" y="645" font-size="14" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#375266">CORREDOR</text>
+<circle cx="296" cy="165" r="12" fill="#be765e" stroke="#925d57" stroke-width="3"/><circle cx="293" cy="163" r="4" fill="#f2d38a"/><circle cx="300" cy="167" r="4" fill="#f0e5c3"/>
+<circle cx="293" cy="389" r="12" fill="#be765e" stroke="#925d57" stroke-width="3"/><circle cx="290" cy="387" r="4" fill="#f2d38a"/><circle cx="297" cy="391" r="4" fill="#f0e5c3"/>
+<circle cx="573" cy="161" r="12" fill="#be765e" stroke="#925d57" stroke-width="3"/><circle cx="570" cy="159" r="4" fill="#f2d38a"/><circle cx="577" cy="163" r="4" fill="#f0e5c3"/>
+<circle cx="566" cy="399" r="12" fill="#be765e" stroke="#925d57" stroke-width="3"/><circle cx="563" cy="397" r="4" fill="#f2d38a"/><circle cx="570" cy="401" r="4" fill="#f0e5c3"/>
+<circle cx="574" cy="551" r="12" fill="#be765e" stroke="#925d57" stroke-width="3"/><circle cx="571" cy="549" r="4" fill="#f2d38a"/><circle cx="578" cy="553" r="4" fill="#f0e5c3"/>
+<rect x="70" y="402" width="29" height="67" rx="2" fill="#83b3c3" stroke="#527992" stroke-width="4"/>
+<rect x="77" y="410" width="14" height="26" rx="2" fill="#ddeef4" stroke="#94b4c6" stroke-width="2"/>
+<rect x="556" y="584" width="48" height="49" rx="2" fill="#e6d3a7" stroke="#7d886c" stroke-width="4"/>
+<text x="580" y="615" font-size="11" font-family="Trebuchet MS, Arial, sans-serif" text-anchor="middle" font-weight="900" letter-spacing="1.8" fill="#547076">INFO</text>
+</svg>
