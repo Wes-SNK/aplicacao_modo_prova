@@ -145,7 +145,8 @@ BEGIN
  IF NOT coalesce(v_super.enabled,false) THEN RAISE EXCEPTION 'Supervisão não habilitada';END IF;
  UPDATE public.exam_lobby l SET authorized=true,authorized_at=now()
  FROM public.students s WHERE l.exam_id=v_exam.id AND s.id=l.student_id
- AND s.active AND s.class_group=v_super.class_group AND NOT l.authorized;
+ AND s.active AND s.class_group=v_super.class_group AND NOT l.authorized
+ AND l.last_seen_at>now()-interval '45 seconds';
  GET DIAGNOSTICS v_count=ROW_COUNT;
  RETURN jsonb_build_object('ok',true,'authorized_count',v_count);
 END;$fn$;
@@ -181,7 +182,8 @@ BEGIN
  SELECT * INTO v_super FROM public.exam_supervision WHERE exam_id=v_exam.id;
  IF NOT coalesce(v_super.enabled,false) THEN
   RETURN jsonb_build_object('supervised',false);END IF;
- IF NOT public._exam_available(v_exam) THEN RAISE EXCEPTION 'Avaliação indisponível';END IF;
+ -- A recepção pode abrir antes de a prova ser publicada; nenhum enunciado é
+ -- disponibilizado até o professor ativar o exame e autorizar o aluno.
  SELECT count(*) INTO v_matches FROM public.students
  WHERE active AND class_group=v_super.class_group AND
  lower(btrim(name))=lower(btrim(p_student_name));
