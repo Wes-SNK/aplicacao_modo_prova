@@ -106,6 +106,7 @@
     mp.lobbyChat?.close();
     movementSender?.close();movementSender=null;
     pollBusy=false;
+    for(const node of avatarNodes.values())clearTimeout(node.bubbleTimer);
     $("lobbyAvatars").textContent="";avatarNodes.clear();
     roomTimer = null; onScreen = false; approved = false;
     releaseAnnounced=false;
@@ -150,8 +151,10 @@
     const feet=document.createElement("span");feet.className="avatar-feet";
     const label=document.createElement("small");
     const emote=document.createElement("span");emote.className="avatar-emote";
-    a.append(head,body,feet,label,emote);
-    return {a,label,emote};
+    const bubble=document.createElement("span");
+    bubble.className="avatar-chat-bubble hidden";
+    a.append(head,body,feet,label,emote,bubble);
+    return {a,label,emote,bubble,bubbleTimer:null};
   }
   function drawAvatars() {
     const root=$("lobbyAvatars");
@@ -185,12 +188,23 @@
     });
     for(const [key,node] of avatarNodes){
       if(present.has(key))continue;
+      clearTimeout(node.bubbleTimer);
       node.a.remove?.();
       avatarNodes.delete(key);
     }
     $("lobbySimpleStatus").textContent=
       "Você está aguardando com "+Math.max(0,peers.length-1)+" colega(s). "+
       (approved?"Prova liberada.":"Aguardando liberação da prova.");
+  }
+  function showBubble(senderId,message){
+    // Só mensagens públicas aparecem sobre avatares. Privadas são
+    // exibidas exclusivamente no painel do destinatário e do professor.
+    const node=avatarNodes.get(String(senderId));
+    if(!node)return;
+    clearTimeout(node.bubbleTimer);
+    node.bubble.textContent=String(message).slice(0,75);
+    node.bubble.classList.remove("hidden");
+    node.bubbleTimer=setTimeout(()=>node.bubble.classList.add("hidden"),5000);
   }
   function updateAccessView() {
     const inMap=true;
@@ -397,5 +411,5 @@
     });
   }
   setup();
-  mp.lobbyBridge={join,resume,reset:resetRoom};
+  mp.lobbyBridge={join,resume,reset:resetRoom,showBubble};
 })();
