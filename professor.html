@@ -127,6 +127,56 @@
         </div>
         <p id="quickSimuladoMessage" class="muted" role="status" aria-live="polite">O simulado não é publicado automaticamente na data. Você decide quando liberar.</p>
       </section>
+      <!-- Monitoramento supervisionado; módulo isolado e desativado por padrão. -->
+      <section id="supervisionPanel" class="card supervision-panel">
+        <div class="section-head">
+          <div>
+            <h1>Monitoramento e controle da turma</h1>
+            <p class="muted">Acompanhe a presença, autorize entradas e consulte o progresso sem interferir nas respostas.</p>
+          </div>
+          <span id="supervisionStatusBadge" class="pill">Consultando…</span>
+        </div>
+        <div class="supervision-settings">
+          <div>
+            <label for="supervisionClass">Turma vinculada à avaliação</label>
+            <select id="supervisionClass"><option value="">Selecione uma turma…</option></select>
+          </div>
+          <label class="switch-row">
+            <input id="supervisionEnabled" type="checkbox">
+            <span><strong>Exigir autorização para iniciar</strong>
+            <small>Quando habilitada, os estudantes entram na sala de espera antes de receber a prova.</small></span>
+          </label>
+          <div class="toolbar">
+            <button id="supervisionSave" type="button" class="primary">Salvar supervisão</button>
+            <button id="supervisionRefresh" type="button" class="secondary">Atualizar monitoramento</button>
+            <button id="supervisionExport" type="button" class="secondary">Exportar CSV</button>
+          </div>
+        </div>
+        <p id="supervisionMessage" class="field-help" role="status" aria-live="polite"></p>
+        <div class="supervision-stats" aria-label="Resumo da aplicação">
+          <div><span>Na turma</span><strong id="supervisionTotal">0</strong></div>
+          <div><span>Aguardando</span><strong id="supervisionWaiting">0</strong></div>
+          <div><span>Realizando</span><strong id="supervisionInProgress">0</strong></div>
+          <div><span>Finalizados</span><strong id="supervisionFinished">0</strong></div>
+        </div>
+        <div class="supervision-toolbar">
+          <div>
+            <label for="supervisionFilter">Procurar aluno</label>
+            <input id="supervisionFilter" type="search" placeholder="Nome do estudante…">
+          </div>
+          <button id="supervisionAuthorizeAll" type="button" class="primary" disabled>Autorizar todos os presentes</button>
+        </div>
+        <div class="table-wrap">
+          <table class="supervision-table">
+            <thead>
+              <tr><th>Aluno</th><th>Estado</th><th>Progresso</th><th>Tempo</th><th>Conexão</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="supervisionRows"></tbody>
+          </table>
+        </div>
+        <p class="field-help">Conexão estimada pela última comunicação; a ausência de sinal não é considerada infração. Progresso representa respostas registradas, não acertos.</p>
+      </section>
+
       <section class="card teacher-settings">
         <div class="section-head">
           <div>
@@ -459,5 +509,6 @@
   <script src="common.js"></script>
   <script src="professor.js"></script>
   <script src="presets.js"></script>
+  <script src="monitoramento.js"></script>
 </body>
 </html>
