@@ -1001,3 +1001,42 @@ body.lobby-no-scroll{overflow:hidden;}
 .student-lobby:fullscreen .lobby-chat-panel,
 .student-lobby.lobby-immersive .lobby-chat-panel{
  max-height:40vh;overflow:auto;flex-shrink:0;}
+
+
+/* Complementos do chat modular — IDs do aluno e painel de supervisão. */
+.lobby-chat-toolbar{display:flex;justify-content:flex-end;margin:6px 0;}
+.lobby-chat-heading,.lobby-chat-actions{display:flex;justify-content:space-between;align-items:center;gap:9px;}
+.lobby-chat-messages,.teacher-chat-messages{display:flex;flex-direction:column;gap:6px;}
+.lobby-chat-message,.teacher-chat-message{
+ border-radius:7px;background:#eef4f8;padding:7px 9px;overflow-wrap:anywhere;
+}
+.lobby-chat-message.mine{background:#e5f4ea;}
+.lobby-chat-message.teacher{border-left:3px solid #527fb4;}
+.lobby-chat-message small,.teacher-chat-message small{color:#486277;display:block;}
+.lobby-chat-message p,.teacher-chat-message p{margin:2px 0 0;}
+.lobby-chat-panel textarea,.teacher-chat-section textarea{resize:vertical;width:100%;}
+.lobby-chat-mentions{display:flex;flex-wrap:wrap;gap:5px;padding:5px;border:1px dashed #91aaba;border-radius:6px;}
+.lobby-chat-mentions.hidden{display:none!important;}
+.lobby-chat-panel label{font-weight:600;}
+.avatar-chat-bubble{
+ position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+ max-width:175px;min-width:55px;width:max-content;background:#fffefa;
+ border:2px solid #527185;border-radius:9px;color:#264253;
+ padding:4px 7px;box-shadow:2px 3px #23334433;
+ font-size:12px;line-height:1.25;overflow-wrap:anywhere;
+ text-align:center;pointer-events:none;z-index:10;
+}
+.avatar-chat-bubble.hidden{display:none!important;}
+.teacher-chat-section{display:grid;gap:12px;padding:16px;margin:14px 0;}
+.teacher-chat-settings,.teacher-chat-moderation{display:flex;flex-wrap:wrap;align-items:center;gap:12px;}
+.teacher-chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end;}
+.teacher-chat-compose label,.teacher-chat-compose textarea{grid-column:1/-1;}
+.teacher-chat-moderation select{max-width:300px;width:100%;}
+@media(max-width:720px){
+ .lobby-chat-mentions button,.lobby-chat-quick button{min-height:44px;}
+ .lobby-chat-actions{flex-wrap:wrap;}
+ .lobby-chat-actions button{width:100%;min-height:44px;}
+ .teacher-chat-settings,.teacher-chat-moderation{align-items:stretch;flex-direction:column;}
+ .teacher-chat-compose{grid-template-columns:1fr;}
+ .teacher-chat-moderation select{max-width:none;}
+}
