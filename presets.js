@@ -107,10 +107,10 @@
           "Avaliação existente — preservada; pode servir de modelo para um novo preset."));
       }
       const actions = element("div", "preset-actions");
-      const open = element("a", "preset-action-link", "Abrir no painel");
-      open.href = teacherUrl(rec.slug);
-      actions.appendChild(open);
       if (!rec.archived) {
+        const open = element("a", "preset-action-link", "Abrir no painel");
+        open.href = teacherUrl(rec.slug);
+        actions.appendChild(open);
         actions.appendChild(link("Prévia do aluno", previewUrl(rec.slug)));
         actions.appendChild(button("Duplicar", () => duplicatePreset(rec)));
       }
@@ -123,12 +123,12 @@
         actions.appendChild(button(rec.archived ? "Restaurar" : "Arquivar",
           () => archivePreset(rec), "secondary"));
       }
-      const share = element("a", "preset-action-link", "Link do aluno");
-      share.href = studentUrl(rec.slug);
-      share.target = "_blank";
-      share.rel = "noopener noreferrer";
-      actions.appendChild(share);
       if (!rec.archived) {
+        const share = element("a", "preset-action-link", "Link do aluno");
+        share.href = studentUrl(rec.slug);
+        share.target = "_blank";
+        share.rel = "noopener noreferrer";
+        actions.appendChild(share);
         actions.appendChild(button("Copiar link", () => copyStudentLink(rec)));
       }
       card.appendChild(actions);
