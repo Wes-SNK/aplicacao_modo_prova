@@ -19,6 +19,7 @@ CREATE TABLE IF NOT EXISTS public.exam_lobby_chat_messages (
  sender_student_id uuid REFERENCES public.students(id) ON DELETE CASCADE,
  recipient_student_id uuid REFERENCES public.students(id) ON DELETE CASCADE,
  teacher_sender boolean NOT NULL DEFAULT false,
+ teacher_only boolean NOT NULL DEFAULT false,
  body text NOT NULL CHECK (char_length(btrim(body)) BETWEEN 1 AND 150),
  created_at timestamptz NOT NULL DEFAULT now(),
  CHECK ((teacher_sender AND sender_student_id IS NULL) OR
@@ -56,7 +57,7 @@ BEGIN
  SELECT coalesce(muted,false) INTO v_muted FROM public.exam_lobby_chat_mutes
  WHERE exam_id=v_lobby.exam_id AND student_id=v_lobby.student_id;
  SELECT coalesce(jsonb_agg(jsonb_build_object(
-   'id',l.student_id,'handle','Colega-'||upper(substr(md5(l.student_id::text),1,4)),
+   'id',substr(md5(l.student_id::text),1,10),'handle','Colega-'||upper(substr(md5(l.student_id::text),1,4)),
    'self',l.student_id=v_lobby.student_id
  ) ORDER BY l.student_id),'[]'::jsonb) INTO v_peers
  FROM public.exam_lobby l JOIN public.students s ON s.id=l.student_id
@@ -77,9 +78,12 @@ BEGIN
   FROM public.exam_lobby_chat_messages m
   WHERE m.exam_id=v_lobby.exam_id
     AND m.id>greatest(0,coalesce(p_after,0))
-    AND (m.recipient_student_id IS NULL OR
-     m.sender_student_id=v_lobby.student_id OR
-     m.recipient_student_id=v_lobby.student_id)
+    AND v_allowed AND (
+     (m.teacher_only AND m.sender_student_id=v_lobby.student_id) OR
+     (NOT m.teacher_only AND
+      (m.recipient_student_id IS NULL OR
+       m.sender_student_id=v_lobby.student_id OR
+       m.recipient_student_id=v_lobby.student_id)))
     AND v_allowed
   ORDER BY m.id DESC LIMIT 40
  ) msg;
@@ -90,11 +94,12 @@ END;
 $fn$;
 
 CREATE OR REPLACE FUNCTION public.student_lobby_chat_send(
- p_lobby_token uuid,p_body text,p_recipient uuid DEFAULT NULL
+ p_lobby_token uuid,p_body text,p_recipient text DEFAULT NULL,
+ p_teacher_only boolean DEFAULT false
 ) RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='public'
 AS $fn$
 DECLARE l public.exam_lobby;c public.exam_lobby_chat_settings;
- v_text text;v_id bigint;
+ v_text text;v_id bigint;v_recipient uuid;
 BEGIN
  SELECT * INTO l FROM public.exam_lobby WHERE lobby_token=p_lobby_token;
  IF NOT FOUND THEN RAISE EXCEPTION 'Sessão inválida';END IF;
@@ -112,12 +117,19 @@ BEGIN
   RAISE EXCEPTION 'Mensagem deve ter de 1 a 150 caracteres válidos';
  END IF;
  IF p_recipient IS NOT NULL THEN
+  IF p_teacher_only THEN RAISE EXCEPTION 'Escolha apenas um destinatário';END IF;
   IF NOT coalesce(c.peer_messages,false) THEN
    RAISE EXCEPTION 'Mensagens direcionadas desativadas';END IF;
-  IF p_recipient=l.student_id OR NOT EXISTS(
+  SELECT rl.student_id INTO v_recipient
+  FROM public.exam_lobby rl
+  JOIN public.students s ON s.id=rl.student_id
+  WHERE rl.exam_id=l.exam_id AND s.active
+    AND substr(md5(rl.student_id::text),1,10)=p_recipient
+  LIMIT 1;
+  IF v_recipient IS NULL OR v_recipient=l.student_id OR NOT EXISTS(
    SELECT 1 FROM public.exam_lobby rl
    JOIN public.students s ON s.id=rl.student_id
-   WHERE rl.exam_id=l.exam_id AND rl.student_id=p_recipient AND s.active
+   WHERE rl.exam_id=l.exam_id AND rl.student_id=v_recipient AND s.active
    AND rl.requested_at IS NOT NULL
    AND rl.last_seen_at>now()-interval '45 seconds'
    AND NOT EXISTS(SELECT 1 FROM public.attempts a
@@ -134,8 +146,8 @@ BEGIN
     RAISE EXCEPTION 'Aguarde 3 segundos antes de enviar outra mensagem';
  END IF;
  INSERT INTO public.exam_lobby_chat_messages
- (exam_id,sender_student_id,recipient_student_id,body)
- VALUES (l.exam_id,l.student_id,p_recipient,v_text) RETURNING id INTO v_id;
+ (exam_id,sender_student_id,recipient_student_id,teacher_only,body)
+ VALUES (l.exam_id,l.student_id,v_recipient,coalesce(p_teacher_only,false),v_text) RETURNING id INTO v_id;
  RETURN jsonb_build_object('ok',true,'id',v_id);
 END;
 $fn$;
@@ -191,7 +203,7 @@ BEGIN
  IF NOT FOUND THEN RAISE EXCEPTION 'Avaliação inexistente';END IF;
  SELECT coalesce(jsonb_agg(to_jsonb(m) ORDER BY m.id),'[]'::jsonb)
  INTO v_messages FROM (
-  SELECT c.id,c.body,c.created_at,c.teacher_sender,
+  SELECT c.id,c.body,c.created_at,c.teacher_sender,c.teacher_only,
     coalesce(s.name,'Professor') AS sender,
     coalesce(r.name,'Todos') AS recipient
   FROM public.exam_lobby_chat_messages c
@@ -225,14 +237,14 @@ BEGIN
 END;$fn$;
 
 REVOKE ALL ON FUNCTION public.student_lobby_chat_read(uuid,bigint),
- public.student_lobby_chat_send(uuid,text,uuid),
+ public.student_lobby_chat_send(uuid,text,text,boolean),
  public.teacher_lobby_chat_settings(text,boolean,boolean),
  public.teacher_lobby_chat_mute(text,uuid,boolean),
  public.teacher_lobby_chat_read(text,bigint),
  public.teacher_lobby_chat_send(text,text,uuid)
  FROM PUBLIC,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.student_lobby_chat_read(uuid,bigint),
- public.student_lobby_chat_send(uuid,text,uuid) TO anon,authenticated;
+ public.student_lobby_chat_send(uuid,text,text,boolean) TO anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.teacher_lobby_chat_settings(text,boolean,boolean),
  public.teacher_lobby_chat_mute(text,uuid,boolean),
  public.teacher_lobby_chat_read(text,bigint),
