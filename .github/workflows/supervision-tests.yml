@@ -58,7 +58,7 @@ jobs:
           print("School SVG valid:", len(list(root.iter())), "elements")
           PY
       - name: Run automated tests
-        run: node --test tests/supervision.test.cjs
+        run: node --test tests/*.test.cjs
       - name: Confirm database schema is staged but not applied
         run: |
           test -s migrations/013_supervisao_sala_espera.sql
