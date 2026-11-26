@@ -35,9 +35,9 @@
     const msg=data.preview_only
       ? "Você está visualizando "+data.class_group+", mas a avaliação continua vinculada a "+
         (data.configured_class_group||"nenhuma turma")+
-        ". Para liberar provas dessa turma, confirme a configuração em Salvar supervisão."
+        ". Para liberar provas dessa turma, confirme a vinculação em Vincular turma à avaliação."
       : !data.enabled
-      ? "Selecione a turma, habilite a supervisão e salve. Os estudantes entram diretamente na sala de espera pelo link, sem autorização prévia."
+      ? "Selecione a turma e clique em Vincular turma à avaliação. A entrada na sala de espera é automática, mas iniciar a prova exige sua liberação."
       : !data.is_active
         ? "Os estudantes já podem entrar no pátio virtual. Para iniciar a prova, libere os alunos e publique a avaliação em Avaliações e presets."
         : "Compartilhe o link com a turma. Cada aluno entra diretamente no pátio ao informar seu nome. Quando desejar, clique em Liberar prova. O cronômetro só começa quando o aluno confirmar as regras.";
@@ -99,7 +99,6 @@
       sel.appendChild(none);
       (data.classes||[]).forEach(name=>sel.appendChild(new Option(name,name)));
       sel.value=data.class_group||old||"";
-      $("supervisionEnabled").checked=!!data.enabled;
     }
     const students=Array.isArray(data.students)?data.students:[];
     const now=Date.parse(data.server_time)||Date.now();
@@ -197,18 +196,16 @@
   }
   async function save(){
     const group=$("supervisionClass").value;
-    const enabled=$("supervisionEnabled").checked;
-    if(!group){announce("Escolha uma turma antes de salvar.");return;}
-    if(!window.confirm((enabled
-      ?"Ativar supervisão e exigir autorização individual de início?"
-      :"Desativar a exigência de autorização para esta avaliação?")+
-      "\nTurma: "+group+"\nEssa alteração é exclusiva desta avaliação."))return;
+    if(!group){announce("Escolha uma turma antes de vincular.");return;}
+    if(!window.confirm("Vincular a turma "+group+" a esta avaliação?"+
+      "\nOs alunos entrarão diretamente na sala de espera e você liberará o início da prova."+
+      "\nA alteração é exclusiva desta avaliação."))return;
     await perform(async()=>{
       const res=await trpc("teacher_supervision_configure_v3",{
-        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled
+        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:true
       });
       if(!res?.ok)throw new Error("Configuração não confirmada.");
-      announce("Configuração salva para "+group+".");
+      announce("Turma "+group+" vinculada à avaliação com supervisão do início.");
     });
     await refresh(true);
     dirty=false;
@@ -277,7 +274,6 @@
     showSwitchingClass();
     refresh(true);
   });
-  $("supervisionEnabled").addEventListener("change",()=>{dirty=true;});
   window.addEventListener("modo-prova:teacher-ready",refresh);
   window.addEventListener("modo-prova:teacher-logout",()=>{
     data=null;dirty=false;requestVersion++;
