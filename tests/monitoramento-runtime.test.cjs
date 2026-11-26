@@ -105,7 +105,7 @@ function environment({rpcFailure=false}={}){
       const o=new FakeElement("option");o.textContent=label;o.value=val;return o;
     },
     setInterval:fn=>{intervals.push(fn);return intervals.length;},
-    setTimeout,clearTimeout,
+    setTimeout,clearTimeout,URL,
     console
   };
   vm.runInNewContext(script,context,{filename:"monitoramento.js"});
