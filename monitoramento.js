@@ -208,10 +208,11 @@
         p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled
       });
       if(!res?.ok)throw new Error("Configuração não confirmada.");
-      dirty=false;
       announce("Configuração salva para "+group+".");
     });
     await refresh(true);
+    dirty=false;
+    if(data)render();
   }
   async function authorize(s,yes){
     if(!window.confirm((yes?"Liberar início da prova para ":"Bloquear início da prova de ")+s.name+"?"))return;
