@@ -8,7 +8,7 @@
   const mp = window.ModeProva;
   const $ = id => document.getElementById(id);
   const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug;
-  let token = null, approved = false, roomTimer = null, busy = false;
+  let token = null, approved = false, lobbyAllowed = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
   let acceptEntry = null;
   let onScreen = false;
@@ -19,7 +19,7 @@
   }
   function resetRoom() {
     clearInterval(roomTimer);
-    roomTimer = null; onScreen = false; approved = false;
+    roomTimer = null; onScreen = false; approved = false; lobbyAllowed = false;
     token = null; peers = []; busy = false;
     sessionStorage.removeItem(cacheKey);
   }
@@ -33,7 +33,8 @@
     $("lobbyEnterExam").disabled = true;
     $("lobbyStatusBadge").textContent = "Aguardando";
     $("lobbyStatusBadge").className = "pill";
-    displayMessage("Explore o pátio enquanto aguarda a liberação do professor.");
+    displayMessage("Identificação recebida. Aguarde o professor permitir a entrada no pátio virtual."); 
+    updateAccessView();
     status("Conectando à sala de espera…");
   }
   function drawAvatars() {
@@ -66,25 +67,37 @@
       "Você está aguardando com " + Math.max(0,peers.length-1) + " colega(s). " +
       (approved ? "Entrada autorizada." : "Aguardando liberação.");
   }
-  function updateApproval(value) {
-    approved = !!value;
-    $("lobbyEnterExam").disabled = !approved || busy;
-    $("lobbyStatusBadge").textContent = approved ? "Autorizado" : "Aguardando";
-    $("lobbyStatusBadge").className = approved ? "pill ok" : "pill";
-    displayMessage(approved
-      ? "O professor autorizou sua entrada. Clique em Entrar na avaliação."
-      : "O professor ainda não autorizou sua entrada.",approved?"ok":"info");
+  function updateAccessView() {
+    const inMap=lobbyAllowed;
+    const simple=$("lobbySimpleMode").checked;
+    $("lobbyMap").classList.toggle("hidden",!inMap || simple);
+    $("lobbySimpleStatus").classList.toggle("hidden",!inMap || !simple);
+    document.querySelector(".lobby-movement").classList.toggle("hidden",!inMap || simple);
+    $("lobbySimpleMode").disabled=!inMap;
+    $("lobbyHelpButton").classList.toggle("hidden",!inMap);
+    $("lobbyEnterExam").disabled=!inMap || !approved || busy;
+    $("lobbyStatusBadge").textContent=!inMap?"Aguardando entrada no pátio":
+      approved?"Prova liberada":"No pátio";
+    $("lobbyStatusBadge").className=inMap && approved?"pill ok":"pill";
+    displayMessage(!inMap
+      ? "Aguarde a autorização do professor para ingressar na sala de espera."
+      : approved
+        ? "O professor liberou sua prova. Clique em Entrar na avaliação."
+        : "Você entrou no pátio virtual. Aguarde o professor liberar o início da prova.",
+      inMap&&approved?"ok":"info");
   }
   async function poll() {
     if (!token || !onScreen || document.hidden) return;
     try {
       const result=await mp.rpc("student_lobby_state",{p_lobby_token:token});
-      peers = Array.isArray(result.peers)?result.peers:[];
+      lobbyAllowed=!!result.lobby_allowed;
+      peers = lobbyAllowed && Array.isArray(result.peers)?result.peers:[];
       helpPending=!!result.help_pending;
       $("lobbyHelpButton").textContent = helpPending ? "Cancelar pedido de ajuda" : "Preciso de ajuda";
       status(result.is_active ? "Conectado à escola • atualização automática"
         : "Avaliação temporariamente indisponível.");
-      updateApproval(result.authorized && result.is_active);
+      approved=!!result.authorized && !!result.is_active;
+      updateAccessView();
       drawAvatars();
     } catch(err) {
       status("Sem conexão com a sala. Suas respostas não foram afetadas; reconectando…");
@@ -95,10 +108,12 @@
     poll();
     roomTimer=setInterval(poll,4000);
   }
-  function setSession(value,studentName) {
+  function setSession(value,studentName,allow=false) {
     token=value;
     sessionStorage.setItem(cacheKey,JSON.stringify({token,studentName}));
     showRoom(studentName);
+    lobbyAllowed=!!allow;
+    updateAccessView();
     beginPoll();
   }
   async function join(name,onEntry) {
@@ -108,8 +123,7 @@
     let response;
     try {
       response=await mp.rpc("student_lobby_join",{
-        p_exam_slug:mp.cfg.examSlug,p_student_name:name,
-        p_access_code:$("studentAccessCodeInput").value.trim() || null
+        p_exam_slug:mp.cfg.examSlug,p_student_name:name
       });
     } catch(err) {
       // Compatibilidade temporária com banco sem a migração de supervisão.
@@ -119,7 +133,7 @@
     }
     if (!response?.supervised) return false;
     if (!response.lobby_token) throw new Error("Não foi possível identificar a sala de espera");
-    setSession(response.lobby_token,response.student_name||name);
+    setSession(response.lobby_token,response.student_name||name,response.lobby_allowed);
     return true;
   }
   async function resume(onEntry) {
@@ -134,7 +148,7 @@
     return true;
   }
   async function enter() {
-    if (!approved || busy || !token || !acceptEntry) return;
+    if (!lobbyAllowed || !approved || busy || !token || !acceptEntry) return;
     busy=true;
     $("lobbyEnterExam").disabled=true;
     try {
@@ -146,11 +160,11 @@
       acceptEntry(payload);
     } catch(err) {
       displayMessage(err.message||"Não foi possível entrar. Solicite ajuda ao professor.","error");
-      busy=false; $("lobbyEnterExam").disabled=!approved;
+      busy=false; $("lobbyEnterExam").disabled=!approved || !lobbyAllowed;
     }
   }
   async function move(dx,dy,emote=null) {
-    if(!token || !onScreen || $("lobbySimpleMode").checked) return;
+    if(!token || !onScreen || !lobbyAllowed || $("lobbySimpleMode").checked) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
     const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
@@ -164,7 +178,7 @@
     } catch{status("Reconectando movimentação…");}
   }
   async function requestHelp() {
-    if(!token || !onScreen) return;
+    if(!token || !onScreen || !lobbyAllowed) return;
     try{
       const r=await mp.rpc("student_lobby_help",{
         p_lobby_token:token,p_request:!helpPending
@@ -186,14 +200,9 @@
       $(id).addEventListener("click",()=>move(0,0,name)));
     $("lobbyHelpButton").addEventListener("click",requestHelp);
     $("lobbyEnterExam").addEventListener("click",enter);
-    $("lobbySimpleMode").addEventListener("change",()=>{
-      const simple=$("lobbySimpleMode").checked;
-      $("lobbyMap").classList.toggle("hidden",simple);
-      $("lobbySimpleStatus").classList.toggle("hidden",!simple);
-      document.querySelector(".lobby-movement").classList.toggle("hidden",simple);
-    });
+    $("lobbySimpleMode").addEventListener("change",updateAccessView);
     document.addEventListener("keydown",e=>{
-      if (!onScreen || $("lobbySimpleMode").checked ||
+      if (!onScreen || !lobbyAllowed || $("lobbySimpleMode").checked ||
         ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) return;
       const dirs={ArrowUp:[0,-5],ArrowDown:[0,5],ArrowLeft:[-5,0],
         ArrowRight:[5,0],w:[0,-5],s:[0,5],a:[-5,0],d:[5,0]};

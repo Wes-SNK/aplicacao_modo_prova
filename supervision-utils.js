@@ -19,8 +19,10 @@
       if(s.status==="in_progress")return "Realizando";
       if(s.status==="ready")return "Pronto para iniciar";
       if(s.waiting && s.authorized)return "Autorizado";
-      if(s.waiting)return "Aguardando autorização";
-      if(s.authorized)return "Autorizado — ainda não entrou";
+      if(s.waiting)return "No pátio — aguardando liberação";
+      if(s.lobby_requested&&!s.lobby_allowed)return "Aguardando entrada no pátio";
+      if(s.lobby_allowed)return "Pátio liberado — ainda não entrou";
+      if(s.authorized)return "Prova liberada — ainda não entrou";
       return "Ainda não entrou";
     },
     connectionStatus(lastSeen,waiting,inProgress,now=Date.now()){
