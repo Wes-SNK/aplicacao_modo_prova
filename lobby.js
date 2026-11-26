@@ -103,7 +103,6 @@
     mp.lobbyChat?.close();
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
-    mp.lobbyChat?.close();
     movementSender?.close();movementSender=null;
     pollBusy=false;
     for(const node of avatarNodes.values())clearTimeout(node.bubbleTimer);
