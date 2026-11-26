@@ -40,14 +40,15 @@ test("Liberação coletiva: somente estudantes que realmente chegaram",()=>{
 });
 test("Todos os arquivos JavaScript passam no parser",()=>{
  for(const name of ["config.js","common.js","student.js","professor.js","presets.js",
- "preview-aluno.js","supervision-utils.js","lobby.js","monitoramento.js","alunos.js"]){
+ "preview-aluno.js","supervision-utils.js","lobby.js","monitoramento.js","alunos.js",
+ "teacher-login.js","teacher-pages.js"]){
   assert.doesNotThrow(()=>new Function(read(name)),name);
  }
 });
 test("Todos os IDs usados pelos módulos existem nas páginas correspondentes",()=>{
  const ids=html=>new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(x=>x[1]));
  const lookup=js=>[...new Set([...js.matchAll(/\$\("([^"]+)"\)/g)].map(x=>x[1]))];
- const teacher=ids(read("professor.html")),student=ids(read("index.html")),
+ const teacher=ids(read("professor-shell.html")),student=ids(read("index.html")),
  preview=ids(read("preview-aluno.html"));
  for(const name of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
   assert.deepEqual(lookup(read(name)).filter(x=>!teacher.has(x)),[],name);
@@ -171,4 +172,41 @@ test("Código individual é opcional e a ativação tardia é bloqueada",()=>{
  assert.match(frontend,/p_access_code:/);
  assert.match(migration,/v_super\.require_code/);
  assert.match(migration,/códigos depois de estudantes entrarem/);
+});
+
+test("Login exclusivo: nenhuma opção de presets ou turma aparece antes de autenticar",()=>{
+ const login=read("professor.html");
+ assert.match(login,/id="teacherLoginForm"/);
+ assert.match(login,/teacher-login\.js/);
+ assert.doesNotMatch(login,/id="presetManager"|id="studentManager"|id="supervisionPanel"/);
+ assert.doesNotMatch(login,/id="teacherMainNav"|data-page-link/);
+ assert.doesNotMatch(login,/professor\.js|presets\.js/);
+});
+test("Páginas distintas com layout compartilhado e controles preservados",()=>{
+ const shell=read("professor-shell.html");
+ const scripts=read("teacher-pages.js");
+ const sections=["painel","questoes","avaliacoes","alunos"];
+ for(const page of sections){
+  const markup=read(page+".html");
+  assert.match(markup,new RegExp('data-teacher-page="'+page+'"'));
+  assert.match(markup,/teacher-pages\.js/);
+  assert.match(shell,new RegExp('data-page-link="'+page+'"'));
+  assert.match(shell,new RegExp('data-page-area="'+page+'"'));
+ }
+ assert.match(scripts,/validTeacherSession/);
+ assert.match(scripts,/if\(!session\?\.access_token\)/);
+ assert.match(scripts,/fetch\("professor-shell\.html"/);
+ assert.match(scripts,/teacher-area-disabled/);
+ assert.match(scripts,/teacher_presets_list/);
+ for(const id of ["presetManager","supervisionPanel","studentManager",
+  "questionBankPanel","questionList","attemptsTable","btnToggleSimuladoOnline"]){
+  assert.match(shell,new RegExp('id="'+id+'"'));
+ }
+});
+test("Rotas antigas vão à página correspondente sem abrir o login com presets",()=>{
+ const preview=read("preview-aluno.js"),presets=read("presets.js");
+ assert.match(preview,/painel\.html\?exame=/);
+ assert.match(presets,/avaliacoes\.html\?exame=/);
+ assert.match(presets,/questoes\.html/);
+ assert.match(read("teacher-login.js"),/window\.location\.replace\(destination\(\)\)/);
 });
