@@ -58,6 +58,10 @@ BEGIN
  IF p_require_code AND EXISTS(SELECT 1 FROM public.students s WHERE s.active
   AND s.class_group=p_class_group AND nullif(btrim(coalesce(s.access_code,'')),'') IS NULL)
  THEN RAISE EXCEPTION 'Há alunos sem código: gere os códigos individuais antes de habilitar';END IF;
+ IF p_require_code AND NOT EXISTS(SELECT 1 FROM public.exam_supervision
+  WHERE exam_id=v_exam.id AND require_code=true)
+  AND EXISTS(SELECT 1 FROM public.exam_lobby WHERE exam_id=v_exam.id)
+ THEN RAISE EXCEPTION 'Não é possível exigir códigos depois de estudantes entrarem na sala';END IF;
  IF p_enabled AND EXISTS(SELECT 1 FROM public.attempts WHERE exam_id=v_exam.id)
  AND NOT EXISTS(SELECT 1 FROM public.exam_supervision
  WHERE exam_id=v_exam.id AND enabled AND class_group=p_class_group) THEN
