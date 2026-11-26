@@ -22,9 +22,12 @@
   const pageURL=window.location.pathname.split("/").pop()+window.location.search;
   const loginURL="professor.html?next="+encodeURIComponent(pageURL);
   const goToLogin=()=>window.location.replace(loginURL);
+  // Versionamento único impede combinar o shell atualizado com módulos antigos
+  // eventualmente retidos pelo cache do navegador.
+  const appRevision="20261126-panel-regression-1";
   const loadScript=src=>new Promise((resolve,reject)=>{
     const script=document.createElement("script");
-    script.src=src;script.async=false;
+    script.src=src+"?rev="+encodeURIComponent(appRevision);script.async=false;
     script.onload=resolve;script.onerror=()=>reject(new Error("Falha ao carregar "+src));
     document.body.appendChild(script);
   });
@@ -83,6 +86,8 @@
     for(const src of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
       await loadScript(src);
     }
+    // Diagnóstico: falhas assíncronas devem aparecer no próprio painel.
+    // Carregamento completo do shell não é garantia de RPC bem-sucedida.
     // Permite que os presets personalizados também sejam selecionados no
     // cabeçalho sem acoplar o gerenciador ao painel de login.
     try{
