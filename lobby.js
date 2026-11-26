@@ -152,10 +152,7 @@
     if(!token || !onScreen || $("lobbySimpleMode").checked) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
-    const next={
-      x:Math.max(4,Math.min(96,pos.x+dx)),
-      y:Math.max(8,Math.min(91,pos.y+dy))
-    };
+    const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
     if(dx||dy)pos=next;
     const self=peers.find(p=>p.self);
     if(self){self.x=pos.x;self.y=pos.y;if(emote)self.emote=emote;drawAvatars();}
