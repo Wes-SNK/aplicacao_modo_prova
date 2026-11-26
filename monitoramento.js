@@ -165,11 +165,17 @@
     const version=++requestVersion;
     const selectedGroup=$("supervisionClass").value;
     loading=true;
+    $("supervisionStatusBadge").textContent="Consultando turmas…";
+    announce("Consultando os alunos cadastrados…");
     try{
-      const result=await trpc("teacher_supervision_roster_by_class",{
-        p_exam_slug:mp.cfg.examSlug,
-        p_class_group:selectedGroup||null
-      });
+      const result=await Promise.race([
+        trpc("teacher_supervision_roster_by_class",{
+          p_exam_slug:mp.cfg.examSlug,
+          p_class_group:selectedGroup||null
+        }),
+        new Promise((_,reject)=>setTimeout(
+          ()=>reject(new Error("Tempo limite de consulta excedido.")),12000))
+      ]);
       if(version!==requestVersion)return;
       if(!result || !Array.isArray(result.students))throw new Error("Resposta inesperada");
       data=result;render();
@@ -178,9 +184,35 @@
         (result.preview_only?" Visualização apenas: salve a vinculação para liberar a prova.":""));
     }catch(err){
       if(version!==requestVersion)return;
-      announce(err.status===404
-        ?"Consulta de turmas indisponível. Verifique a migração 020."
-        :"Não foi possível atualizar a turma: "+(err.message||err));
+      const error=err.message||String(err);
+      // Em caso de falha do módulo de monitoramento, o cadastro autenticado
+      // ainda pode mostrar as turmas sem autorizar ninguém a iniciar a prova.
+      try{
+        const saved=await trpc("teacher_students_list");
+        if(version!==requestVersion)return;
+        if(!Array.isArray(saved))throw new Error("Cadastro inválido");
+        const active=saved.filter(student=>student.active);
+        const classes=[...new Set(active.map(student=>student.class_group)
+          .filter(Boolean))].sort((a,b)=>a.localeCompare(b,"pt-BR"));
+        const group=selectedGroup||"";
+        data={
+          enabled:false,preview_only:true,class_group:group,
+          configured_class_group:null,is_active:false,
+          server_time:new Date().toISOString(),
+          classes,students:active.filter(student=>student.class_group===group)
+            .map(student=>({...student,status:"not_started",waiting:false,
+              authorized:false,answered:0,total:0,occurrences:0}))
+        };
+        render();
+        announce("Monitoramento temporariamente indisponível ("+error+
+          "). As turmas foram carregadas do cadastro; a liberação de prova permanece bloqueada.");
+      }catch(fallbackErr){
+        if(version!==requestVersion)return;
+        $("supervisionStatusBadge").textContent="Erro ao consultar";
+        announce("Não foi possível carregar as turmas: "+error+
+          ". Erro no cadastro: "+(fallbackErr.message||fallbackErr)+
+          ". Atualize a página ou entre novamente.");
+      }
     }finally{
       if(version===requestVersion)loading=false;
     }
