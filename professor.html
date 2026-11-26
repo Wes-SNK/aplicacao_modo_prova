@@ -23,6 +23,7 @@
   <main class="shell wide">
     <nav class="assessment-nav" aria-label="Selecionar banco de questões">
       <a href="professor.html?avaliacao=simulado">Simulado 01/12 (preset)</a>
+      <a href="#presetManager">Gerenciar presets</a>
       <a href="professor.html?avaliacao=prova">Prova do bimestre</a>
       <a href="professor.html">Avaliação anterior</a>
     </nav>
@@ -38,6 +39,73 @@
     </section>
 
     <section id="teacherDashboard" class="hidden">
+      <section id="presetManager" class="card presets-manager">
+        <div class="section-head">
+          <div>
+            <h1>Gerenciar avaliações e presets</h1>
+            <p class="muted">Crie, duplique e prepare avaliações independentes. Os novos presets começam fora do ar.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnPresetRefresh" type="button" class="secondary">Atualizar</button>
+            <button id="btnPresetNew" type="button" class="primary">Novo preset</button>
+          </div>
+        </div>
+        <p id="presetManagerMessage" class="muted" role="status" aria-live="polite">Consultando avaliações…</p>
+
+        <div id="presetCreateForm" class="preset-create-form hidden">
+          <h2>Preparar novo preset</h2>
+          <div class="settings-grid">
+            <div class="field-span-2">
+              <label for="presetTitle">Título da avaliação</label>
+              <input id="presetTitle" type="text" maxlength="160" placeholder="Ex.: Simulado de revisão — 2º bimestre">
+            </div>
+            <div>
+              <label for="presetMode">Modalidade</label>
+              <select id="presetMode">
+                <option value="simulation">Simulado (com correção comentada)</option>
+                <option value="exam">Prova (sem gabarito para o aluno)</option>
+              </select>
+            </div>
+            <div>
+              <label for="presetDuration">Duração</label>
+              <select id="presetDuration">
+                <option value="60">60 minutos</option>
+                <option value="90">90 minutos</option>
+                <option value="120" selected>120 minutos</option>
+                <option value="180">180 minutos</option>
+                <option value="none">Sem limite de tempo</option>
+              </select>
+            </div>
+            <div>
+              <label for="presetOccurrences">Limite de ocorrências</label>
+              <input id="presetOccurrences" type="number" min="1" max="20" value="4">
+            </div>
+            <div>
+              <label for="presetSource">Questões iniciais</label>
+              <select id="presetSource">
+                <option value="">Começar vazio — selecionar questões depois</option>
+              </select>
+            </div>
+          </div>
+          <p class="field-help">Você poderá adicionar questões manualmente pelo banco ou utilizar a distribuição automática por disciplina e dificuldade.</p>
+          <div class="toolbar">
+            <button id="btnPresetCancel" type="button" class="secondary">Cancelar</button>
+            <button id="btnPresetCreate" type="button" class="primary">Criar preset desativado</button>
+          </div>
+        </div>
+
+        <div id="presetList" class="preset-list"></div>
+        <div id="presetAutofill" class="preset-autofill hidden">
+          <h2>Montagem automática de questões</h2>
+          <p class="muted">Selecione as quantidades por disciplina e dificuldade. Disponível somente para presets novos e ainda vazios; a escolha será gravada de forma integral ou não será aplicada.</p>
+          <div id="presetDistributionTable" class="table-wrap"></div>
+          <div class="toolbar">
+            <strong id="presetDistributionTotal">Total: 20 questões</strong>
+            <button id="btnPresetAutoFill" type="button" class="primary">Montar questões automaticamente</button>
+          </div>
+          <p id="presetAutofillMessage" class="muted" role="status" aria-live="polite"></p>
+        </div>
+      </section>
       <!-- Publicação rápida exclusivamente para o simulado de 01/12/2026. -->
       <section id="simuladoQuickPublish" class="card simulado-quick-publish hidden">
         <div class="section-head">
@@ -385,5 +453,6 @@
   <script src="config.js"></script>
   <script src="common.js"></script>
   <script src="professor.js"></script>
+  <script src="presets.js"></script>
 </body>
 </html>
