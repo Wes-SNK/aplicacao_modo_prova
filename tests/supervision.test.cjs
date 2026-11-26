@@ -216,7 +216,8 @@ test("Pré-autorização tem controle próprio e não confunde presença",()=>{
  assert.match(sql,/requested_at DROP NOT NULL/);
  assert.match(sql,/requested_at IS NOT NULL/);
  assert.match(sql,/INSERT INTO public\.exam_lobby/);
- assert.match(monitor,/Autorizar antecipadamente/);
+ assert.match(monitor,/Permitir sala de espera/);
+ assert.match(monitor,/Liberar prova/);
  assert.match(shell,/id="supervisionStudentLink"/);
  assert.match(shell,/id="supervisionCopyLink"/);
  assert.match(read(".github/workflows/supervision-tests.yml"),/supervision-preauth\.sql/);
