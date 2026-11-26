@@ -747,6 +747,9 @@
     });
   }
 
+  // Heartbeat é apenas presença; não grava respostas nem interfere no cronômetro.
+  // Em rede compartilhada, evita solicitações simultâneas se uma anterior demorar.
+  let heartbeatInFlight=false;
   function installUiHandlers() {
     const isSimulado = cfg.examSlug === "simulado-4bim-1b-2026";
     $("appTitle").textContent = isSimulado
@@ -757,16 +760,23 @@
     setConnectionBadge($("connectionBadge"));
     environmentChecks();
 
-    // Ping é apenas sinal de atividade para o painel; não interfere no
-    // salvamento automático, no cronômetro nem nas ocorrências da prova.
-    if (!window.ModeProva.teacherPreview) setInterval(() => {
-      if (state.active && state.sessionToken && navigator.onLine) {
-        rpc("student_exam_heartbeat", {
+    // Com aproximadamente 30 alunos, 15 s mantém a presença atualizada
+    // dentro da janela do monitoramento (25 s) e reduz o número de pings.
+    if (!window.ModeProva.teacherPreview) setInterval(async () => {
+      if (!state.active || !state.sessionToken || !navigator.onLine ||
+          document.hidden || heartbeatInFlight) return;
+      heartbeatInFlight=true;
+      try {
+        await rpc("student_exam_heartbeat", {
           p_session_token: state.sessionToken,
           p_position: state.index + 1
-        }).catch(() => {});
+        });
+      } catch {
+        // Uma queda de conexão não registra ocorrência nem invalida respostas.
+      } finally {
+        heartbeatInFlight=false;
       }
-    }, 10000);
+    }, 15000);
 
     $("btnExamHelp").addEventListener("click",async()=>{
       if(!state.active || !state.supervised)return;
