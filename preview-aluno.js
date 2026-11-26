@@ -12,14 +12,17 @@
     throw new Error("Prévia indisponível. Volte ao painel do professor.");
   };
   const $ = id => document.getElementById(id);
-  const query = new URLSearchParams(window.location.search).get("avaliacao");
+  const params = new URLSearchParams(window.location.search);
+  const query = params.get("avaliacao");
+  const customSlug = params.get("exame");
   const allowed = {
     simulado: "simulado-4bim-1b-2026",
     prova: "prova-4bim-1b-2026",
     anterior: "4bim-1b-2026"
   };
-  const currentSlug = Object.prototype.hasOwnProperty.call(allowed, query)
-    ? allowed[query] : null;
+  const currentSlug = customSlug
+    ? (/^preset-[0-9a-f]{32}$/.test(customSlug) ? customSlug : null)
+    : (Object.prototype.hasOwnProperty.call(allowed, query) ? allowed[query] : null);
   if (!currentSlug || mp.cfg.examSlug !== currentSlug) {
     $("btnEnter").disabled = true;
     mp.setMessage($("loginMessage"),
@@ -28,8 +31,9 @@
     return;
   }
 
-  $("previewBackToTeacher").href =
-    "professor.html" + (query === "prova" ? "?avaliacao=prova" :
+  $("previewBackToTeacher").href = customSlug
+    ? "professor.html?exame=" + encodeURIComponent(customSlug)
+    : "professor.html" + (query === "prova" ? "?avaliacao=prova" :
       query === "anterior" ? "" : "?avaliacao=simulado");
 
   let preview = null;
