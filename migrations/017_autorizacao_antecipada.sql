@@ -52,7 +52,7 @@ BEGIN
   'classes',v_groups,
   'is_active',v_exam.is_active,'students',v_students,
   'server_time',now());
-END;$function$
+END;$function$;
 
 CREATE OR REPLACE FUNCTION public.teacher_supervision_authorize(p_exam_slug text, p_student_id uuid, p_authorize boolean)
  RETURNS jsonb
@@ -95,7 +95,7 @@ BEGIN
    WHERE exam_id=v_exam.id AND student_id=p_student_id;
  END IF;
  RETURN jsonb_build_object('ok',true,'authorized',p_authorize);
-END;$function$
+END;$function$;
 
 CREATE OR REPLACE FUNCTION public.student_lobby_join(p_exam_slug text, p_student_name text, p_access_code text DEFAULT NULL::text)
  RETURNS jsonb
@@ -137,7 +137,7 @@ BEGIN
  RETURN jsonb_build_object('supervised',true,'lobby_token',v_lobby.lobby_token,
   'student_name',v_student.name,'exam_title',v_exam.title,
   'authorized',v_lobby.authorized);
-END;$function$
+END;$function$;
 
 CREATE OR REPLACE FUNCTION public.student_lobby_state(p_lobby_token uuid)
  RETURNS jsonb
@@ -167,7 +167,7 @@ BEGIN
   'help_pending',v_lobby.help_requested_at IS NOT NULL AND
     (v_lobby.help_resolved_at IS NULL OR v_lobby.help_resolved_at<v_lobby.help_requested_at),
   'server_time',now());
-END;$function$
+END;$function$;
 
 REVOKE ALL ON FUNCTION public.teacher_supervision_roster(text),
  public.teacher_supervision_authorize(text,uuid,boolean) FROM PUBLIC,anon;
