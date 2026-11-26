@@ -102,8 +102,13 @@ test("A supervisão é opt-in; uma queda de internet não deve criar ocorrência
 function node(tag="div"){
  const events={};
  return {
-  tagName:tag.toUpperCase(),className:"",classList:{
-    add(){},remove(){},toggle(){}},
+  tagName:tag.toUpperCase(),className:"",classList:(()=>{
+    const values=new Set();
+    return {add(name){values.add(name);},remove(name){values.delete(name);},
+      toggle(name,force){const enabled=force===undefined?!values.has(name):force;
+        if(enabled)values.add(name);else values.delete(name);return enabled;},
+      contains(name){return values.has(name);}};
+  })(),
   textContent:"",value:"",disabled:false,checked:false,style:{},children:[],
   addEventListener(name,fn){events[name]=fn;},
   async emit(name,evt={}){return events[name]?.(evt);},
@@ -137,7 +142,8 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
    throw Error("Unexpected RPC "+name);
   }
  };
- const win={ModeProva:mp,SupervisionUtils:rules};
+ const facts=require("../lobby-curiosities.js");
+ const win={ModeProva:mp,SupervisionUtils:rules,LobbyCuriosities:facts};
  const doc={
   hidden:false,activeElement:node(),body:node("body"),
   fullscreenElement:null,
@@ -157,6 +163,14 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  const present=await mp.lobbyBridge.join("Estudante Teste",payload=>received=payload);
  assert.equal(present,true);
  await new Promise(setImmediate);
+ assert.ok(find("lobbyCuriosityText").textContent.length>35,
+  "Uma curiosidade deve surgir ao ingressar na sala");
+ const firstFact=find("lobbyCuriosityText").textContent;
+ await find("lobbyNextCuriosity").emit("click");
+ assert.notEqual(find("lobbyCuriosityText").textContent,firstFact,
+  "O botão Outra curiosidade deve variar o conteúdo");
+ assert.equal(find("lobbyReleaseNotice").classList.contains("hidden"),true,
+  "Aviso de liberação não deve aparecer antes da autorização");
  // Navegadores sem requestFullscreen usam modo imersivo CSS sem
  // desativar o restante da interface da sala de espera.
  await find("lobbyFullscreenButton").emit("click");
@@ -176,6 +190,13 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  authorized=true;
  await intervals.at(-1)();
  await new Promise(setImmediate);
+ assert.equal(find("lobbyReleaseNotice").classList.contains("hidden"),false,
+  "O aluno deve receber aviso visual quando autorizado");
+ await find("lobbyDismissRelease").emit("click");
+ assert.equal(find("lobbyReleaseNotice").classList.contains("hidden"),true);
+ await intervals.at(-1)();
+ assert.equal(find("lobbyReleaseNotice").classList.contains("hidden"),true,
+  "O aviso dispensado não deve reaparecer a cada consulta");
  assert.equal(find("lobbyEnterExam").disabled,false);
  await find("lobbyEnterExam").emit("click");
  assert.equal(received.session_token,"fake-attempt-token");
@@ -286,5 +307,31 @@ test("Mapa de escola detalhado, responsivo e com expansão explícita",()=>{
   assert.match(html,/id="lobbyFullscreenButton"/);
   assert.match(html,/id="lobbyMap"/);
   assert.match(html,/id="lobbyAvatars"/);
+ }
+});
+
+test("Curiosidades são conteúdo educativo local, sem questões ou rede",()=>{
+ const facts=require("../lobby-curiosities.js");
+ assert.ok(Array.isArray(facts));
+ assert.ok(facts.length>=15);
+ assert.ok(new Set(facts).size===facts.length);
+ for(const fact of facts){
+  assert.equal(typeof fact,"string");
+  assert.ok(fact.length>=45 && fact.length<=180);
+  assert.doesNotMatch(fact,/https?:\/\/|javascript:|<script/i);
+ }
+ const src=read("lobby-curiosities.js");
+ assert.doesNotMatch(src,/fetch\(|XMLHttpRequest|supabase/i);
+ assert.match(read("lobby.js"),/24000/);
+ assert.match(read("lobby.js"),/releaseAnnounced/);
+ for(const p of ["index.html","preview-aluno.html"]){
+  const html=read(p);
+  assert.match(html,/id="lobbyCuriosityText"/);
+  assert.match(html,/id="lobbyNextCuriosity"/);
+  assert.match(html,/id="lobbyReleaseNotice"/);
+  assert.match(html,/id="lobbyDismissRelease"/);
+  assert.match(html,/role="status" aria-live="polite"/);
+  assert.ok(html.indexOf('src="lobby-curiosities.js"')<
+    html.indexOf('src="lobby.js"'));
  }
 });
