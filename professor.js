@@ -33,6 +33,13 @@
   }
 
   function showLogin() {
+    // As áreas internas exigem autenticação antes de carregar o shell.
+    // Se a sessão expirar, retornar à página limpa de login.
+    if (document.body.dataset.teacherPage) {
+      const from=window.location.pathname.split("/").pop()+window.location.search;
+      window.location.replace("professor.html?next="+encodeURIComponent(from));
+      return;
+    }
     $("teacherLogin").classList.remove("hidden");
     $("teacherDashboard").classList.add("hidden");
     $("btnLogout").classList.add("hidden");
@@ -70,9 +77,12 @@
       setMessage($("teacherLoginMessage"), "", "info");
       showDashboard();
       await refreshDashboard();
-      await loadQuestions();
-      await loadBankQuestions();
-      startPolling();
+      if (document.body.dataset.teacherPage === "questoes") {
+        await loadQuestions();
+        await loadBankQuestions();
+      }
+      if (["painel","avaliacoes"].includes(document.body.dataset.teacherPage))
+        startPolling();
     } catch (err) {
       setMessage($("teacherLoginMessage"), "Falha no login. Verifique as credenciais.", "error");
     } finally {
@@ -949,9 +959,12 @@
     if (session) {
       showDashboard();
       await refreshDashboard();
-      await loadQuestions();
-      await loadBankQuestions();
-      startPolling();
+      if (document.body.dataset.teacherPage === "questoes") {
+        await loadQuestions();
+        await loadBankQuestions();
+      }
+      if (["painel","avaliacoes"].includes(document.body.dataset.teacherPage))
+        startPolling();
     } else {
       showLogin();
     }

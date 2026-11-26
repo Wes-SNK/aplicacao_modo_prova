@@ -1,0 +1,555 @@
+<!-- Fragmento compartilhado: carregado APÓS validar a sessão do professor.
+     Os módulos não ativos permanecem no DOM para compatibilidade com os
+     manipuladores antigos, mas ficam ocultos por data-page-area. -->
+<header class="topbar">
+    <div>
+      <strong>Painel do Professor</strong>
+      <span class="muted" id="teacherExamLabel"></span>
+    </div>
+    <div class="topbar-actions">
+      <span id="teacherConnectionBadge" class="badge">Verificando conexão…</span>
+      <button id="btnTestStudentMode" class="small secondary hidden" type="button" title="Experimentar a mesma interface do aluno sem ativar a avaliação">Testar como aluno</button>
+      <button id="btnLogout" class="small secondary hidden">Sair</button>
+    </div>
+  </header>
+
+  <main class="shell wide">
+    <section id="teacherLogin" class="card">
+      <h1>Acesso do professor</h1>
+      <p class="lead">Use o e-mail e a senha cadastrados no Supabase Auth.</p>
+      <label for="teacherEmail">E-mail</label>
+      <input id="teacherEmail" type="email" autocomplete="username">
+      <label for="teacherPassword">Senha</label>
+      <input id="teacherPassword" type="password" autocomplete="current-password">
+      <div id="teacherLoginMessage" class="message hidden"></div>
+      <button id="btnTeacherLogin" class="primary">Entrar</button>
+    </section>
+
+    <nav id="teacherMainNav" class="teacher-main-nav hidden" aria-label="Seções do painel do professor">
+      <a href="painel.html" data-page-link="painel">Painel de controle</a>
+      <a href="questoes.html" data-page-link="questoes">Questões</a>
+      <a href="avaliacoes.html" data-page-link="avaliacoes">Avaliações e presets</a>
+      <a href="alunos.html" data-page-link="alunos">Alunos e turmas</a>
+    </nav>
+    <section id="teacherPageHeader" class="teacher-page-heading hidden">
+      <div>
+        <h1 id="teacherPageTitle">Painel de controle</h1>
+        <p id="teacherPageDescription" class="muted"></p>
+      </div>
+      <label class="teacher-assessment-picker">
+        Avaliação em trabalho
+        <select id="teacherAssessmentSelect">
+          <option value="simulado-4bim-1b-2026">Simulado 01/12</option>
+          <option value="prova-4bim-1b-2026">Prova bimestral</option>
+          <option value="4bim-1b-2026">Avaliação anterior</option>
+        </select>
+      </label>
+    </section>
+    <section id="teacherDashboard" class="hidden">
+      <section id="presetManager" data-page-area="avaliacoes" class="card presets-manager">
+        <div class="section-head">
+          <div>
+            <h1>Gerenciar avaliações e presets</h1>
+            <p class="muted">Crie, duplique e prepare avaliações independentes. Os novos presets começam fora do ar.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnPresetRefresh" type="button" class="secondary">Atualizar</button>
+            <button id="btnPresetNew" type="button" class="primary">Novo preset</button>
+          </div>
+        </div>
+        <p id="presetManagerMessage" class="muted" role="status" aria-live="polite">Consultando avaliações…</p>
+
+        <div id="presetCreateForm" class="preset-create-form hidden">
+          <h2>Preparar novo preset</h2>
+          <div class="settings-grid">
+            <div class="field-span-2">
+              <label for="presetTitle">Título da avaliação</label>
+              <input id="presetTitle" type="text" maxlength="160" placeholder="Ex.: Simulado de revisão — 2º bimestre">
+            </div>
+            <div>
+              <label for="presetMode">Modalidade</label>
+              <select id="presetMode">
+                <option value="simulation">Simulado (com correção comentada)</option>
+                <option value="exam">Prova (sem gabarito para o aluno)</option>
+              </select>
+            </div>
+            <div>
+              <label for="presetDuration">Duração</label>
+              <select id="presetDuration">
+                <option value="60">60 minutos</option>
+                <option value="90">90 minutos</option>
+                <option value="120" selected>120 minutos</option>
+                <option value="180">180 minutos</option>
+                <option value="none">Sem limite de tempo</option>
+                <option value="custom">Outro tempo…</option>
+              </select>
+              <div id="presetCustomDurationGroup" class="hidden">
+                <label for="presetCustomDuration">Tempo personalizado (5 a 300 minutos)</label>
+                <input id="presetCustomDuration" type="number" min="5" max="300" step="1" value="75">
+              </div>
+            </div>
+            <div>
+              <label for="presetOccurrences">Limite de ocorrências</label>
+              <input id="presetOccurrences" type="number" min="1" max="20" value="4">
+            </div>
+            <div>
+              <label for="presetSource">Questões iniciais</label>
+              <select id="presetSource">
+                <option value="">Começar vazio — selecionar questões depois</option>
+              </select>
+            </div>
+          </div>
+          <p class="field-help">Você poderá adicionar questões manualmente pelo banco ou utilizar a distribuição automática por disciplina e dificuldade.</p>
+          <div class="toolbar">
+            <button id="btnPresetCancel" type="button" class="secondary">Cancelar</button>
+            <button id="btnPresetCreate" type="button" class="primary">Criar preset desativado</button>
+          </div>
+        </div>
+
+        <div id="presetList" class="preset-list"></div>
+        <div id="presetAutofill" class="preset-autofill hidden">
+          <h2>Montagem automática de questões</h2>
+          <p class="muted">Selecione as quantidades por disciplina e dificuldade. Disponível somente para presets novos e ainda vazios; a escolha será gravada de forma integral ou não será aplicada.</p>
+          <div id="presetDistributionTable" class="table-wrap"></div>
+          <div class="toolbar">
+            <strong id="presetDistributionTotal">Total: 20 questões</strong>
+            <button id="btnPresetAutoFill" type="button" class="primary">Montar questões automaticamente</button>
+          </div>
+          <p id="presetAutofillMessage" class="muted" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+      <!-- Publicação rápida exclusivamente para o simulado de 01/12/2026. -->
+      <section id="simuladoQuickPublish" data-page-area="painel" class="card simulado-quick-publish hidden">
+        <div class="section-head">
+          <div>
+            <h1>Simulado de 1º de dezembro — publicação rápida</h1>
+            <p class="muted">Preset de 20 questões: 8 fáceis, 9 médias e 3 difíceis. A prova oficial permanece separada.</p>
+          </div>
+          <span id="quickSimuladoBadge" class="pill">Consultando…</span>
+        </div>
+        <p id="quickSimuladoInfo" class="muted" aria-live="polite">Consultando configurações salvas…</p>
+        <div class="simulado-quick-actions">
+          <button id="btnToggleSimuladoOnline" class="primary" disabled>Colocar simulado online</button>
+          <a class="simulado-student-link" href="index.html?avaliacao=simulado" target="_blank" rel="noopener noreferrer">Abrir link do aluno</a>
+        </div>
+        <p id="quickSimuladoMessage" class="muted" role="status" aria-live="polite">O simulado não é publicado automaticamente na data. Você decide quando liberar.</p>
+      </section>
+      <!-- Monitoramento supervisionado; módulo isolado e desativado por padrão. -->
+      <section id="supervisionPanel" data-page-area="painel" class="card supervision-panel">
+        <div class="section-head">
+          <div>
+            <h1>Monitoramento e controle da turma</h1>
+            <p class="muted">Acompanhe a presença, autorize entradas e consulte o progresso sem interferir nas respostas.</p>
+          </div>
+          <span id="supervisionStatusBadge" class="pill">Consultando…</span>
+        </div>
+        <div class="supervision-settings">
+          <div>
+            <label for="supervisionClass">Turma vinculada à avaliação</label>
+            <select id="supervisionClass"><option value="">Selecione uma turma…</option></select>
+          </div>
+          <label class="switch-row">
+            <input id="supervisionEnabled" type="checkbox">
+            <span><strong>Exigir autorização para iniciar</strong>
+            <small>Quando habilitada, os estudantes entram na sala de espera antes de receber a prova.</small></span>
+          </label>
+          <label class="switch-row">
+            <input id="supervisionRequireCode" type="checkbox">
+            <span><strong>Exigir código individual na sala de espera</strong>
+            <small>Opcional. Gere e distribua os códigos previamente, de forma privada.</small></span>
+          </label>
+          <div class="toolbar">
+            <button id="supervisionIssueCodes" type="button" class="secondary">Gerar códigos da turma (CSV)</button>
+          </div>
+          <div class="toolbar">
+            <button id="supervisionSave" type="button" class="primary">Salvar supervisão</button>
+            <button id="supervisionRefresh" type="button" class="secondary">Atualizar monitoramento</button>
+            <button id="supervisionExport" type="button" class="secondary">Exportar CSV</button>
+          </div>
+        </div>
+        <p id="supervisionMessage" class="field-help" role="status" aria-live="polite"></p>
+        <div class="supervision-stats" aria-label="Resumo da aplicação">
+          <div><span>Na turma</span><strong id="supervisionTotal">0</strong></div>
+          <div><span>Aguardando</span><strong id="supervisionWaiting">0</strong></div>
+          <div><span>Realizando</span><strong id="supervisionInProgress">0</strong></div>
+          <div><span>Finalizados</span><strong id="supervisionFinished">0</strong></div>
+        </div>
+        <div class="supervision-toolbar">
+          <div>
+            <label for="supervisionFilter">Procurar aluno</label>
+            <input id="supervisionFilter" type="search" placeholder="Nome do estudante…">
+          </div>
+          <button id="supervisionAuthorizeAll" type="button" class="primary" disabled>Autorizar todos os presentes</button>
+        </div>
+        <div class="table-wrap">
+          <table class="supervision-table">
+            <thead>
+              <tr><th>Aluno</th><th>Estado</th><th>Progresso</th><th>Tempo</th><th>Conexão</th><th>Ações</th></tr>
+            </thead>
+            <tbody id="supervisionRows"></tbody>
+          </table>
+        </div>
+        <p class="field-help">Conexão estimada pela última comunicação; a ausência de sinal não é considerada infração. Progresso representa respostas registradas, não acertos.</p>
+      </section>
+
+      <!-- Cadastro de alunos, separado do banco e das tentativas da prova. -->
+      <section id="studentManager" data-page-area="alunos" class="card student-manager">
+        <div class="section-head">
+          <div>
+            <h1>Alunos e turmas</h1>
+            <p class="muted">Confira a lista, cadastre alunos e corrija vínculos. Alterações não apagam resultados.</p>
+          </div>
+          <button id="studentRefresh" class="secondary" type="button">Atualizar lista</button>
+        </div>
+        <div class="student-manager-form">
+          <div>
+            <label for="studentAdminName">Nome completo</label>
+            <input id="studentAdminName" placeholder="Nome do estudante" maxlength="120" autocomplete="off">
+          </div>
+          <div>
+            <label for="studentAdminClass">Turma</label>
+            <input id="studentAdminClass" placeholder="Ex.: 1º INF - B" maxlength="80" autocomplete="off">
+          </div>
+          <div class="toolbar">
+            <button id="studentSave" class="primary" type="button">Cadastrar aluno</button>
+            <button id="studentCancel" class="secondary hidden" type="button">Cancelar edição</button>
+          </div>
+        </div>
+        <p id="studentManagerMessage" class="field-help" role="status" aria-live="polite"></p>
+        <label for="studentSearch">Pesquisar aluno</label>
+        <input id="studentSearch" type="search" placeholder="Nome ou turma…">
+        <div class="table-wrap">
+          <table class="student-manager-table">
+            <thead><tr><th>Nome</th><th>Turma</th><th>Estado</th><th>Código</th><th>Ações</th></tr></thead>
+            <tbody id="studentAdminRows"></tbody>
+          </table>
+        </div>
+      </section>
+
+      <section data-page-area="avaliacoes" class="card teacher-settings">
+        <div class="section-head">
+          <div>
+            <h1>Configurações da avaliação</h1>
+            <p class="muted">Altere as regras principais sem editar o banco manualmente.</p>
+          </div>
+          <span id="examActiveBadge" class="pill">—</span>
+        </div>
+
+        <div class="settings-grid">
+          <div class="field-span-2">
+            <label for="examTitleInput">Título da avaliação</label>
+            <input id="examTitleInput" type="text" maxlength="160">
+          </div>
+          <div>
+            <label for="examDurationPreset">Duração da avaliação</label>
+            <select id="examDurationPreset">
+              <option value="30">30 minutos</option>
+              <option value="45">45 minutos</option>
+              <option value="60">60 minutos</option>
+              <option value="90">90 minutos</option>
+              <option value="120">120 minutos</option>
+              <option value="180">180 minutos</option>
+              <option value="240">240 minutos</option>
+              <option value="none">Sem limite de tempo</option>
+              <option value="custom">Outro tempo…</option>
+            </select>
+            <div id="examDurationCustomGroup" class="hidden">
+              <label for="examDurationInput">Tempo personalizado (5 a 300 minutos)</label>
+              <input id="examDurationInput" type="number" min="5" max="300" step="1">
+            </div>
+            <p class="field-help">Sem limite: não há cronômetro nem encerramento por tempo. As regras de ocorrência permanecem ativas.</p>
+          </div>
+          <div>
+            <label for="examOccurrencesInput">Limite de ocorrências</label>
+            <input id="examOccurrencesInput" type="number" min="1" max="20">
+          </div>
+          <div class="field-span-2">
+            <label for="examModeInput">Modo de aplicação</label>
+            <select id="examModeInput">
+              <option value="exam">Prova</option>
+              <option value="simulation">Simulado</option>
+            </select>
+            <p class="field-help">No Simulado, o aluno recebe nota, percentual de acertos e correção após finalizar.</p>
+          </div>
+          <label class="switch-row field-span-2">
+            <input id="examActiveInput" type="checkbox">
+            <span>
+              <strong>Avaliação ativa</strong>
+              <small>Quando desativada, novos alunos não conseguem iniciar a prova.</small>
+            </span>
+          </label>
+        </div>
+
+        <div class="settings-actions">
+          <span id="settingsMessage" class="muted"></span>
+          <button id="btnSaveSettings" class="primary">Salvar configurações</button>
+        </div>
+      </section>
+
+      <div data-page-area="painel" class="dashboard-grid">
+        <div class="card stat"><span>Total</span><strong id="statTotal">0</strong></div>
+        <div class="card stat"><span>Em andamento</span><strong id="statProgress">0</strong></div>
+        <div class="card stat"><span>Finalizadas</span><strong id="statFinished">0</strong></div>
+        <div class="card stat"><span>Com ocorrências</span><strong id="statViolations">0</strong></div>
+      </div>
+
+      <section data-page-area="questoes" class="card question-manager">
+        <div class="section-head">
+          <div>
+            <h1>Questões da avaliação</h1>
+            <p class="muted" id="questionsMeta">Cadastre e organize as questões que serão apresentadas aos alunos.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnPreviewQuestions" class="secondary">Pré-visualizar</button>
+            <button id="btnNewQuestion" class="primary">Nova questão</button>
+          </div>
+        </div>
+        <div class="assessment-question-filter">
+          <label for="assessmentDifficultyFilter">Filtrar questões da avaliação por dificuldade</label>
+          <select id="assessmentDifficultyFilter">
+            <option value="">Todas as dificuldades</option>
+            <option value="facil">Fáceis</option>
+            <option value="media">Médias</option>
+            <option value="dificil">Difíceis</option>
+            <option value="sem_classificacao">Sem classificação</option>
+          </select>
+        </div>
+        <div id="questionsLockMessage" class="message warn hidden"></div>
+        <div id="questionsMessage" class="muted" aria-live="polite"></div>
+        <div id="questionList" class="question-list"></div>
+      </section>
+
+      <section data-page-area="questoes" class="card question-manager" id="questionBankPanel">
+        <div class="section-head">
+          <div>
+            <h1>Banco de questões</h1>
+            <p class="muted" id="bankMeta">Questões preservadas para reutilização, independentemente da avaliação.</p>
+          </div>
+          <div class="toolbar">
+            <button id="btnBankRefresh" class="secondary">Atualizar banco</button>
+            <button id="btnBankNewQuestion" class="primary">Nova questão no banco</button>
+          </div>
+        </div>
+        <div class="settings-grid bank-filters">
+          <div>
+            <label for="bankSubjectFilter">Disciplina</label>
+            <select id="bankSubjectFilter">
+              <option value="">Todas as disciplinas</option>
+              <option value="Lógica de Programação">Lógica de Programação</option>
+              <option value="HTML/CSS">HTML/CSS</option>
+              <option value="Arquitetura e Manutenção">Arquitetura e Manutenção</option>
+              <option value="Planejamento de Carreira e IA">Planejamento de Carreira e IA</option>
+              <option value="Geral">Geral / questões anteriores</option>
+            </select>
+          </div>
+          <div>
+            <label for="bankSearchInput">Pesquisar no banco</label>
+            <input id="bankSearchInput" type="search" placeholder="Palavra do enunciado, tema ou origem">
+          </div>
+          <div>
+            <label for="bankDifficultyFilter">Nível de dificuldade</label>
+            <select id="bankDifficultyFilter">
+              <option value="">Todos os níveis</option>
+              <option value="facil">Fácil</option>
+              <option value="media">Média</option>
+              <option value="dificil">Difícil</option>
+              <option value="sem_classificacao">Ainda não classificada</option>
+            </select>
+          </div>
+        </div>
+        <p id="bankMessage" class="muted" aria-live="polite"></p>
+        <div id="bankQuestionList" class="question-list bank-question-list"></div>
+      </section>
+
+      <section data-page-area="painel" class="card">
+        <div class="section-head">
+          <div>
+            <h1 id="dashboardTitle">Avaliação</h1>
+            <p class="muted" id="dashboardMeta"></p>
+          </div>
+          <div class="toolbar">
+            <button id="btnRefresh" class="secondary">Atualizar</button>
+            <button id="btnExportCsv" class="secondary">Exportar CSV</button>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table id="attemptsTable">
+            <thead>
+              <tr>
+                <th>Estudante</th>
+                <th>Turma</th>
+                <th>Status</th>
+                <th>Início</th>
+                <th>Envio</th>
+                <th>Nota</th>
+                <th>Ocorrências</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="dashboardMessage" class="muted"></p>
+      </section>
+    </section>
+  </main>
+
+  <div id="questionEditorModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="questionEditorTitle">
+    <div class="overlay-card question-editor-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="questionEditorTitle">Nova questão</h2>
+          <p class="muted">Questões objetivas com quatro alternativas (A–D) ou cinco (A–E) e correção automática.</p>
+        </div>
+        <button id="btnCloseQuestionEditor" class="small secondary">Fechar</button>
+      </div>
+
+      <div id="questionBankMetadata" class="hidden">
+        <label for="questionSubjectInput">Disciplina da questão</label>
+        <select id="questionSubjectInput">
+          <option value="Lógica de Programação">Lógica de Programação</option>
+          <option value="HTML/CSS">HTML/CSS</option>
+          <option value="Arquitetura e Manutenção">Arquitetura e Manutenção</option>
+          <option value="Planejamento de Carreira e IA">Planejamento de Carreira e IA</option>
+          <option value="Geral">Geral</option>
+        </select>
+        <label for="questionTopicInput">Assunto ou tema (opcional)</label>
+        <input id="questionTopicInput" type="text" maxlength="160" placeholder="Ex.: conversão de números binários">
+        <p class="field-help">A questão será guardada para reutilização. Para aplicá-la, adicione-a a uma prova ou simulado.</p>
+      </div>
+
+      <label for="questionDifficultyInput">Nível de dificuldade</label>
+      <select id="questionDifficultyInput" class="editor-select">
+        <option value="">Não classificada</option>
+        <option value="facil">Fácil</option>
+        <option value="media">Média</option>
+        <option value="dificil">Difícil</option>
+      </select>
+
+      <label for="questionStemInput">Texto-base e comando da questão</label>
+      <textarea id="questionStemInput" rows="5" maxlength="4000" placeholder="Digite o enunciado da questão"></textarea>
+
+      <div id="objectiveFields">
+        <label for="questionOptionCount">Quantidade de alternativas</label>
+        <select id="questionOptionCount" class="editor-select">
+          <option value="4">Quatro (A–D) — novo padrão</option>
+          <option value="5">Cinco (A–E) — compatibilidade</option>
+        </select>
+        <div class="option-editor-grid">
+          <label>A <input id="optionAInput" type="text" maxlength="1000"></label>
+          <label>B <input id="optionBInput" type="text" maxlength="1000"></label>
+          <label>C <input id="optionCInput" type="text" maxlength="1000"></label>
+          <label>D <input id="optionDInput" type="text" maxlength="1000"></label>
+          <label id="optionERow" class="hidden">E <input id="optionEInput" type="text" maxlength="1000"></label>
+        </div>
+
+        <label for="correctAnswerInput">Gabarito</label>
+        <select id="correctAnswerInput">
+          <option value="A">A</option>
+          <option value="B">B</option>
+          <option value="C">C</option>
+          <option value="D">D</option>
+          <option value="E" id="optionECorrect" class="hidden">E</option>
+        </select>
+
+        <label for="questionPointsInput">Valor</label>
+        <input id="questionPointsInput" type="number" min="0" max="100" step="0.1" value="1">
+      </div>
+
+      <label for="questionExplanationInput">Justificativa da resposta (exibida após concluir o simulado)</label>
+      <textarea id="questionExplanationInput" rows="3" maxlength="2500" placeholder="Explique o raciocínio ou conceito necessário para chegar à alternativa correta."></textarea>
+
+      <label class="switch-row" id="questionActiveRow">
+        <input id="questionActiveInput" type="checkbox" checked>
+        <span>
+          <strong>Questão ativa</strong>
+          <small>Somente questões ativas aparecem para os alunos.</small>
+        </span>
+      </label>
+
+      <div id="questionEditorMessage" class="message hidden"></div>
+      <div class="modal-actions">
+        <button id="btnCancelQuestionEdit" class="secondary">Cancelar</button>
+        <button id="btnSaveQuestion" class="primary">Salvar questão</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="deleteQuestionModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="deleteQuestionTitle">
+    <div class="overlay-card">
+      <h2 id="deleteQuestionTitle">Excluir questão</h2>
+      <p id="deleteQuestionText" class="lead"></p>
+      <div class="message info">A questão será retirada somente desta avaliação. A versão registrada no banco de questões será preservada. A remoção não é permitida quando houver tentativas registradas.</div>
+      <div class="modal-actions">
+        <button id="btnCancelDeleteQuestion" class="secondary">Cancelar</button>
+        <button id="btnConfirmDeleteQuestion" class="danger">Excluir questão</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="questionPreviewModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="questionPreviewTitle">
+    <div class="overlay-card detail-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="questionPreviewTitle">Pré-visualização da avaliação</h2>
+          <p class="muted">Visão do professor. O gabarito aparece destacado apenas aqui.</p>
+        </div>
+        <button id="btnCloseQuestionPreview" class="small secondary">Fechar</button>
+      </div>
+      <div id="questionPreviewList" class="question-preview-list"></div>
+    </div>
+  </div>
+
+  <div id="resumeAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resumeAttemptTitle">
+    <div class="overlay-card">
+      <h2 id="resumeAttemptTitle">Continuar de onde parou</h2>
+      <p id="resumeAttemptText" class="lead"></p>
+      <div class="message info">
+        As respostas, as marcações de revisão, as ocorrências e o horário original serão preservados. O cronômetro não será reiniciado. A sessão anterior será invalidada.
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelResume" class="secondary">Cancelar</button>
+        <button id="btnConfirmResume" class="primary">Liberar continuação</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="resetAttemptModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="resetAttemptTitle">
+    <div class="overlay-card">
+      <h2 id="resetAttemptTitle">Nova tentativa (do zero)</h2>
+      <p id="resetAttemptText" class="lead"></p>
+      <div class="message warn">
+        Esta ação apaga a tentativa atual, incluindo respostas, marcações de revisão, nota, ocorrências e cronômetro. O cadastro do aluno será mantido.
+      </div>
+      <div class="modal-actions">
+        <button id="btnCancelReset" class="secondary">Cancelar</button>
+        <button id="btnConfirmReset" class="danger">Iniciar do zero</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="detailModal" class="overlay hidden" role="dialog" aria-modal="true">
+    <div class="overlay-card detail-modal">
+      <div class="section-head">
+        <div>
+          <h2 id="detailStudent">Detalhes</h2>
+          <p id="detailMeta" class="muted"></p>
+        </div>
+        <button id="btnCloseDetail" class="small secondary">Fechar</button>
+      </div>
+
+      <h3>Respostas</h3>
+      <div id="detailAnswers"></div>
+
+      <h3>Eventos registrados</h3>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Horário</th><th>Evento</th><th>Contou?</th><th>Questão</th></tr>
+          </thead>
+          <tbody id="detailEvents"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>

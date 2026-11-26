@@ -11,7 +11,7 @@
   const { cfg, rpc, setMessage, setConnectionBadge } = window.ModeProva;
 
   const $ = (id) => document.getElementById(id);
-  const screens = ["screenLogin", "screenRules", "screenExam", "screenFinished"];
+  const screens = ["screenLogin", "screenLobby", "screenRules", "screenExam", "screenFinished"];
 
   let state = {
     sessionToken: null,
@@ -30,6 +30,8 @@
     endsAt: null,
     status: null,
     active: false,
+    supervised: false,
+    helpPending: false,
     submitting: false,
     lastViolationAt: 0,
     lastViolationType: null,
@@ -144,6 +146,8 @@
     state.studentName = payload.student_name;
     state.examTitle = payload.exam_title;
     state.assessmentMode = payload.assessment_mode || "exam";
+    state.supervised = !!payload.supervised ||
+      sessionStorage.getItem("modoProva:supervised:" + cfg.examSlug) === "1";
     state.durationMinutes = payload.duration_minutes;
     state.maxOccurrences = payload.max_occurrences;
     state.occurrences = payload.occurrences || 0;
@@ -208,6 +212,18 @@
     $("btnEnter").disabled = true;
     setMessage($("loginMessage"), "Localizando estudante…", "info");
     try {
+      // Em avaliações supervisionadas, nunca recebe questões ou token de prova
+      // antes que o professor autorize o ingresso na sala de espera.
+      const lobby = window.ModeProva.lobbyBridge;
+      if (lobby && await lobby.join(studentName, payload => {
+        hydrate(payload);
+        renderRules();
+        showScreen("screenRules");
+      })) {
+        showScreen("screenLobby");
+        setMessage($("loginMessage"), "", "info");
+        return;
+      }
       const payload = await rpc("start_attempt_by_name", {
         p_exam_slug: cfg.examSlug,
         p_student_name: studentName,
@@ -228,6 +244,8 @@
     const m = String(msg || "");
     if (m.includes("Estudante não encontrado")) return "Nome não encontrado. Digite seu nome completo conforme a lista da turma.";
     if (m.includes("Nome ambíguo")) return "Há mais de um estudante com esse nome. Chame o professor.";
+    if (m.includes("Estudante não encontrado nesta turma")) return "Nome não encontrado na turma selecionada. Chame o professor.";
+    if (m.includes("sala de espera") || m.includes("autorização")) return "Aguarde autorização do professor na sala de espera.";
     if (m.includes("Avaliação indisponível")) return "Esta avaliação não está disponível neste momento.";
     if (m.includes("já iniciada")) return "Esta avaliação já foi iniciada para este estudante. Se for você, use o mesmo computador e chame o professor se a atividade não for retomada automaticamente.";
     if (m.includes("já finalizada")) return "Esta avaliação já foi finalizada para este estudante.";
@@ -275,6 +293,7 @@
   }
 
   function renderExam() {
+    $("btnExamHelp").classList.toggle("hidden",!state.supervised);
     $("studentName").textContent = state.studentName || "—";
     $("occurrenceCount").textContent = state.occurrences;
     $("occurrenceMax").textContent = state.maxOccurrences;
@@ -680,6 +699,7 @@
     $("submitOverlay").classList.add("hidden");
     showScreen("screenFinished");
     clearSessionCache();
+    sessionStorage.removeItem("modoProva:supervised:" + cfg.examSlug);
     document.exitFullscreen?.().catch(() => {});
   }
 
@@ -737,6 +757,34 @@
     setConnectionBadge($("connectionBadge"));
     environmentChecks();
 
+    // Ping é apenas sinal de atividade para o painel; não interfere no
+    // salvamento automático, no cronômetro nem nas ocorrências da prova.
+    if (!window.ModeProva.teacherPreview) setInterval(() => {
+      if (state.active && state.sessionToken && navigator.onLine) {
+        rpc("student_exam_heartbeat", {
+          p_session_token: state.sessionToken,
+          p_position: state.index + 1
+        }).catch(() => {});
+      }
+    }, 10000);
+
+    $("btnExamHelp").addEventListener("click",async()=>{
+      if(!state.active || !state.supervised)return;
+      const btn=$("btnExamHelp");btn.disabled=true;
+      try{
+        const r=await rpc("student_exam_help",{
+          p_session_token:state.sessionToken,p_request:!state.helpPending
+        });
+        state.helpPending=!!r.help_pending;
+        btn.textContent=state.helpPending?"Cancelar pedido de ajuda":"Pedir ajuda ao professor";
+        showViolationToast(state.helpPending
+          ?"Pedido de ajuda enviado ao professor."
+          :"Pedido de ajuda cancelado.");
+      }catch{
+        showViolationToast("Não foi possível enviar o pedido. Verifique a conexão.");
+      }finally{btn.disabled=false;}
+    });
+
     $("btnEnter").addEventListener("click", enterWithName);
     $("studentNameInput").addEventListener("keydown", e => {
       if (e.key === "Enter") enterWithName();
@@ -791,7 +839,14 @@
     installSecurityHandlers();
     try {
       const resumed = await tryResume();
-      if (!resumed) showScreen("screenLogin");
+      if (!resumed) {
+        const waiting = await window.ModeProva.lobbyBridge?.resume(payload => {
+          hydrate(payload);
+          renderRules();
+          showScreen("screenRules");
+        });
+        showScreen(waiting ? "screenLobby" : "screenLogin");
+      }
     } catch (err) {
       showScreen("screenLogin");
       setMessage($("loginMessage"), err.message, "error");

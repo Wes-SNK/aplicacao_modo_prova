@@ -32,6 +32,11 @@
       <input id="studentNameInput" autocomplete="name" autocapitalize="words" spellcheck="false"
              maxlength="120" placeholder="Ex.: Maria Silva Santos">
 
+      <label for="studentAccessCodeInput">Código individual (somente se fornecido pelo professor)</label>
+      <input id="studentAccessCodeInput" type="password" maxlength="32" autocomplete="off"
+             placeholder="Código individual, quando exigido">
+      <p class="field-help">O professor poderá exigir um código adicional para identificar os estudantes na sala de espera.</p>
+
       <div class="checks" id="environmentChecks">
         <div><span id="checkJs" class="dot ok"></span> JavaScript</div>
         <div><span id="checkStorage" class="dot"></span> Armazenamento local</div>
@@ -42,6 +47,53 @@
 
       <div id="loginMessage" class="message hidden"></div>
       <button id="btnEnter" class="primary">Continuar</button>
+    </section>
+
+    <!-- Sala de espera opcional. A autorização é sempre validada no servidor. -->
+    <section id="screenLobby" class="card student-lobby hidden" aria-label="Sala de espera">
+      <div class="section-head">
+        <div>
+          <h1>Bem-vindo à escola virtual</h1>
+          <p class="muted">Aguarde a autorização do professor para entrar no laboratório.</p>
+        </div>
+        <span id="lobbyStatusBadge" class="pill">Aguardando</span>
+      </div>
+      <p id="lobbyStudentName" class="lead"></p>
+      <p id="lobbyConnection" class="field-help" role="status">Conectando à sala…</p>
+      <div class="lobby-controls">
+        <label class="switch-row">
+          <input id="lobbySimpleMode" type="checkbox">
+          <span>Modo simples (sem mapa)</span>
+        </label>
+        <button id="lobbyHelpButton" class="secondary" type="button">Preciso de ajuda</button>
+      </div>
+      <div id="lobbyMap" class="school-map" role="group" aria-label="Mapa acessível da escola. Use as setas do teclado ou os botões de direção.">
+        <div class="school-zone zone-gate"><strong>Portão</strong></div>
+        <div class="school-zone zone-yard"><strong>Pátio</strong><small>Espere aqui</small></div>
+        <div class="school-zone zone-hall"><strong>Corredor</strong></div>
+        <div class="school-zone zone-lab"><strong>Laboratório</strong><small>Entrada autorizada</small></div>
+        <div class="school-zone zone-teacher"><strong>Professor</strong></div>
+        <div id="lobbyAvatars" class="lobby-avatars" aria-live="off"></div>
+      </div>
+      <p id="lobbySimpleStatus" class="muted hidden">Você está na sala de espera. O professor poderá autorizar sua entrada.</p>
+      <div class="lobby-movement">
+        <div class="lobby-directions" aria-label="Mover personagem">
+          <button id="lobbyMoveUp" type="button" class="secondary" aria-label="Mover para cima">↑</button>
+          <div>
+            <button id="lobbyMoveLeft" type="button" class="secondary" aria-label="Mover para esquerda">←</button>
+            <button id="lobbyMoveDown" type="button" class="secondary" aria-label="Mover para baixo">↓</button>
+            <button id="lobbyMoveRight" type="button" class="secondary" aria-label="Mover para direita">→</button>
+          </div>
+        </div>
+        <div class="lobby-emotes">
+          <span class="muted">Reações rápidas</span>
+          <button id="lobbyEmoteWave" type="button" class="secondary" aria-label="Acenar">Olá!</button>
+          <button id="lobbyEmoteReady" type="button" class="secondary" aria-label="Estou pronto">Pronto</button>
+          <button id="lobbyEmoteQuestion" type="button" class="secondary" aria-label="Tenho uma dúvida">Dúvida</button>
+        </div>
+      </div>
+      <div id="lobbyApprovalMessage" class="message info">O professor ainda não autorizou sua entrada.</div>
+      <button id="lobbyEnterExam" type="button" class="primary" disabled>Entrar na avaliação</button>
     </section>
 
     <section id="screenRules" class="card hidden">
@@ -77,6 +129,7 @@
           <span>Ocorrências</span>
           <strong><span id="occurrenceCount">0</span>/<span id="occurrenceMax">0</span></strong>
         </div>
+        <button id="btnExamHelp" class="secondary exam-help-button" type="button">Pedir ajuda ao professor</button>
         <div id="questionNav" class="question-nav" aria-label="Navegação entre questões"></div>
         <div class="legend">
           <span><i class="legend-dot answered"></i> Respondida</span>
@@ -139,6 +192,8 @@
 
   <script src="config.js"></script>
   <script src="common.js"></script>
+  <script src="supervision-utils.js"></script>
+  <script src="lobby.js"></script>
   <script src="student.js"></script>
 </body>
 </html>

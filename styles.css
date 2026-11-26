@@ -519,3 +519,165 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .preset-actions > button,
   .preset-actions > .preset-action-link { flex: 1 1 auto; justify-content: center; }
 }
+
+
+/* ===== Sala de espera lúdica (somente antes da avaliação) ===== */
+.student-lobby { max-width: 920px; margin-inline: auto; }
+.lobby-controls,.lobby-movement,.supervision-toolbar {
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.lobby-controls { margin:12px 0; }
+.school-map {
+  width:100%;height:370px;position:relative;overflow:hidden;isolation:isolate;
+  border:3px solid #56748b;border-radius:16px;
+  background:
+    linear-gradient(90deg,transparent 49%,#e4cda0 49%,#e4cda0 55%,transparent 55%),
+    repeating-linear-gradient(0deg,#a9cb9e 0px,#a9cb9e 39px,#a2c496 40px);
+}
+.school-zone {
+  position:absolute;display:flex;flex-direction:column;gap:4px;
+  align-items:center;justify-content:center;text-align:center;
+  border:3px solid #6589a0;border-radius:12px;
+  background:#e6f0f8;color:#143851;pointer-events:none;
+  box-shadow:0 4px 0 #7293a5;
+}
+.school-zone strong{font-size:clamp(.7rem,2vw,.96rem);}
+.school-zone small{font-size:.7rem;}
+.zone-gate{left:1%;top:67%;width:14%;height:30%;background:#f6e6c0;border-color:#ad9660;}
+.zone-yard{left:20%;top:15%;width:45%;height:70%;background:#d5eac0;border-color:#9cba88;}
+.zone-hall{left:66%;top:8%;width:10%;height:84%;background:#f7edd8;border-color:#cbbd92;}
+.zone-lab{left:77%;top:4%;width:22%;height:46%;background:#cde9f9;}
+.zone-teacher{left:77%;top:54%;width:22%;height:37%;background:#e8daf9;border-color:#a48ec1;}
+.lobby-avatars{position:absolute;inset:0;pointer-events:none;z-index:2;}
+.lobby-avatar {
+  position:absolute;transform:translate(-50%,-45%);
+  width:46px;height:58px;display:flex;flex-direction:column;align-items:center;
+  justify-content:flex-end;transition:left .18s linear,top .18s linear;
+  filter:drop-shadow(1px 2px 1px #455a6480);
+}
+.avatar-head {
+  width:24px;height:24px;display:block;flex-shrink:0;border-radius:10px 10px 9px 9px;
+  background:#f1bf91;border:2px solid #744c3f;
+}
+.avatar-body {
+  width:28px;height:23px;display:block;flex-shrink:0;border:2px solid #3e4e60;
+  border-radius:8px 8px 3px 3px;background:#527bb3;
+}
+.avatar-style-1 .avatar-body{background:#b76b6b}
+.avatar-style-2 .avatar-body{background:#6d9a78}
+.avatar-style-3 .avatar-body{background:#b18c48}
+.avatar-style-4 .avatar-body{background:#9176b4}
+.avatar-style-5 .avatar-body{background:#529da6}
+.lobby-avatar small{
+  color:#182c3c;background:#fffef4eF;padding:1px 4px;font-size:.61rem;
+  font-weight:700;white-space:nowrap;border-radius:4px;
+}
+.lobby-avatar.own-avatar .avatar-body{outline:3px solid #ffce54;outline-offset:1px;}
+.lobby-avatar.own-avatar small{background:#ffdc77;}
+.avatar-emote{position:absolute;top:-13px;right:-21px;background:#fff;border:1px solid #a1adba;
+  padding:1px 4px;border-radius:8px;font-weight:700;font-size:.7rem;white-space:nowrap;}
+.lobby-movement{margin:16px 0;}
+.lobby-directions{display:flex;flex-direction:column;align-items:center;gap:4px;}
+.lobby-directions div{display:flex;gap:4px;}
+.lobby-directions button{min-width:44px;min-height:36px;font-size:1.1rem;}
+.lobby-emotes{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+#lobbyEnterExam{margin-top:12px;}
+
+/* ===== Visão da turma / autorizações ===== */
+.supervision-panel{margin-bottom:18px;}
+.supervision-settings{display:grid;gap:12px;}
+.supervision-settings>div:first-child{max-width:380px;}
+.supervision-settings .toolbar{justify-content:flex-start;}
+.supervision-settings .switch-row{max-width:700px;}
+.supervision-stats{
+  display:grid;grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:10px;margin:18px 0;
+}
+.supervision-stats>div{
+  display:flex;flex-direction:column;align-items:center;text-align:center;
+  gap:5px;padding:13px 5px;border:1px solid #d5dfe8;border-radius:10px;background:#f7fafc;
+}
+.supervision-stats span{font-size:.78rem;color:#556577;}
+.supervision-stats strong{font-size:1.5rem;font-variant-numeric:tabular-nums;}
+.supervision-toolbar{margin:16px 0;align-items:end;}
+.supervision-toolbar label{display:block;}
+.supervision-toolbar input{min-width:220px;}
+.supervision-table{min-width:850px;}
+.supervision-student{font-weight:600;min-width:150px;}
+.supervision-progress-cell{min-width:155px;font-size:.85rem;}
+.supervision-progress-track{width:100%;height:8px;background:#dce7ed;
+  overflow:hidden;border-radius:6px;margin-top:5px;}
+.supervision-progress-track>div{height:100%;background:#397ea8;border-radius:6px;}
+.supervision-actions{min-width:120px;}
+.supervision-actions button{margin:2px;}
+.supervision-help{display:block;color:#975e13;font-size:.75rem;}
+.supervision-offline{color:#965e22;font-weight:600;}
+@media(max-width:680px){
+ .school-map{height:310px;}
+ .zone-lab small,.zone-teacher small,.zone-yard small{display:none;}
+ .lobby-movement{align-items:flex-start;}
+ .supervision-stats{grid-template-columns:repeat(2,minmax(0,1fr));}
+ .supervision-toolbar button{width:100%;}
+ .supervision-toolbar input{width:100%;}
+}
+@media(prefers-reduced-motion:reduce){
+ .lobby-avatar{transition:none;}
+}
+
+
+/* Gestão de alunos e pedido de ajuda durante a avaliação. */
+.exam-help-button{width:100%;margin:8px 0 12px;text-align:center;}
+.student-manager{margin-bottom:18px;}
+.student-manager-form{
+ display:grid;grid-template-columns:minmax(180px,1.4fr) minmax(140px,1fr) auto;
+ align-items:end;gap:12px;margin:16px 0;
+}
+.student-manager-form>div{min-width:0;}
+.student-manager-form label{display:block;margin-bottom:5px;}
+.student-manager-form .toolbar{gap:7px;}
+.student-manager-table{min-width:650px;}
+.student-admin-actions{white-space:nowrap;}
+.student-admin-actions button{margin:2px;}
+@media(max-width:700px){
+ .student-manager-form{grid-template-columns:1fr;}
+ .student-manager-form .toolbar{display:flex;flex-wrap:wrap;}
+}
+
+
+/* Navegação do professor separada do login; layout compartilhado por página. */
+.teacher-area-disabled { display: none !important; }
+.teacher-login-page { min-height: 100vh; }
+.teacher-login-shell { width: min(480px, calc(100% - 32px)); margin-top: 8vh; }
+.teacher-login-shell .card { padding: 28px; }
+.teacher-login-shell button { width: 100%; margin-top: 16px; }
+.teacher-main-nav {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 24px; padding: 8px;
+  background: #fff; border: 1px solid #d6dee8; border-radius: 12px;
+}
+.teacher-main-nav a {
+  padding: 10px 15px; border-radius: 9px; text-decoration: none;
+  color: #334155; font-weight: 650;
+}
+.teacher-main-nav a:hover,
+.teacher-main-nav a:focus-visible { background: #edf4ff; color: #1e40af; }
+.teacher-main-nav a[aria-current="page"] { color: #fff; background: #1e40af; }
+.teacher-page-heading {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 20px; margin-bottom: 22px;
+}
+.teacher-page-heading h1 { margin: 0 0 4px; font-size: 1.8rem; }
+.teacher-page-heading p { margin: 0; }
+.teacher-assessment-picker { display: grid; gap: 5px; min-width: 240px;
+  font-size: .85rem; margin: 0; }
+.teacher-assessment-picker select { padding: 10px; border-radius: 8px;
+  border: 1px solid #c4cedb; background: #fff; max-width: 350px; }
+.teacher-retry-link { display: inline-block; text-decoration: none; }
+@media (max-width: 720px) {
+  .teacher-main-nav { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .teacher-main-nav a { text-align: center; padding: 10px 5px; font-size: .9rem; }
+  .teacher-page-heading { flex-direction: column; align-items: stretch; }
+  .teacher-assessment-picker { min-width: 0; }
+  .teacher-assessment-picker select { max-width: 100%; width: 100%; }
+  .teacher-login-shell .card { padding: 18px; }
+}

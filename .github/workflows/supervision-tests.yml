@@ -1,0 +1,65 @@
+name: Supervision module validation
+
+on:
+  push:
+    branches:
+      - feature/sala-espera-monitoramento-gather
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  supervision-tests:
+    name: Node tests and static contracts
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: supervision_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: supervision_ci
+    steps:
+      - name: Checkout feature branch
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Validate JavaScript syntax
+        run: |
+          for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby.js monitoramento.js alunos.js teacher-login.js teacher-pages.js; do
+            node --check "$file"
+          done
+      - name: Run automated tests
+        run: node --test tests/supervision.test.cjs
+      - name: Confirm database schema is staged but not applied
+        run: |
+          test -s migrations/013_supervisao_sala_espera.sql
+          test -s migrations/014_gates_inicio_avaliacao.sql
+          test -s migrations/015_ajuda_auditoria.sql
+          test -s migrations/016_turma_codigos.sql
+      - name: Apply migrations to isolated PostgreSQL and test real authorization rules
+        run: |
+          psql -v ON_ERROR_STOP=1 -f tests/bootstrap-postgres.sql
+          for migration in migrations/013_supervisao_sala_espera.sql migrations/014_gates_inicio_avaliacao.sql migrations/015_ajuda_auditoria.sql migrations/016_turma_codigos.sql; do
+            psql -v ON_ERROR_STOP=1 -f "$migration"
+          done
+          psql -v ON_ERROR_STOP=1 -f tests/supervision-db.sql

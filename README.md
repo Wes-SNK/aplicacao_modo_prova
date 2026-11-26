@@ -500,3 +500,19 @@ A tabela de propriedade dos presets está sob RLS, sem acesso direto para usuár
 Foram testados no Supabase, em transações revertidas: criar vazio, montar 20 questões na matriz 8/9/3, publicar, desativar, duplicar, arquivar, restaurar, rejeitar publicação sem questões, ignorar questões marcadas inativas na validação e bloquear a publicação de um preset de outro proprietário. Nenhuma avaliação fictícia ou tentativa foi mantida.
 
 **Validação pendente:** conferência visual em navegador/GitHub Pages, incluindo login e links dinâmicos, antes de aplicar um preset novo a estudantes. Não confundir a prévia em memória com uma tentativa real de homologação do backend. O status dos três exames legados não foi alterado durante a implementação.
+
+
+## Organização modular do painel do professor — branch de homologação
+
+A página de login `professor.html` foi simplificada: exibe exclusivamente o formulário de autenticação e informações de acesso. Presets, controles, listagem de questões e dados de estudantes somente aparecem após o login, em páginas específicas.
+
+- `painel.html`: acompanhamento da aplicação, turma, autorização individual, ocorrências e resultados.
+- `questoes.html`: questões pertencentes à avaliação e banco reutilizável.
+- `avaliacoes.html`: preparação de avaliações, presets, regras, tempo e publicação.
+- `alunos.html`: cadastro de estudantes, turma e situação cadastral.
+
+Para evitar HTML duplicado, o arquivo `professor-shell.html` reúne a estrutura que os scripts existentes utilizam, e `teacher-pages.js` controla autenticação, navegação e visibilidade da área selecionada. `teacher-login.js` autentica e redireciona para a página solicitada, com validação de rota interna.
+
+A navegação preserva os parâmetros `?avaliacao=simulado`, `?avaliacao=prova` e `?exame=preset-...`. Os presets continuam sendo criados e duplicados na área **Avaliações e presets**, enquanto a edição manual de questões ocorre em **Questões**.
+
+As mudanças estão exclusivamente na branch `feature/sala-espera-monitoramento-gather`, vinculada ao PR em rascunho #2. Não foram integradas à `main`, nem aplicaram alterações ao banco do Modo Prova. Verificações para a aprovação manual: `docs/HOMOLOGACAO_SUPERVISAO.md`.
