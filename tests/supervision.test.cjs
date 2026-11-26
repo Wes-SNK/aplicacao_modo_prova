@@ -163,6 +163,14 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  assert.match(find("lobbyFullscreenButton").textContent,/Sair da tela cheia/);
  await find("lobbyFullscreenButton").emit("click");
  assert.match(find("lobbyFullscreenButton").textContent,/Tela cheia/);
+ // Em navegadores com API de tela cheia, o componente completo é expandido.
+ find("screenLobby").requestFullscreen=async()=>{doc.fullscreenElement=find("screenLobby");};
+ doc.exitFullscreen=async()=>{doc.fullscreenElement=null;};
+ await find("lobbyFullscreenButton").emit("click");
+ assert.equal(doc.fullscreenElement,find("screenLobby"));
+ assert.match(find("lobbyFullscreenButton").textContent,/Sair da tela cheia/);
+ await find("lobbyFullscreenButton").emit("click");
+ assert.equal(doc.fullscreenElement,null);
  assert.equal(find("lobbyEnterExam").disabled,true);
  assert.equal(calls.includes("student_lobby_enter"),false);
  authorized=true;
