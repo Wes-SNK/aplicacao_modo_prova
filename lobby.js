@@ -11,6 +11,9 @@
   let token = null, approved = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
   let walkingTimer = null;
+  let movementSender=null,pollBusy=false;
+  // Nós de avatar permanecem no DOM entre consultas; só posições/expressões mudam.
+  const avatarNodes=new Map();
   let acceptEntry = null;
   let onScreen = false;
   let hasEntered = false;
@@ -98,6 +101,9 @@
   function resetRoom() {
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
+    movementSender?.close();movementSender=null;
+    pollBusy=false;
+    $("lobbyAvatars").textContent="";avatarNodes.clear();
     roomTimer = null; onScreen = false; approved = false;
     releaseAnnounced=false;
     $("lobbyReleaseNotice").classList.add("hidden");
@@ -110,6 +116,15 @@
   }
   function showRoom(studentName) {
     onScreen = true;
+    movementSender?.close();
+    movementSender=window.ModoProvaPerformance?.createLatestSender(
+      payload=>mp.rpc("student_lobby_move",{
+        p_lobby_token:token,p_x:payload.x,p_y:payload.y,p_emote:payload.emote
+      }),{
+        minIntervalMs:750,
+        onError:()=>status("Reconectando movimentação…")
+      }
+    )||null;
     $("lobbyStudentName").textContent = studentName
       ? "Bem-vindo(a), " + studentName + "." : "Aguardando o professor…";
     $("lobbyEnterExam").disabled = true;
@@ -122,37 +137,55 @@
     updateAccessView();
     status("Conectando à sala de espera…");
   }
+  function makeAvatar() {
+    const a=document.createElement("div");
+    a.className="lobby-avatar";
+    a.setAttribute("role","img");
+    const head=document.createElement("span");head.className="avatar-head";
+    const body=document.createElement("span");body.className="avatar-body";
+    const feet=document.createElement("span");feet.className="avatar-feet";
+    const label=document.createElement("small");
+    const emote=document.createElement("span");emote.className="avatar-emote";
+    a.append(head,body,feet,label,emote);
+    return {a,label,emote};
+  }
   function drawAvatars() {
-    const root = $("lobbyAvatars");
-    root.textContent = "";
-    peers.forEach((p,i) => {
-      const a = document.createElement("div");
-      a.className = "lobby-avatar avatar-style-" + Number(p.style||0) + (p.self ? " own-avatar":"");
-      a.style.left = Math.min(96,Math.max(4,Number(p.x)||12)) + "%";
-      a.style.top = Math.min(91,Math.max(8,Number(p.y)||65)) + "%";
-      a.setAttribute("role","img");
-      a.setAttribute("aria-label",p.self?"Seu personagem":"Outro estudante aguardando");
-      const head=document.createElement("span");
-      head.className="avatar-head";
-      const body=document.createElement("span");
-      body.className="avatar-body";
-      const feet=document.createElement("span");
-      feet.className="avatar-feet";
-      const label=document.createElement("small");
-      label.textContent = p.self ? "Você" : "Colega";
-      a.append(head,body,feet,label);
-      if (p.emote) {
-        const emote=document.createElement("span");
-        emote.className="avatar-emote";
-        emote.textContent = ({wave:"Olá!",question:"?",ready:"OK"})[p.emote] || "";
-        a.appendChild(emote);
+    const root=$("lobbyAvatars");
+    const present=new Set();
+    peers.forEach((p,i)=>{
+      const key=String(p.id??(p.self?"self":"peer-"+i));
+      present.add(key);
+      let node=avatarNodes.get(key);
+      if(!node){
+        node=makeAvatar();
+        avatarNodes.set(key,node);
+        root.appendChild(node.a);
       }
-      if(p.self) {pos={x:Number(p.x),y:Number(p.y)};}
-      root.appendChild(a);
+      node.a.className="lobby-avatar avatar-style-"+Number(p.style||0)+
+        (p.self?" own-avatar":"");
+      // Não recuar o próprio avatar para uma coordenada antiga enquanto
+      // a atualização otimizada ainda está em trânsito.
+      const movingLocally=p.self && !!movementSender?.pending;
+      const x=movingLocally?pos.x:Number(p.x);
+      const y=movingLocally?pos.y:Number(p.y);
+      node.a.style.left=Math.min(96,Math.max(4,x||12))+"%";
+      node.a.style.top=Math.min(91,Math.max(8,y||65))+"%";
+      node.a.setAttribute("aria-label",p.self?
+        "Seu personagem":"Outro estudante aguardando");
+      node.label.textContent=p.self?"Você":"Colega";
+      const emote=({wave:"Olá!",question:"?",ready:"OK"})[p.emote]||"";
+      node.emote.textContent=emote;
+      node.emote.classList.toggle("hidden",!emote);
+      if(p.self && !movingLocally)pos={x:Number(p.x),y:Number(p.y)};
     });
-    $("lobbySimpleStatus").textContent =
-      "Você está aguardando com " + Math.max(0,peers.length-1) + " colega(s). " +
-      (approved ? "Prova liberada." : "Aguardando liberação da prova.");
+    for(const [key,node] of avatarNodes){
+      if(present.has(key))continue;
+      node.a.remove?.();
+      avatarNodes.delete(key);
+    }
+    $("lobbySimpleStatus").textContent=
+      "Você está aguardando com "+Math.max(0,peers.length-1)+" colega(s). "+
+      (approved?"Prova liberada.":"Aguardando liberação da prova.");
   }
   function updateAccessView() {
     const inMap=true;
@@ -171,7 +204,9 @@
       approved?"ok":"info");
   }
   async function poll() {
-    if (!token || !onScreen || document.hidden) return;
+    if (!token || !onScreen || document.hidden || pollBusy) return;
+    // Evita acúmulo de solicitações quando a rede escolar fica lenta.
+    pollBusy=true;
     try {
       const result=await mp.rpc("student_lobby_state",{p_lobby_token:token});
       peers = Array.isArray(result.peers)?result.peers:[];
@@ -188,12 +223,16 @@
       drawAvatars();
     } catch(err) {
       status("Sem conexão com a sala. Suas respostas não foram afetadas; reconectando…");
+    }finally{
+      pollBusy=false;
     }
   }
   function beginPoll() {
     clearInterval(roomTimer);
     poll();
-    roomTimer=setInterval(poll,4000);
+    // 6,5 s mantém o aluno visível no painel (janela de presença > 25 s)
+    // com menos consultas do que os 4 s anteriores: ~37% de redução.
+    roomTimer=setInterval(poll,6500);
   }
   function setSession(value,studentName) {
     token=value;
@@ -263,11 +302,16 @@
     if(dx||dy)pos=next;
     const self=peers.find(p=>p.self);
     if(self){self.x=pos.x;self.y=pos.y;if(emote)self.emote=emote;drawAvatars();}
-    try {
-      await mp.rpc("student_lobby_move",{
-        p_lobby_token:token,p_x:pos.x,p_y:pos.y,p_emote:emote
-      });
-    } catch{status("Reconectando movimentação…");}
+    if(movementSender){
+      movementSender.push({x:pos.x,y:pos.y,emote},{urgent:!!emote});
+    }else{
+      // Fallback seguro para uma página antiga ainda no cache.
+      try {
+        await mp.rpc("student_lobby_move",{
+          p_lobby_token:token,p_x:pos.x,p_y:pos.y,p_emote:emote
+        });
+      }catch{status("Reconectando movimentação…");}
+    }
   }
   function walkToPoint(event) {
     if(!onScreen || !token || $("lobbySimpleMode").checked)return;

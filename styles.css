@@ -909,3 +909,41 @@ body.lobby-no-scroll{overflow:hidden;}
 @media(prefers-reduced-motion:reduce) {
  .lobby-curiosity,.lobby-release-notice{animation:none;}
 }
+
+
+/* Tablets escolares: zonas de toque generosas, sem alterar o fluxo da prova.
+ * Regras responsivas usam largura da janela, não identificação do dispositivo.
+ * Assim funcionam em tablets Android, notebooks compactos e tela dividida. */
+@media (pointer: coarse) {
+  .lobby-directions button,
+  .lobby-emotes button,
+  #lobbyEnterExam,
+  #lobbyFullscreenButton,
+  #lobbyHelpButton,
+  #lobbyNextCuriosity,
+  .qnav,
+  .exam-actions button,
+  .option { min-height:44px; }
+  .option { align-items:center; }
+  .option input[type="radio"] { min-width:20px;min-height:20px;flex-shrink:0; }
+  .lobby-directions button { min-width:48px; }
+}
+@media (min-width: 801px) and (max-width: 1100px) {
+  .exam-layout { grid-template-columns: 180px minmax(0,1fr); gap:12px; }
+  .question-card { min-width:0; }
+  .sidebar { top:60px; }
+  .question-head { flex-wrap:wrap; }
+}
+@media(max-width:800px) {
+  .exam-layout { grid-template-columns:minmax(0,1fr); }
+  .question-nav { grid-template-columns:repeat(8,minmax(0,1fr)); }
+  .question-card { min-height:0; }
+  .exam-actions { flex-wrap:wrap; }
+  .exam-actions button { flex:1 1 115px; }
+  .exam-actions .danger { margin-left:0; }
+}
+@media(max-width:460px) {
+  .question-nav { grid-template-columns:repeat(5,minmax(0,1fr)); }
+  .question-head { flex-direction:column;gap:8px; }
+  .question-head h2 { margin-bottom:8px; }
+}

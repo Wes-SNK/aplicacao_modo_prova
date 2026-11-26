@@ -559,3 +559,25 @@ A primeira curiosidade aparece imediatamente quando o estudante entra na sala de
 Quando a autorização de início chega por `student_lobby_state`, `lobby.js` exibe uma notificação destacada **Sua prova foi liberada!**, com instrução para clicar em **Entrar na avaliação**. O aviso aparece uma vez por entrada na sala e pode ser dispensado, sem modificar a autorização nem iniciar a prova. A sala mantém o mapa, a opção de tela cheia e o modo simples. Não há novos endpoints, tabelas, questionários ou dependências.
 
 **Validação recomendada:** entrar no laboratório com o aluno de teste; conferir a primeira curiosidade e o botão seguinte; aguardar a troca automática; liberar pelo painel de professor em outro navegador e conferir o aviso, botão de entrada e a ausência de repetições após fechar o aviso; confirmar o funcionamento em tela cheia e no modo simples. A prova continua começando somente após o estudante confirmar as regras.
+
+
+## Otimização para turmas de aproximadamente 30 alunos e tablets (novembro/2026)
+
+A primeira rodada de otimização prioriza tráfego de presença e movimentação, preservando a lógica de prova. Não envolve migração nem alteração das avaliações publicadas.
+
+**Sala de espera:**
+- Intervalo de consulta de presença: 4 s → **6,5 s**. Para 30 alunos presentes, a estimativa teórica cai de cerca de 450 para 277 consultas/minuto, sem contar movimentos. A consulta inicial é imediata. Uma consulta lenta não gera outra concorrente; a aba oculta não consulta e atualiza ao voltar.
+- Movimentação: `client-performance.js` coalesce posições e limita o envio a aproximadamente um a cada **750 ms**, por cliente, com no máximo uma gravação em curso. A movimentação do próprio avatar continua imediata localmente. Emoções geram prioridade; a última coordenada é mantida.
+- Renderização: os mesmos nós HTML dos avatares são reutilizados e reposicionados; apenas entradas/saídas criam ou eliminam nós. O aluno não recebe os nomes dos colegas.
+- O mapa SVG continua estático, sem downloads de imagens externas, e o **modo simples** permanece disponível.
+
+**Prova e dispositivos:**
+- Presença durante prova: heartbeat de 10 s → **15 s**, com prevenção de requisições simultâneas. Estimativa para 30 alunos realizando a prova: 180 → 120 pings/minuto. Isso não altera a correção, as regras, as respostas, as tentativas, o cronômetro nem o registro de ocorrências.
+- Tablets: alvos de toque de pelo menos 44 px, campos de alternativas maiores e reorganização da navegação em retrato/paisagem. Não há bibliotecas externas.
+
+**Verificação obrigatória:**
+1. `node --test tests/*.test.cjs` (inclui a simulação local de 30 clientes e 600 movimentações, além da regressão de painel, aluno e sala de espera);
+2. Github Actions: parser JavaScript e aplicação dos testes SQL em banco PostgreSQL isolado;
+3. homologação com usuários reais em computador e tablet, verificando acesso, tela cheia, rede Wi-Fi da escola, salvamento de respostas, retomada de tentativa e finalização.
+
+Os testes simulados validam limites de código e comportamento, **não demonstram** a capacidade real da rede da escola, nem o desempenho efetivo do Supabase durante uma turma simultânea. O servidor continua validando a autorização de início.

@@ -62,7 +62,8 @@ test("Todos os IDs usados pelos módulos existem nas páginas correspondentes",(
 });
 test("Módulos carregados na ordem segura; prévia sem chamadas reais",()=>{
  for(const page of ["index.html","preview-aluno.html"]){
-  const scripts=[...read(page).matchAll(/<script src="([^"]+)"/g)].map(x=>x[1]);
+  const scripts=[...read(page).matchAll(/<script src="([^"]+)"/g)]
+   .map(x=>x[1].split("?")[0]);
   assert.ok(scripts.indexOf("supervision-utils.js")<scripts.indexOf("lobby.js"));
   assert.ok(scripts.indexOf("lobby.js")<scripts.indexOf("student.js"));
  }
@@ -332,7 +333,7 @@ test("Curiosidades são conteúdo educativo local, sem questões ou rede",()=>{
   assert.match(html,/id="lobbyDismissRelease"/);
   assert.match(html,/role="status" aria-live="polite"/);
   assert.ok(html.indexOf('src="lobby-curiosities.js"')<
-    html.indexOf('src="lobby.js"'));
+    html.indexOf('src="lobby.js?v=20261126-turma30"'));
  }
 });
 
