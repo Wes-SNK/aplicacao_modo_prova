@@ -21,11 +21,11 @@
 
   const isCustom = slug => /^preset-[0-9a-f]{32}$/.test(slug);
   const teacherUrl = slug => isCustom(slug)
-    ? "professor.html?exame=" + encodeURIComponent(slug)
+    ? "questoes.html?exame=" + encodeURIComponent(slug)
     : slug === "simulado-4bim-1b-2026"
-      ? "professor.html?avaliacao=simulado"
+      ? "questoes.html?avaliacao=simulado"
       : slug === "prova-4bim-1b-2026"
-        ? "professor.html?avaliacao=prova" : "professor.html";
+        ? "questoes.html?avaliacao=prova" : "questoes.html";
   const studentUrl = slug => isCustom(slug)
     ? "index.html?exame=" + encodeURIComponent(slug)
     : slug === "simulado-4bim-1b-2026"
@@ -108,7 +108,7 @@
       }
       const actions = element("div", "preset-actions");
       if (!rec.archived) {
-        const open = element("a", "preset-action-link", "Abrir no painel");
+        const open = element("a", "preset-action-link", "Editar questões");
         open.href = teacherUrl(rec.slug);
         actions.appendChild(open);
         actions.appendChild(link("Prévia do aluno", previewUrl(rec.slug)));
@@ -155,7 +155,8 @@
   }
 
   async function refresh() {
-    if (fetching || $("teacherDashboard").classList.contains("hidden")) return;
+    if (fetching || $("teacherDashboard").classList.contains("hidden") ||
+        document.body.dataset.teacherPage !== "avaliacoes") return;
     fetching = true;
     message("Atualizando presets…");
     try {
@@ -285,7 +286,7 @@
       });
       if (!r?.ok || r.archived !== archived) throw new Error("Operação não confirmada.");
       if (archived && rec.slug === cfg.examSlug) {
-        window.location.href = "professor.html?avaliacao=simulado";
+        window.location.href = "questoes.html?avaliacao=simulado";
         return;
       }
       await refresh();
