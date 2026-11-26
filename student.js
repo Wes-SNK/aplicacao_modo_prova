@@ -30,6 +30,8 @@
     endsAt: null,
     status: null,
     active: false,
+    supervised: false,
+    helpPending: false,
     submitting: false,
     lastViolationAt: 0,
     lastViolationType: null,
@@ -144,6 +146,8 @@
     state.studentName = payload.student_name;
     state.examTitle = payload.exam_title;
     state.assessmentMode = payload.assessment_mode || "exam";
+    state.supervised = !!payload.supervised ||
+      sessionStorage.getItem("modoProva:supervised:" + cfg.examSlug) === "1";
     state.durationMinutes = payload.duration_minutes;
     state.maxOccurrences = payload.max_occurrences;
     state.occurrences = payload.occurrences || 0;
@@ -289,6 +293,7 @@
   }
 
   function renderExam() {
+    $("btnExamHelp").classList.toggle("hidden",!state.supervised);
     $("studentName").textContent = state.studentName || "—";
     $("occurrenceCount").textContent = state.occurrences;
     $("occurrenceMax").textContent = state.maxOccurrences;
@@ -694,6 +699,7 @@
     $("submitOverlay").classList.add("hidden");
     showScreen("screenFinished");
     clearSessionCache();
+    sessionStorage.removeItem("modoProva:supervised:" + cfg.examSlug);
     document.exitFullscreen?.().catch(() => {});
   }
 
@@ -761,6 +767,23 @@
         }).catch(() => {});
       }
     }, 10000);
+
+    $("btnExamHelp").addEventListener("click",async()=>{
+      if(!state.active || !state.supervised)return;
+      const btn=$("btnExamHelp");btn.disabled=true;
+      try{
+        const r=await rpc("student_exam_help",{
+          p_session_token:state.sessionToken,p_request:!state.helpPending
+        });
+        state.helpPending=!!r.help_pending;
+        btn.textContent=state.helpPending?"Cancelar pedido de ajuda":"Pedir ajuda ao professor";
+        showViolationToast(state.helpPending
+          ?"Pedido de ajuda enviado ao professor."
+          :"Pedido de ajuda cancelado.");
+      }catch{
+        showViolationToast("Não foi possível enviar o pedido. Verifique a conexão.");
+      }finally{btn.disabled=false;}
+    });
 
     $("btnEnter").addEventListener("click", enterWithName);
     $("studentNameInput").addEventListener("keydown", e => {
