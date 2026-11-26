@@ -8,7 +8,7 @@
   const mp = window.ModeProva;
   const $ = id => document.getElementById(id);
   const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug;
-  let token = null, approved = false, lobbyAllowed = false, roomTimer = null, busy = false;
+  let token = null, approved = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
   let acceptEntry = null;
   let onScreen = false;
@@ -19,7 +19,7 @@
   }
   function resetRoom() {
     clearInterval(roomTimer);
-    roomTimer = null; onScreen = false; approved = false; lobbyAllowed = false;
+    roomTimer = null; onScreen = false; approved = false;
     token = null; peers = []; busy = false;
     sessionStorage.removeItem(cacheKey);
   }
@@ -33,7 +33,7 @@
     $("lobbyEnterExam").disabled = true;
     $("lobbyStatusBadge").textContent = "Aguardando";
     $("lobbyStatusBadge").className = "pill";
-    displayMessage("Identificação recebida. Aguarde o professor permitir a entrada no pátio virtual."); 
+    displayMessage("Você entrou no pátio virtual. Aguarde o professor liberar sua prova.");
     updateAccessView();
     status("Conectando à sala de espera…");
   }
@@ -65,33 +65,29 @@
     });
     $("lobbySimpleStatus").textContent =
       "Você está aguardando com " + Math.max(0,peers.length-1) + " colega(s). " +
-      (approved ? "Entrada autorizada." : "Aguardando liberação.");
+      (approved ? "Prova liberada." : "Aguardando liberação da prova.");
   }
   function updateAccessView() {
-    const inMap=lobbyAllowed;
+    const inMap=true;
     const simple=$("lobbySimpleMode").checked;
-    $("lobbyMap").classList.toggle("hidden",!inMap || simple);
-    $("lobbySimpleStatus").classList.toggle("hidden",!inMap || !simple);
-    document.querySelector(".lobby-movement").classList.toggle("hidden",!inMap || simple);
-    $("lobbySimpleMode").disabled=!inMap;
-    $("lobbyHelpButton").classList.toggle("hidden",!inMap);
-    $("lobbyEnterExam").disabled=!inMap || !approved || busy;
-    $("lobbyStatusBadge").textContent=!inMap?"Aguardando entrada no pátio":
-      approved?"Prova liberada":"No pátio";
-    $("lobbyStatusBadge").className=inMap && approved?"pill ok":"pill";
-    displayMessage(!inMap
-      ? "Aguarde a autorização do professor para ingressar na sala de espera."
-      : approved
-        ? "O professor liberou sua prova. Clique em Entrar na avaliação."
-        : "Você entrou no pátio virtual. Aguarde o professor liberar o início da prova.",
-      inMap&&approved?"ok":"info");
+    $("lobbyMap").classList.toggle("hidden",simple);
+    $("lobbySimpleStatus").classList.toggle("hidden",!simple);
+    document.querySelector(".lobby-movement").classList.toggle("hidden",simple);
+    $("lobbySimpleMode").disabled=false;
+    $("lobbyHelpButton").classList.remove("hidden");
+    $("lobbyEnterExam").disabled=!approved || busy;
+    $("lobbyStatusBadge").textContent=approved?"Prova liberada":"Aguardando prova";
+    $("lobbyStatusBadge").className=approved?"pill ok":"pill";
+    displayMessage(approved
+      ? "O professor liberou sua prova. Clique em Entrar na avaliação."
+      : "Você está na sala de espera. Aguarde a liberação da prova pelo professor.",
+      approved?"ok":"info");
   }
   async function poll() {
     if (!token || !onScreen || document.hidden) return;
     try {
       const result=await mp.rpc("student_lobby_state",{p_lobby_token:token});
-      lobbyAllowed=!!result.lobby_allowed;
-      peers = lobbyAllowed && Array.isArray(result.peers)?result.peers:[];
+      peers = Array.isArray(result.peers)?result.peers:[];
       helpPending=!!result.help_pending;
       $("lobbyHelpButton").textContent = helpPending ? "Cancelar pedido de ajuda" : "Preciso de ajuda";
       status(result.is_active ? "Conectado à escola • atualização automática"
@@ -108,11 +104,10 @@
     poll();
     roomTimer=setInterval(poll,4000);
   }
-  function setSession(value,studentName,allow=false) {
+  function setSession(value,studentName) {
     token=value;
     sessionStorage.setItem(cacheKey,JSON.stringify({token,studentName}));
     showRoom(studentName);
-    lobbyAllowed=!!allow;
     updateAccessView();
     beginPoll();
   }
@@ -133,7 +128,7 @@
     }
     if (!response?.supervised) return false;
     if (!response.lobby_token) throw new Error("Não foi possível identificar a sala de espera");
-    setSession(response.lobby_token,response.student_name||name,response.lobby_allowed);
+    setSession(response.lobby_token,response.student_name||name);
     return true;
   }
   async function resume(onEntry) {
@@ -148,7 +143,7 @@
     return true;
   }
   async function enter() {
-    if (!lobbyAllowed || !approved || busy || !token || !acceptEntry) return;
+    if (!approved || busy || !token || !acceptEntry) return;
     busy=true;
     $("lobbyEnterExam").disabled=true;
     try {
@@ -160,11 +155,11 @@
       acceptEntry(payload);
     } catch(err) {
       displayMessage(err.message||"Não foi possível entrar. Solicite ajuda ao professor.","error");
-      busy=false; $("lobbyEnterExam").disabled=!approved || !lobbyAllowed;
+      busy=false; $("lobbyEnterExam").disabled=!approved;
     }
   }
   async function move(dx,dy,emote=null) {
-    if(!token || !onScreen || !lobbyAllowed || $("lobbySimpleMode").checked) return;
+    if(!token || !onScreen || $("lobbySimpleMode").checked) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
     const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
@@ -178,7 +173,7 @@
     } catch{status("Reconectando movimentação…");}
   }
   async function requestHelp() {
-    if(!token || !onScreen || !lobbyAllowed) return;
+    if(!token || !onScreen) return;
     try{
       const r=await mp.rpc("student_lobby_help",{
         p_lobby_token:token,p_request:!helpPending
@@ -202,7 +197,7 @@
     $("lobbyEnterExam").addEventListener("click",enter);
     $("lobbySimpleMode").addEventListener("change",updateAccessView);
     document.addEventListener("keydown",e=>{
-      if (!onScreen || !lobbyAllowed || $("lobbySimpleMode").checked ||
+      if (!onScreen || $("lobbySimpleMode").checked ||
         ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) return;
       const dirs={ArrowUp:[0,-5],ArrowDown:[0,5],ArrowLeft:[-5,0],
         ArrowRight:[5,0],w:[0,-5],s:[0,5],a:[-5,0],d:[5,0]};
