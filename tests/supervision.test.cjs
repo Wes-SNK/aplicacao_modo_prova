@@ -335,3 +335,22 @@ test("Curiosidades são conteúdo educativo local, sem questões ou rede",()=>{
     html.indexOf('src="lobby.js"'));
  }
 });
+
+test("Troca de turma no painel não mantém alunos de TESTE nem libera outra turma",()=>{
+ const monitor=read("monitoramento.js");
+ const sql=read("migrations/020_visualizacao_turma_selecionada.sql");
+ assert.match(monitor,/teacher_supervision_roster_by_class/);
+ assert.match(monitor,/p_class_group:selectedGroup\|\|null/);
+ assert.match(monitor,/supervisionClass"\)\.addEventListener\("change"/);
+ assert.match(monitor,/showSwitchingClass\(\)/);
+ assert.match(monitor,/refresh\(true\)/);
+ assert.match(monitor,/requestVersion/);
+ assert.match(monitor,/!data\.preview_only && !hasStarted/);
+ assert.match(monitor,/data\.enabled && !data\.preview_only/);
+ assert.match(monitor,/Visualização apenas: salve a vinculação/);
+ assert.match(sql,/configured_class_group/);
+ assert.match(sql,/preview_only/);
+ assert.match(sql,/s\.class_group=v_target/);
+ assert.match(sql,/IF auth\.uid\(\) IS NULL/);
+ assert.match(read(".github/workflows/supervision-tests.yml"),/tests\/supervision-class-switch\.sql/);
+});

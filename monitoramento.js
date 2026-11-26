@@ -7,7 +7,7 @@
   "use strict";
   const mp=window.ModeProva;
   const $=id=>document.getElementById(id);
-  let data=null,loading=false,changing=false,dirty=false;
+  let data=null,loading=false,changing=false,dirty=false,requestVersion=0;
   const formatTime=seconds=>{
     if(seconds==null)return "—";
     const n=Math.max(0,Number(seconds));
@@ -32,7 +32,11 @@
   }
   function renderInstructions(){
     if(!data)return;
-    const msg=!data.enabled
+    const msg=data.preview_only
+      ? "Você está visualizando "+data.class_group+", mas a avaliação continua vinculada a "+
+        (data.configured_class_group||"nenhuma turma")+
+        ". Para liberar provas dessa turma, confirme a configuração em Salvar supervisão."
+      : !data.enabled
       ? "Selecione a turma, habilite a supervisão e salve. Os estudantes entram diretamente na sala de espera pelo link, sem autorização prévia."
       : !data.is_active
         ? "Os estudantes já podem entrar no pátio virtual. Para iniciar a prova, libere os alunos e publique a avaliação em Avaliações e presets."
@@ -82,7 +86,9 @@
   }
   function render(){
     if(!data)return;
-    $("supervisionStatusBadge").textContent=data.enabled?"Supervisão ligada":"Supervisão desativada";
+    $("supervisionStatusBadge").textContent=data.preview_only
+      ?"Visualização — outra turma vinculada"
+      : data.enabled?"Supervisão ligada":"Supervisão desativada";
     $("supervisionStatusBadge").className=data.enabled?"pill ok":"pill";
     renderInstructions();
     if(!dirty){
@@ -125,7 +131,7 @@
       const td=cell(tr,null,"supervision-actions");
       const hasStarted=["in_progress","submitted","auto_submitted"].includes(s.status);
       // Entrar no pátio é automático; somente o início da prova exige autorização.
-      if(data.enabled && !hasStarted){
+      if(data.enabled && !data.preview_only && !hasStarted){
         td.appendChild(action(s.authorized?"Bloquear início":"Liberar prova",
           ()=>authorize(s,!s.authorized),s.authorized?"secondary":"primary"));
       }
@@ -136,30 +142,49 @@
     if(!visible.length){
       const empty=document.createElement("tr");
       const td=cell(empty,data.class_group
-        ?"Nenhum estudante corresponde ao filtro.":"Selecione uma turma e salve as configurações.");
+        ?(students.length?"Nenhum estudante corresponde ao filtro.":"Não há estudantes ativos nesta turma.")
+        :"Selecione uma turma para visualizar os estudantes.");
       td.colSpan=6;body.appendChild(empty);
     }
     $("supervisionAuthorizeAll").disabled=changing ||
       !window.SupervisionUtils.canRequestExam(
-        students.filter(s=>isRecent(s.last_seen,Date.now())),data.enabled);
+        students.filter(s=>isRecent(s.last_seen,Date.now())),data.enabled && !data.preview_only);
   }
-  async function refresh(){
+  function showSwitchingClass() {
+    data=null;
+    $("supervisionRows").textContent="";
+    for(const id of ["supervisionTotal","supervisionWaiting",
+      "supervisionInProgress","supervisionFinished"])$(id).textContent="—";
+    $("supervisionAuthorizeAll").disabled=true;
+    $("supervisionStatusBadge").textContent="Consultando turma…";
+    announce("Carregando estudantes de "+($("supervisionClass").value||"turma selecionada")+"…");
+  }
+  async function refresh(force=false){
     if(document.body.dataset.teacherPage!=="painel" ||
-       loading || changing || $("teacherDashboard").classList.contains("hidden"))return;
+       changing || $("teacherDashboard").classList.contains("hidden"))return;
+    if(loading && !force)return;
+    const version=++requestVersion;
+    const selectedGroup=$("supervisionClass").value;
     loading=true;
     try{
-      const result=await trpc("teacher_supervision_roster",{
-        p_exam_slug:mp.cfg.examSlug
+      const result=await trpc("teacher_supervision_roster_by_class",{
+        p_exam_slug:mp.cfg.examSlug,
+        p_class_group:selectedGroup||null
       });
+      if(version!==requestVersion)return;
       if(!result || !Array.isArray(result.students))throw new Error("Resposta inesperada");
       data=result;render();
-      announce("Atualizado em "+new Date().toLocaleTimeString("pt-BR")+
-        ". A lista mostra todos os estudantes ativos da turma selecionada.");
+      announce("Turma "+(result.class_group||"não selecionada")+": "+
+        result.students.length+" estudante(s) ativo(s)."+
+        (result.preview_only?" Visualização apenas: salve a vinculação para liberar a prova.":""));
     }catch(err){
+      if(version!==requestVersion)return;
       announce(err.status===404
-        ?"Módulo ainda não ativado no banco. A migração de supervisão será aplicada após homologação."
-        :"Não foi possível atualizar: "+(err.message||err));
-    }finally{loading=false;}
+        ?"Consulta de turmas indisponível. Verifique a migração 020."
+        :"Não foi possível atualizar a turma: "+(err.message||err));
+    }finally{
+      if(version===requestVersion)loading=false;
+    }
   }
   async function perform(callback){
     if(changing)return;
@@ -183,10 +208,11 @@
         p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled
       });
       if(!res?.ok)throw new Error("Configuração não confirmada.");
-      dirty=false;
       announce("Configuração salva para "+group+".");
     });
-    await refresh();
+    await refresh(true);
+    dirty=false;
+    if(data)render();
   }
   async function authorize(s,yes){
     if(!window.confirm((yes?"Liberar início da prova para ":"Bloquear início da prova de ")+s.name+"?"))return;
@@ -195,7 +221,7 @@
         p_exam_slug:mp.cfg.examSlug,p_student_id:s.id,p_authorize:yes
       });
       if(!r?.ok)throw new Error("Ação não confirmada.");
-    });await refresh();
+    });await refresh(true);
   }
   async function authorizeAll(){
     const candidates=(data?.students||[]).filter(s=>s.waiting&&!s.authorized&&
@@ -209,7 +235,7 @@
       });
       if(!r?.ok)throw new Error("Liberação não confirmada.");
       announce(r.authorized_count+" estudantes autorizados.");
-    });await refresh();
+    });await refresh(true);
   }
   async function resolveHelp(s){
     await perform(async()=>{
@@ -217,7 +243,7 @@
         p_exam_slug:mp.cfg.examSlug,p_student_id:s.id
       });
       if(!r?.ok)throw new Error("Atendimento não confirmado.");
-    });await refresh();
+    });await refresh(true);
   }
   function exportCsv(){
     const students=data?.students||[];
@@ -246,11 +272,16 @@
   $("supervisionAuthorizeAll").addEventListener("click",authorizeAll);
   $("supervisionExport").addEventListener("click",exportCsv);
   $("supervisionFilter").addEventListener("input",render);
-  $("supervisionClass").addEventListener("change",()=>{dirty=true;});
+  $("supervisionClass").addEventListener("change",()=>{
+    dirty=true;
+    showSwitchingClass();
+    refresh(true);
+  });
   $("supervisionEnabled").addEventListener("change",()=>{dirty=true;});
   window.addEventListener("modo-prova:teacher-ready",refresh);
   window.addEventListener("modo-prova:teacher-logout",()=>{
-    data=null;dirty=false;$("supervisionRows").textContent="";
+    data=null;dirty=false;requestVersion++;
+    $("supervisionRows").textContent="";
     announce("Entre como professor para acompanhar a turma.");
   });
   setInterval(refresh,5000);
