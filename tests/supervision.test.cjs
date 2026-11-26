@@ -362,3 +362,17 @@ test("Avatares reduzidos no mapa sem alterar a lógica de movimentação",()=>{
  assert.match(css,/\.lobby-avatar\.own-avatar/);
  assert.match(read("lobby.js"),/student_lobby_move/);
 });
+
+test("Painel sem checkbox, mantém liberação obrigatória do professor",()=>{
+ const markup=read("professor-shell.html"),monitor=read("monitoramento.js");
+ assert.doesNotMatch(markup,/id="supervisionEnabled"/);
+ assert.doesNotMatch(markup,/Exigir autorização para iniciar/);
+ assert.match(markup,/Vincular turma à avaliação/);
+ assert.match(markup,/início da prova depende da liberação do professor/);
+ assert.doesNotMatch(monitor,/supervisionEnabled/);
+ assert.match(monitor,/p_enabled:true/);
+ assert.match(monitor,/teacher_supervision_configure_v3/);
+ assert.match(monitor,/teacher_supervision_authorize/);
+ assert.match(monitor,/teacher_supervision_roster_by_class/);
+ assert.match(monitor,/Vincular a turma/);
+});
