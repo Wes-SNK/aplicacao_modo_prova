@@ -68,6 +68,7 @@ jobs:
           test -s migrations/017_autorizacao_antecipada.sql
           test -s migrations/018_duas_permissoes_sem_codigos.sql
           test -s migrations/019_entrada_direta_patio.sql
+          test -s migrations/020_visualizacao_turma_selecionada.sql
       - name: Apply migrations to isolated PostgreSQL and test real authorization rules
         run: |
           psql -v ON_ERROR_STOP=1 -f tests/bootstrap-postgres.sql
@@ -80,3 +81,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/supervision-two-gates.sql
           psql -v ON_ERROR_STOP=1 -f migrations/019_entrada_direta_patio.sql
           psql -v ON_ERROR_STOP=1 -f tests/supervision-direct-lobby.sql
+          psql -v ON_ERROR_STOP=1 -f migrations/020_visualizacao_turma_selecionada.sql
+          psql -v ON_ERROR_STOP=1 -f tests/supervision-class-switch.sql
