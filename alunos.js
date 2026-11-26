@@ -38,7 +38,7 @@
     for(const student of selected){
       const tr=make("tr");
       for(const value of [student.name,student.class_group,
-        student.active?"Ativo":"Inativo",student.has_code?"Emitido":"Sem código"]){
+        student.active?"Ativo":"Inativo"]){
         const td=make("td",value);tr.appendChild(td);
       }
       const actions=make("td");actions.className="student-admin-actions";
@@ -53,7 +53,7 @@
     }
     if(!selected.length){
       const tr=make("tr"),td=make("td","Nenhum estudante encontrado.");
-      td.colSpan=5;tr.appendChild(td);area.appendChild(tr);
+      td.colSpan=4;tr.appendChild(td);area.appendChild(tr);
     }
   }
   function startEdit(student){
