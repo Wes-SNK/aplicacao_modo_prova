@@ -93,6 +93,9 @@ BEGIN
        '@Aluno-'||upper(substr(md5(m.recipient_student_id::text),1,6))
      ELSE 'Todos' END,
   'teacher_sender',m.sender_teacher,
+  'sender_id',CASE WHEN m.sender_student_id IS NOT NULL
+    THEN substr(md5(m.sender_student_id::text),1,10) ELSE NULL END,
+  'public_message',m.recipient_student_id IS NULL AND NOT m.recipient_teacher,
   'self',m.sender_student_id=l.student_id)
   ORDER BY m.id),'[]'::jsonb) INTO v_messages
  FROM (SELECT * FROM public.lobby_chat_messages m
@@ -133,6 +136,8 @@ BEGIN
       a.exam_id=q.exam_id AND a.student_id=q.student_id
       AND a.started_at IS NOT NULL);
    IF NOT FOUND THEN RAISE EXCEPTION 'Destinatário não está na sala';END IF;
+ ELSIF NOT c.peer_messages THEN
+   RAISE EXCEPTION 'Somente mensagens ao professor estão habilitadas';
  END IF;
  -- Serializa envios da mesma sessão para aplicar limite antiflood
  -- mesmo quando o navegador dispara requisições concorrentes.
