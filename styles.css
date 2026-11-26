@@ -577,7 +577,9 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   background:#a5ba9b url("school-map.svg") center / 100% 100% no-repeat;
   box-shadow:0 4px 0 #5e7c8a;
   image-rendering:auto;
+  cursor:crosshair;
 }
+.school-map:focus-visible{outline:3px solid #ffdb75;outline-offset:3px;}
 .lobby-map-caption{
   display:flex;justify-content:space-between;align-items:center;gap:8px;
   width:100%;padding:2px 6px;
