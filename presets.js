@@ -118,10 +118,14 @@
         actions.appendChild(button(rec.is_active ? "Tirar do ar" : "Colocar online",
           () => togglePublish(rec), rec.is_active ? "danger" : "primary",
           !rec.is_active && rec.question_count < 1));
+        if (rec.slug === cfg.examSlug && rec.question_count === 0 && !rec.is_active) {
+          actions.appendChild(button("Montar por dificuldade", () =>
+            $("presetAutofill").scrollIntoView({ behavior: "smooth", block: "start" })));
+        }
       }
       if (rec.custom) {
         actions.appendChild(button(rec.archived ? "Restaurar" : "Arquivar",
-          () => archivePreset(rec), "secondary"));
+          () => archivePreset(rec), "secondary", rec.is_active));
       }
       if (!rec.archived) {
         const share = element("a", "preset-action-link", "Link do aluno");
@@ -178,15 +182,14 @@
     if (!rec) return;
     $("presetMode").value = rec.assessment_mode;
     const duration = $("presetDuration");
-    const oldCustom = duration.querySelector('[data-preset-custom="yes"]');
-    oldCustom?.remove();
     const v = rec.duration_minutes == null ? "none" : String(rec.duration_minutes);
     if (![...duration.options].some(o => o.value === v)) {
-      const custom = new Option(v + " minutos", v);
-      custom.dataset.presetCustom = "yes";
-      duration.appendChild(custom);
+      duration.value = "custom";
+      $("presetCustomDuration").value = v;
+    } else {
+      duration.value = v;
     }
-    duration.value = v;
+    syncPresetDuration();
     $("presetOccurrences").value = rec.max_occurrences;
     if (!$("presetTitle").value.trim()) $("presetTitle").value = rec.title + " — cópia";
   }
@@ -204,11 +207,16 @@
       renderList(); // Reabilita os controles após qualquer ação concluída.
     }
   }
+  function syncPresetDuration() {
+    $("presetCustomDurationGroup").classList.toggle(
+      "hidden", $("presetDuration").value !== "custom");
+  }
   async function createPreset() {
     const title = $("presetTitle").value.trim();
     const mode = $("presetMode").value;
     const durationVal = $("presetDuration").value;
-    const duration = durationVal === "none" ? null : Number(durationVal);
+    const duration = durationVal === "none" ? null
+      : Number(durationVal === "custom" ? $("presetCustomDuration").value : durationVal);
     const occurrences = Number($("presetOccurrences").value);
     const source = $("presetSource").value || null;
     if (title.length < 5 || title.length > 160 ||
@@ -386,6 +394,7 @@
   $("btnPresetCreate").addEventListener("click",createPreset);
   $("btnPresetAutoFill").addEventListener("click",autoFill);
   $("presetSource").addEventListener("change",adaptSource);
+  $("presetDuration").addEventListener("change",syncPresetDuration);
   buildDistribution();
   window.addEventListener("modo-prova:teacher-ready",refresh);
   window.addEventListener("modo-prova:teacher-logout",()=>{
