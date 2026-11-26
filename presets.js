@@ -201,6 +201,7 @@
       acting = false;
       $("btnPresetCreate").disabled = false;
       $("btnPresetRefresh").disabled = false;
+      renderList(); // Reabilita os controles após qualquer ação concluída.
     }
   }
   async function createPreset() {
