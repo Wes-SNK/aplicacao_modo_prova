@@ -32,7 +32,8 @@ test("Contrato de segurança: mensagens vinculadas à avaliação e banco fechad
  assert.match(sql,/ENABLE ROW LEVEL SECURITY/g);
  assert.match(sql,/REVOKE ALL ON public\.lobby_chat_settings/);
  assert.match(sql,/p_lobby_token uuid/);
- assert.match(sql,/a\.started_at IS NOT NULL/);
+ assert.match(sql,/a\.student_id=l\.student_id\)/);
+ assert.doesNotMatch(sql,/a\.started_at IS NOT NULL/);
  assert.match(sql,/auth\.uid\(\) IS NULL/);
  assert.match(sql,/3 seconds/);
  assert.match(sql,/length\(v_body\) NOT BETWEEN 1 AND 150/);
