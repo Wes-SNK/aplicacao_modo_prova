@@ -71,6 +71,7 @@
       (data.classes||[]).forEach(name=>sel.appendChild(new Option(name,name)));
       sel.value=data.class_group||old||"";
       $("supervisionEnabled").checked=!!data.enabled;
+      $("supervisionRequireCode").checked=!!data.require_code;
     }
     const students=Array.isArray(data.students)?data.students:[];
     const now=Date.parse(data.server_time)||Date.now();
@@ -116,7 +117,8 @@
       td.colSpan=6;body.appendChild(empty);
     }
     $("supervisionAuthorizeAll").disabled=changing ||
-      !window.SupervisionUtils.canRequestExam(students,data.enabled);
+      !window.SupervisionUtils.canRequestExam(
+        students.filter(s=>isRecent(s.last_seen,Date.now())),data.enabled);
   }
   async function refresh(){
     if(loading || changing || $("teacherDashboard").classList.contains("hidden"))return;
@@ -147,20 +149,39 @@
   async function save(){
     const group=$("supervisionClass").value;
     const enabled=$("supervisionEnabled").checked;
+    const requireCode=$("supervisionRequireCode").checked;
     if(!group){announce("Escolha uma turma antes de salvar.");return;}
     if(!window.confirm((enabled
       ?"Ativar supervisão e exigir autorização individual de início?"
       :"Desativar a exigência de autorização para esta avaliação?")+
       "\nTurma: "+group+"\nEssa alteração é exclusiva desta avaliação."))return;
     await perform(async()=>{
-      const res=await trpc("teacher_supervision_configure",{
-        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled
+      const res=await trpc("teacher_supervision_configure_v2",{
+        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled,
+        p_require_code:requireCode
       });
       if(!res?.ok)throw new Error("Configuração não confirmada.");
       dirty=false;
       announce("Configuração salva para "+group+".");
     });
     await refresh();
+  }
+  async function issueCodes(){
+    const group=$("supervisionClass").value;
+    if(!group){announce("Selecione a turma antes de gerar códigos.");return;}
+    if(!window.confirm("Gerar NOVOS códigos para todos os estudantes ativos de "+
+      group+"? Os códigos anteriores deixarão de funcionar.\n"+
+      "O CSV contém dados de acesso: guarde e distribua individualmente."))return;
+    await perform(async()=>{
+      const rows=await trpc("teacher_student_issue_codes",{p_class_group:group});
+      if(!Array.isArray(rows)||!rows.length)throw new Error("Nenhum código retornado.");
+      const csv=[["Aluno","Código"],...rows.map(r=>[r.name,r.code])];
+      mp.downloadText("codigos-"+group.replace(/[^a-z0-9_-]/gi,"-")+".csv",
+        "\uFEFF"+csv.map(r=>r.map(escapeCsv).join(",")).join("\r\n"),
+        "text/csv;charset=utf-8");
+      announce(rows.length+" códigos gerados e salvos em CSV. Não publique esse arquivo.");
+      window.dispatchEvent(new Event("modo-prova:students-updated"));
+    });
   }
   async function authorize(s,yes){
     if(!window.confirm((yes?"Autorizar início para ":"Revogar autorização de ")+s.name+"?"))return;
@@ -172,7 +193,8 @@
     });await refresh();
   }
   async function authorizeAll(){
-    const candidates=(data?.students||[]).filter(s=>s.waiting&&!s.authorized);
+    const candidates=(data?.students||[]).filter(s=>s.waiting&&!s.authorized&&
+      isRecent(s.last_seen,Date.now()));
     if(!candidates.length)return;
     if(!window.confirm("Autorizar "+candidates.length+
       " estudante(s) presentes na sala de espera? Não inclui ausentes."))return;
@@ -205,12 +227,14 @@
       rows.map(row=>row.map(escapeCsv).join(",")).join("\r\n"),"text/csv;charset=utf-8");
   }
   $("supervisionSave").addEventListener("click",save);
+  $("supervisionIssueCodes").addEventListener("click",issueCodes);
   $("supervisionRefresh").addEventListener("click",refresh);
   $("supervisionAuthorizeAll").addEventListener("click",authorizeAll);
   $("supervisionExport").addEventListener("click",exportCsv);
   $("supervisionFilter").addEventListener("input",render);
   $("supervisionClass").addEventListener("change",()=>{dirty=true;});
   $("supervisionEnabled").addEventListener("change",()=>{dirty=true;});
+  $("supervisionRequireCode").addEventListener("change",()=>{dirty=true;});
   window.addEventListener("modo-prova:teacher-ready",refresh);
   window.addEventListener("modo-prova:teacher-logout",()=>{
     data=null;dirty=false;$("supervisionRows").textContent="";
