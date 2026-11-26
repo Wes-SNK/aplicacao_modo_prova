@@ -75,7 +75,7 @@ BEGIN
  RETURN jsonb_build_object('ok',true,'enabled',p_enabled,'class_group',p_class_group,
    'student_count',v_count,'require_code',p_require_code);
 END;$fn$;
-CREATE FUNCTION public.teacher_supervision_roster(p_exam_slug text)
+CREATE OR REPLACE FUNCTION public.teacher_supervision_roster(p_exam_slug text)
 RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='public'
 AS $fn$
 DECLARE v_exam public.exams;v_super public.exam_supervision;v_students jsonb;v_groups jsonb;
@@ -209,6 +209,9 @@ BEGIN
  RETURN v_rows;
 END;$fn$;
 
+-- Desabilita a configuração antiga para impedir alteração sem validação do código.
+REVOKE ALL ON FUNCTION public.teacher_supervision_configure(text,text,boolean)
+ FROM PUBLIC,anon,authenticated;
 REVOKE ALL ON FUNCTION public.teacher_supervision_configure_v2(text,text,boolean,boolean),
  public.teacher_students_list(),
  public.teacher_student_save(uuid,text,text),
