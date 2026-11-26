@@ -108,7 +108,8 @@
     let response;
     try {
       response=await mp.rpc("student_lobby_join",{
-        p_exam_slug:mp.cfg.examSlug,p_student_name:name
+        p_exam_slug:mp.cfg.examSlug,p_student_name:name,
+        p_access_code:$("studentAccessCodeInput").value.trim() || null
       });
     } catch(err) {
       // Compatibilidade temporária com banco sem a migração de supervisão.
