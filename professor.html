@@ -74,7 +74,12 @@
                 <option value="120" selected>120 minutos</option>
                 <option value="180">180 minutos</option>
                 <option value="none">Sem limite de tempo</option>
+                <option value="custom">Outro tempo…</option>
               </select>
+              <div id="presetCustomDurationGroup" class="hidden">
+                <label for="presetCustomDuration">Tempo personalizado (5 a 300 minutos)</label>
+                <input id="presetCustomDuration" type="number" min="5" max="300" step="1" value="75">
+              </div>
             </div>
             <div>
               <label for="presetOccurrences">Limite de ocorrências</label>
