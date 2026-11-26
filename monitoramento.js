@@ -33,10 +33,10 @@
   function renderInstructions(){
     if(!data)return;
     const msg=!data.enabled
-      ? "1. Selecione a turma. 2. Marque Exigir autorização para iniciar. 3. Clique Salvar supervisão. Depois escolha os alunos que poderão realizar a avaliação."
+      ? "Selecione a turma, marque Exigir autorização para iniciar e clique em Salvar supervisão. Depois autorize a entrada dos estudantes no pátio e, separadamente, libere a prova."
       : !data.is_active
-        ? "A sala de espera pode receber alunos, mas a avaliação ainda está fora do ar. Autorize os estudantes e publique a avaliação em Avaliações e presets quando desejar iniciar."
-        : "Supervisão ativa. Autorize um aluno pelo nome, mesmo que ele ainda não tenha chegado, ou use Autorizar todos os presentes. Compartilhe o link para abrir o pátio virtual. O estudante inicia a prova ao clicar em Entrar na avaliação.";
+        ? "Você já pode autorizar a entrada dos estudantes na sala de espera. Para eles iniciarem a prova, libere também o início individualmente e publique a avaliação em Avaliações e presets."
+        : "1. Clique em Permitir sala de espera para os estudantes escolhidos. 2. Compartilhe o link do aluno. 3. Quando desejar, clique em Liberar prova. O cronômetro só começa após a confirmação das regras pelo aluno.";
     $("supervisionInstructions").textContent=msg;
   }
   async function trpc(name,args={}){
@@ -94,7 +94,6 @@
       (data.classes||[]).forEach(name=>sel.appendChild(new Option(name,name)));
       sel.value=data.class_group||old||"";
       $("supervisionEnabled").checked=!!data.enabled;
-      $("supervisionRequireCode").checked=!!data.require_code;
     }
     const students=Array.isArray(data.students)?data.students:[];
     const now=Date.parse(data.server_time)||Date.now();
@@ -128,8 +127,9 @@
       // O professor pode autorizar antes da chegada ao pátio. Nesse caso
       // o aluno NÃO consta como presente até abrir sua sala de espera.
       if(data.enabled && !hasStarted){
-        td.appendChild(action(s.authorized?"Revogar autorização":
-            (s.waiting?"Autorizar início":"Autorizar antecipadamente"),
+        td.appendChild(action(s.lobby_allowed?"Bloquear sala":"Permitir sala de espera",
+          ()=>allowLobby(s,!s.lobby_allowed),s.lobby_allowed?"secondary":"primary"));
+        td.appendChild(action(s.authorized?"Bloquear início":"Liberar prova",
           ()=>authorize(s,!s.authorized),s.authorized?"secondary":"primary"));
       }
       if(s.help_pending)td.appendChild(action("Atendido",()=>resolveHelp(s)));
@@ -176,16 +176,14 @@
   async function save(){
     const group=$("supervisionClass").value;
     const enabled=$("supervisionEnabled").checked;
-    const requireCode=$("supervisionRequireCode").checked;
     if(!group){announce("Escolha uma turma antes de salvar.");return;}
     if(!window.confirm((enabled
       ?"Ativar supervisão e exigir autorização individual de início?"
       :"Desativar a exigência de autorização para esta avaliação?")+
       "\nTurma: "+group+"\nEssa alteração é exclusiva desta avaliação."))return;
     await perform(async()=>{
-      const res=await trpc("teacher_supervision_configure_v2",{
-        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled,
-        p_require_code:requireCode
+      const res=await trpc("teacher_supervision_configure_v3",{
+        p_exam_slug:mp.cfg.examSlug,p_class_group:group,p_enabled:enabled
       });
       if(!res?.ok)throw new Error("Configuração não confirmada.");
       dirty=false;
@@ -193,25 +191,18 @@
     });
     await refresh();
   }
-  async function issueCodes(){
-    const group=$("supervisionClass").value;
-    if(!group){announce("Selecione a turma antes de gerar códigos.");return;}
-    if(!window.confirm("Gerar NOVOS códigos para todos os estudantes ativos de "+
-      group+"? Os códigos anteriores deixarão de funcionar.\n"+
-      "O CSV contém dados de acesso: guarde e distribua individualmente."))return;
+  async function allowLobby(s,yes){
+    if(!window.confirm((yes?"Permitir":"Bloquear")+
+      " entrada na sala de espera para "+s.name+"?"))return;
     await perform(async()=>{
-      const rows=await trpc("teacher_student_issue_codes",{p_class_group:group});
-      if(!Array.isArray(rows)||!rows.length)throw new Error("Nenhum código retornado.");
-      const csv=[["Aluno","Código"],...rows.map(r=>[r.name,r.code])];
-      mp.downloadText("codigos-"+group.replace(/[^a-z0-9_-]/gi,"-")+".csv",
-        "\uFEFF"+csv.map(r=>r.map(escapeCsv).join(",")).join("\r\n"),
-        "text/csv;charset=utf-8");
-      announce(rows.length+" códigos gerados e salvos em CSV. Não publique esse arquivo.");
-      window.dispatchEvent(new Event("modo-prova:students-updated"));
-    });
+      const r=await trpc("teacher_supervision_lobby_access",{
+        p_exam_slug:mp.cfg.examSlug,p_student_id:s.id,p_allow:yes
+      });
+      if(!r?.ok)throw new Error("Autorização do pátio não confirmada.");
+    });await refresh();
   }
   async function authorize(s,yes){
-    if(!window.confirm((yes?"Autorizar início para ":"Revogar autorização de ")+s.name+"?"))return;
+    if(!window.confirm((yes?"Liberar início da prova para ":"Bloquear início da prova de ")+s.name+"?"))return;
     await perform(async()=>{
       const r=await trpc("teacher_supervision_authorize",{
         p_exam_slug:mp.cfg.examSlug,p_student_id:s.id,p_authorize:yes
@@ -223,8 +214,8 @@
     const candidates=(data?.students||[]).filter(s=>s.waiting&&!s.authorized&&
       isRecent(s.last_seen,Date.now()));
     if(!candidates.length)return;
-    if(!window.confirm("Autorizar "+candidates.length+
-      " estudante(s) presentes na sala de espera? Não inclui ausentes."))return;
+    if(!window.confirm("Liberar a prova para "+candidates.length+
+      " estudante(s) presentes na sala de espera? Não inclui ausentes.\nO cronômetro começará somente quando cada aluno iniciar a prova."))return;
     await perform(async()=>{
       const r=await trpc("teacher_supervision_authorize_all",{
         p_exam_slug:mp.cfg.examSlug
@@ -264,14 +255,12 @@
     }
   });
   syncStudentLink();
-  $("supervisionIssueCodes").addEventListener("click",issueCodes);
   $("supervisionRefresh").addEventListener("click",refresh);
   $("supervisionAuthorizeAll").addEventListener("click",authorizeAll);
   $("supervisionExport").addEventListener("click",exportCsv);
   $("supervisionFilter").addEventListener("input",render);
   $("supervisionClass").addEventListener("change",()=>{dirty=true;});
   $("supervisionEnabled").addEventListener("change",()=>{dirty=true;});
-  $("supervisionRequireCode").addEventListener("change",()=>{dirty=true;});
   window.addEventListener("modo-prova:teacher-ready",refresh);
   window.addEventListener("modo-prova:teacher-logout",()=>{
     data=null;dirty=false;$("supervisionRows").textContent="";
