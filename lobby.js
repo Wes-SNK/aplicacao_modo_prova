@@ -15,6 +15,41 @@
   let onScreen = false;
   let hasEntered = false;
   let immersiveFallback = false;
+  const curiosities=Array.isArray(window.LobbyCuriosities)
+    ? window.LobbyCuriosities : [];
+  let curiosityQueue=[],curiosityIndex=0,lastCuriosityAt=0;
+  let releaseAnnounced=false;
+  function shuffleCuriosities() {
+    curiosityQueue=curiosities.map((_,i)=>i);
+    for(let i=curiosityQueue.length-1;i>0;i--){
+      const j=Math.floor(Math.random()*(i+1));
+      [curiosityQueue[i],curiosityQueue[j]]=[curiosityQueue[j],curiosityQueue[i]];
+    }
+    curiosityIndex=0;
+  }
+  function nextCuriosity(){
+    if(!curiosities.length){
+      $("lobbyCuriosityText").textContent=
+        "Aproveite para explorar a escola virtual enquanto aguarda o professor.";
+      $("lobbyCuriosityCount").textContent="";
+      $("lobbyNextCuriosity").disabled=true;
+      return;
+    }
+    if(curiosityIndex>=curiosityQueue.length)shuffleCuriosities();
+    const index=curiosityQueue[curiosityIndex++];
+    $("lobbyCuriosityText").textContent=curiosities[index];
+    $("lobbyCuriosityCount").textContent=curiosityIndex+" / "+curiosities.length;
+    lastCuriosityAt=Date.now();
+  }
+  function resetCuriosities(){
+    shuffleCuriosities();
+    nextCuriosity();
+  }
+  function showReleaseNotice(){
+    if(releaseAnnounced)return;
+    releaseAnnounced=true;
+    $("lobbyReleaseNotice").classList.remove("hidden");
+  }
   const lobbyScreen = () => $("screenLobby");
   function isImmersive() {
     return immersiveFallback || document.fullscreenElement === lobbyScreen();
@@ -64,6 +99,8 @@
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
     roomTimer = null; onScreen = false; approved = false;
+    releaseAnnounced=false;
+    $("lobbyReleaseNotice").classList.add("hidden");
     exitImmersive();
     token = null; peers = []; busy = false;
     sessionStorage.removeItem(cacheKey);
@@ -79,6 +116,9 @@
     $("lobbyStatusBadge").textContent = "Aguardando";
     $("lobbyStatusBadge").className = "pill";
     displayMessage("Você entrou no pátio virtual. Aguarde o professor liberar sua prova.");
+    releaseAnnounced=false;
+    $("lobbyReleaseNotice").classList.add("hidden");
+    resetCuriosities();
     updateAccessView();
     status("Conectando à sala de espera…");
   }
@@ -139,7 +179,11 @@
       $("lobbyHelpButton").textContent = helpPending ? "Cancelar pedido de ajuda" : "Preciso de ajuda";
       status(result.is_active ? "Conectado à escola • atualização automática"
         : "Avaliação temporariamente indisponível.");
-      approved=!!result.authorized && !!result.is_active;
+      const nowApproved=!!result.authorized && !!result.is_active;
+      if(nowApproved&&!approved)showReleaseNotice();
+      approved=nowApproved;
+      if(!approved && Date.now()-lastCuriosityAt>=24000)
+        nextCuriosity();
       updateAccessView();
       drawAvatars();
     } catch(err) {
@@ -270,6 +314,10 @@
       ["lobbyEmoteReady","ready"]].forEach(([id,name])=>
       $(id).addEventListener("click",()=>move(0,0,name)));
     $("lobbyHelpButton").addEventListener("click",requestHelp);
+    $("lobbyNextCuriosity").addEventListener("click",nextCuriosity);
+    $("lobbyDismissRelease").addEventListener("click",()=>{
+      $("lobbyReleaseNotice").classList.add("hidden");
+    });
     $("lobbyFullscreenButton").addEventListener("click",toggleFullscreen);
     $("lobbyMap").addEventListener("click",walkToPoint);
     document.addEventListener("fullscreenchange",syncFullscreenButton);
