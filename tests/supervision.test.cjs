@@ -22,6 +22,7 @@ test("Estados distintos: ausente, espera, autorizado, realizando e finalizado",(
  assert.equal(rules.studentStatus({status:"not_started"}),"Ainda não entrou");
  assert.equal(rules.studentStatus({waiting:true,status:"not_started"}),"Aguardando autorização");
  assert.equal(rules.studentStatus({waiting:true,authorized:true,status:"not_started"}),"Autorizado");
+ assert.equal(rules.studentStatus({waiting:false,authorized:true,status:"not_started"}),"Autorizado — ainda não entrou");
  assert.equal(rules.studentStatus({status:"in_progress"}),"Realizando");
  assert.equal(rules.studentStatus({status:"auto_submitted"}),"Finalizado");
 });
@@ -209,4 +210,17 @@ test("Rotas antigas vão à página correspondente sem abrir o login com presets
  assert.match(presets,/avaliacoes\.html\?exame=/);
  assert.match(presets,/questoes\.html/);
  assert.match(read("teacher-login.js"),/window\.location\.replace\(destination\(\)\)/);
+});
+
+test("Pré-autorização tem controle próprio e não confunde presença",()=>{
+ const sql=read("migrations/017_autorizacao_antecipada.sql");
+ const monitor=read("monitoramento.js");
+ const shell=read("professor-shell.html");
+ assert.match(sql,/requested_at DROP NOT NULL/);
+ assert.match(sql,/requested_at IS NOT NULL/);
+ assert.match(sql,/INSERT INTO public\.exam_lobby/);
+ assert.match(monitor,/Autorizar antecipadamente/);
+ assert.match(shell,/id="supervisionStudentLink"/);
+ assert.match(shell,/id="supervisionCopyLink"/);
+ assert.match(read(".github/workflows/supervision-tests.yml"),/supervision-preauth\.sql/);
 });
