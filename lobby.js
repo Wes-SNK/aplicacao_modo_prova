@@ -101,6 +101,7 @@
   function resetRoom() {
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
+    mp.lobbyChat?.close();
     movementSender?.close();movementSender=null;
     pollBusy=false;
     $("lobbyAvatars").textContent="";avatarNodes.clear();
@@ -136,6 +137,7 @@
     resetCuriosities();
     updateAccessView();
     status("Conectando à sala de espera…");
+    mp.lobbyChat?.open(token);
   }
   function makeAvatar() {
     const a=document.createElement("div");
@@ -170,6 +172,7 @@
       const y=movingLocally?pos.y:Number(p.y);
       node.a.style.left=Math.min(96,Math.max(4,x||12))+"%";
       node.a.style.top=Math.min(91,Math.max(8,y||65))+"%";
+      node.a.dataset.chatPeer=key;
       node.a.setAttribute("aria-label",p.self?
         "Seu personagem":"Outro estudante aguardando");
       node.label.textContent=p.self?"Você":"Colega";
