@@ -72,7 +72,6 @@
           <span>Modo simples (sem mapa)</span>
         </label>
         <button id="lobbyHelpButton" class="secondary" type="button">Preciso de ajuda</button>
-        <button id="lobbyChatToggle" class="secondary hidden" type="button" aria-controls="lobbyChatPanel">Conversas</button>
       </div>
       <div class="lobby-map-stage">
         <div id="lobbyMap" class="school-map" role="group" aria-label="Mapa da escola visto de cima. Use as setas do teclado ou W, A, S, D para movimentar o avatar.">
@@ -85,31 +84,6 @@
         </div>
       </div>
       <p id="lobbySimpleStatus" class="muted hidden">Você está na sala de espera. Aguarde o professor liberar a prova.</p>
-      <aside id="lobbyChatPanel" class="lobby-chat-panel hidden" aria-label="Conversa supervisionada da turma">
-        <div class="lobby-chat-head">
-          <strong>Conversas na sala de espera</strong>
-          <button id="lobbyChatClose" class="secondary" type="button">Fechar</button>
-        </div>
-        <p class="field-help">As mensagens são acompanhadas pelo professor. Não compartilhe dados pessoais.</p>
-        <div id="lobbyChatMessages" class="lobby-chat-messages" role="log" aria-label="Mensagens recebidas"></div>
-        <div id="lobbyChatQuick" class="lobby-chat-quick" aria-label="Mensagens rápidas">
-          <button type="button" data-chat-quick="Olá, pessoal!">Olá!</button>
-          <button type="button" data-chat-quick="Estou pronto!">Estou pronto!</button>
-          <button type="button" data-chat-quick="Boa prova!">Boa prova!</button>
-          <button type="button" data-chat-quick="Preciso de ajuda">Preciso de ajuda</button>
-          <button type="button" data-chat-quick="Meu tablet está travando">Tablet travando</button>
-          <button type="button" data-chat-quick="Não consigo entrar">Não consigo entrar</button>
-        </div>
-        <label for="lobbyChatTarget">Enviar para</label>
-        <select id="lobbyChatTarget"><option value="">Toda a turma</option></select>
-        <label for="lobbyChatInput">Mensagem (até 150 caracteres)</label>
-        <textarea id="lobbyChatInput" maxlength="150" rows="2" placeholder="Escreva aqui ou selecione @Professor no destinatário…"></textarea>
-        <div id="lobbyChatSuggestions" class="lobby-chat-mentions hidden" aria-label="Sugestões de menção"></div>
-        <div class="lobby-chat-footer">
-          <span id="lobbyChatStatus" role="status" aria-live="polite">Aguardando mensagens.</span>
-          <button id="lobbyChatSend" class="primary" type="button">Enviar</button>
-        </div>
-      </aside>
       <div class="lobby-curiosity" aria-label="Curiosidades sobre tecnologia">
         <div class="lobby-curiosity-heading">
           <span class="lobby-curiosity-kicker">Você sabia?</span>
@@ -286,9 +260,7 @@
   <script src="lobby-curiosities.js"></script>
   <script src="client-performance.js?v=20261126-turma30"></script>
   <script src="lobby-chat-utils.js"></script>
-  <script src="lobby-chat.js"></script>
   <script src="lobby.js?v=20261126-turma30"></script>
-  <script src="lobby-chat-utils.js"></script>
   <script src="lobby-chat.js"></script>
   <script src="student.js?v=20261126-turma30"></script>
 </body>
