@@ -947,3 +947,57 @@ body.lobby-no-scroll{overflow:hidden;}
   .question-head { flex-direction:column;gap:8px; }
   .question-head h2 { margin-bottom:8px; }
 }
+
+
+/* Chat: compacto em desktop, gaveta rolável em tablet, sem cobrir botões da prova.
+ * Estados de autorização continuam fora do chat. */
+.lobby-chat-panel{
+ width:100%;display:grid;gap:8px;padding:13px;
+ border:2px solid #a4bcc2;border-radius:12px;background:#f8fbfa;
+ box-shadow:0 4px 12px #243b4819;color:#1c3947;
+}
+.lobby-chat-panel.hidden{display:none!important;}
+.lobby-chat-head,.lobby-chat-footer{
+ display:flex;align-items:center;justify-content:space-between;gap:10px;
+}
+.lobby-chat-messages,.teacher-chat-messages{
+ overflow-y:auto;overscroll-behavior:contain;
+ max-height:180px;min-height:75px;
+ background:#fff;border:1px solid #d1dde2;
+ border-radius:8px;padding:7px;
+}
+.lobby-chat-message,.teacher-chat-item{
+ padding:6px 9px;margin:3px 0;border-radius:8px;background:#edf3f7;
+ max-width:100%;overflow-wrap:anywhere;
+}
+.lobby-chat-message.mine{background:#e0f1e7;}
+.lobby-chat-message.teacher{border-left:4px solid #3469b1;}
+.lobby-chat-message small{display:block;font-size:.73rem;color:#465f6c;}
+.lobby-chat-message p,.teacher-chat-item p{margin:2px 0 0;}
+.lobby-chat-quick{display:flex;gap:5px;flex-wrap:wrap;}
+.lobby-chat-quick button{border:1px solid #afc7d3;border-radius:16px;
+ background:#e7f3f7;color:#254b60;padding:6px 10px;cursor:pointer;}
+.lobby-chat-panel textarea{min-height:55px;resize:vertical;}
+.lobby-chat-footer span{font-size:.8rem;color:#567080;}
+.lobby-chat-panel select{max-width:100%;}
+.teacher-chat-controls{margin-top:22px;padding:15px;background:#f7f9fb;
+ border:1px solid #ced9df;border-radius:12px;}
+.teacher-chat-controls h2{margin:0 0 8px;font-size:1.18rem;}
+.teacher-chat-controls .toolbar{flex-wrap:wrap;}
+.teacher-chat-send,.teacher-chat-mute{display:flex;align-items:end;gap:8px;
+ flex-wrap:wrap;margin:10px 0;}
+.teacher-chat-send label,.teacher-chat-mute label{font-weight:600;}
+.teacher-chat-send input{flex:1 1 220px;min-width:140px;}
+.teacher-chat-item strong{font-size:.8rem;color:#36576b;}
+@media(max-width:720px){
+ .lobby-chat-panel{padding:9px;gap:6px;}
+ .lobby-chat-messages{max-height:140px;}
+ .lobby-chat-quick button{min-height:44px;}
+ .lobby-chat-footer button,.lobby-chat-head button{min-height:44px;}
+ .teacher-chat-send>*,.teacher-chat-mute>*{flex:1 1 100%;}
+}
+.student-lobby:fullscreen .lobby-chat-messages,
+.student-lobby.lobby-immersive .lobby-chat-messages{max-height:100px;min-height:50px;}
+.student-lobby:fullscreen .lobby-chat-panel,
+.student-lobby.lobby-immersive .lobby-chat-panel{
+ max-height:40vh;overflow:auto;flex-shrink:0;}
