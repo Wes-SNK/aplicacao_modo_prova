@@ -681,3 +681,18 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   .teacher-assessment-picker select { max-width: 100%; width: 100%; }
   .teacher-login-shell .card { padding: 18px; }
 }
+
+
+/* Guia operacional: exibe o acesso à sala de espera sem misturar com publicação. */
+.supervision-guide {
+  margin: 16px 0;
+  padding: 15px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+}
+.supervision-guide strong { display:block; margin-bottom:6px; }
+.supervision-guide p { margin:8px 0; }
+.supervision-guide .toolbar { gap:8px; flex-wrap:wrap; }
+@media(max-width:650px) {
+  .supervision-guide .toolbar>* { flex:1 1 100%; text-align:center; justify-content:center; }
+}
