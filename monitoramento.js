@@ -33,10 +33,10 @@
   function renderInstructions(){
     if(!data)return;
     const msg=!data.enabled
-      ? "Selecione a turma, marque Exigir autorização para iniciar e clique em Salvar supervisão. Depois autorize a entrada dos estudantes no pátio e, separadamente, libere a prova."
+      ? "Selecione a turma, habilite a supervisão e salve. Os estudantes entram diretamente na sala de espera pelo link, sem autorização prévia."
       : !data.is_active
-        ? "Você já pode autorizar a entrada dos estudantes na sala de espera. Para eles iniciarem a prova, libere também o início individualmente e publique a avaliação em Avaliações e presets."
-        : "1. Clique em Permitir sala de espera para os estudantes escolhidos. 2. Compartilhe o link do aluno. 3. Quando desejar, clique em Liberar prova. O cronômetro só começa após a confirmação das regras pelo aluno.";
+        ? "Os estudantes já podem entrar no pátio virtual. Para iniciar a prova, libere os alunos e publique a avaliação em Avaliações e presets."
+        : "Compartilhe o link com a turma. Cada aluno entra diretamente no pátio ao informar seu nome. Quando desejar, clique em Liberar prova. O cronômetro só começa quando o aluno confirmar as regras.";
     $("supervisionInstructions").textContent=msg;
   }
   async function trpc(name,args={}){
@@ -124,11 +124,8 @@
         connection.classList.add("supervision-offline");
       const td=cell(tr,null,"supervision-actions");
       const hasStarted=["in_progress","submitted","auto_submitted"].includes(s.status);
-      // O professor pode autorizar antes da chegada ao pátio. Nesse caso
-      // o aluno NÃO consta como presente até abrir sua sala de espera.
+      // Entrar no pátio é automático; somente o início da prova exige autorização.
       if(data.enabled && !hasStarted){
-        td.appendChild(action(s.lobby_allowed?"Bloquear sala":"Permitir sala de espera",
-          ()=>allowLobby(s,!s.lobby_allowed),s.lobby_allowed?"secondary":"primary"));
         td.appendChild(action(s.authorized?"Bloquear início":"Liberar prova",
           ()=>authorize(s,!s.authorized),s.authorized?"secondary":"primary"));
       }
@@ -190,16 +187,6 @@
       announce("Configuração salva para "+group+".");
     });
     await refresh();
-  }
-  async function allowLobby(s,yes){
-    if(!window.confirm((yes?"Permitir":"Bloquear")+
-      " entrada na sala de espera para "+s.name+"?"))return;
-    await perform(async()=>{
-      const r=await trpc("teacher_supervision_lobby_access",{
-        p_exam_slug:mp.cfg.examSlug,p_student_id:s.id,p_allow:yes
-      });
-      if(!r?.ok)throw new Error("Autorização do pátio não confirmada.");
-    });await refresh();
   }
   async function authorize(s,yes){
     if(!window.confirm((yes?"Liberar início da prova para ":"Bloquear início da prova de ")+s.name+"?"))return;

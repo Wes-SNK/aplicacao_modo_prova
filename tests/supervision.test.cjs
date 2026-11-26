@@ -21,7 +21,7 @@ test("Progresso: porcentagem sem valores negativos ou acima do total",()=>{
 test("Estados distintos: ausente, espera, autorizado, realizando e finalizado",()=>{
  assert.equal(rules.studentStatus({status:"not_started"}),"Ainda não entrou");
  assert.equal(rules.studentStatus({waiting:true,status:"not_started"}),"No pátio — aguardando liberação");
- assert.equal(rules.studentStatus({lobby_requested:true,lobby_allowed:false,status:"not_started"}),"Aguardando entrada no pátio");
+ assert.equal(rules.studentStatus({lobby_requested:true,lobby_allowed:false,status:"not_started"}),"Na sala de espera");
  assert.equal(rules.studentStatus({waiting:true,authorized:true,status:"not_started"}),"Autorizado");
  assert.equal(rules.studentStatus({waiting:false,authorized:true,status:"not_started"}),"Prova liberada — ainda não entrou");
  assert.equal(rules.studentStatus({status:"in_progress"}),"Realizando");
@@ -118,7 +118,7 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  const find=id=>elements[id]??=(node());
  const intervals=[];
  const calls=[];
- let authorized=false,lobbyAllowed=false,received=null;
+ let authorized=false,received=null;
  const mp={
   cfg:{examSlug:"simulado-4bim-1b-2026"},teacherPreview:false,
   setMessage(el,msg,kind){el.textContent=msg;el.kind=kind;},
@@ -128,7 +128,7 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
     supervised:true,lobby_token:"fake-lobby-token",
     student_name:"Estudante Teste",authorized:false,lobby_allowed:false};
    if(name==="student_lobby_state")return{
-    is_active:true,authorized,lobby_allowed:lobbyAllowed,peers:[{id:"anon-1",x:12,y:65,style:0,self:true}],help_pending:false};
+    is_active:true,authorized,peers:[{id:"anon-1",x:12,y:65,style:0,self:true}],help_pending:false};
    if(name==="student_lobby_enter"){
     if(!authorized)throw Error("Unauthorized");
     return{session_token:"fake-attempt-token",questions:[]};
@@ -159,10 +159,6 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  assert.equal(find("lobbyEnterExam").disabled,true);
  assert.equal(calls.includes("student_lobby_enter"),false);
  authorized=true;
- await intervals.at(-1)();
- assert.equal(find("lobbyEnterExam").disabled,true,
-  "Liberar a prova não deve contornar a autorização do pátio");
- lobbyAllowed=true;
  await intervals.at(-1)();
  await new Promise(setImmediate);
  assert.equal(find("lobbyEnterExam").disabled,false);
@@ -216,7 +212,7 @@ test("Pré-autorização tem controle próprio e não confunde presença",()=>{
  assert.match(sql,/requested_at DROP NOT NULL/);
  assert.match(sql,/requested_at IS NOT NULL/);
  assert.match(sql,/INSERT INTO public\.exam_lobby/);
- assert.match(monitor,/Permitir sala de espera/);
+ assert.doesNotMatch(monitor,/Permitir sala de espera/);
  assert.match(monitor,/Liberar prova/);
  assert.match(shell,/id="supervisionStudentLink"/);
  assert.match(shell,/id="supervisionCopyLink"/);
@@ -236,7 +232,20 @@ test("Duas permissões independentes; códigos individuais removidos da interfac
  assert.doesNotMatch(read("lobby.js"),/p_access_code|studentAccessCodeInput/);
  assert.doesNotMatch(read("monitoramento.js"),/teacher_student_issue_codes|teacher_supervision_configure_v2/);
  assert.match(read("monitoramento.js"),/teacher_supervision_configure_v3/);
- assert.match(read("monitoramento.js"),/teacher_supervision_lobby_access/);
- assert.match(read("lobby.js"),/lobbyAllowed/);
- assert.match(read("lobby.js"),/Aguarde a autorização do professor para ingressar na sala de espera/);
+ assert.doesNotMatch(read("monitoramento.js"),/teacher_supervision_lobby_access/);
+ assert.doesNotMatch(read("lobby.js"),/lobbyAllowed/);
+ assert.match(read("lobby.js"),/Você entrou no pátio virtual/);
+});
+
+test("Ingresso direto na sala: único bloqueio é a liberação da prova",()=>{
+ const migration=read("migrations/019_entrada_direta_patio.sql");
+ const lobby=read("lobby.js");
+ const monitor=read("monitoramento.js");
+ assert.match(migration,/requested_at=now\(\)/);
+ assert.match(migration,/lobby_allowed=true/);
+ assert.match(migration,/REVOKE ALL ON FUNCTION public\.teacher_supervision_lobby_access/);
+ assert.match(lobby,/Aguarde o professor liberar sua prova/);
+ assert.doesNotMatch(lobby,/Aguarde a autorização do professor para ingressar/);
+ assert.doesNotMatch(monitor,/function allowLobby/);
+ assert.match(monitor,/Liberar prova/);
 });
