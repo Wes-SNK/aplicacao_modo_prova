@@ -548,3 +548,14 @@ Na avaliação supervisionada, o estudante entra diretamente no mapa após infor
 **Acessibilidade:** o aluno mantém a opção **Modo simples (sem mapa)**, com estado textual de espera. O `school-map.svg` não depende de CDN, sprite externo, biblioteca gráfica ou serviços pagos. A sala utiliza as rotinas de presença já existentes no Supabase; não houve migrações.
 
 **Validação manual:** abrir o link do laboratório de testes como aluno; verificar se a escola ocupa boa parte da largura; usar setas/WASD, clique, F, botão de tela cheia e sair da tela cheia; conferir o comportamento em outro navegador e com tela pequena; liberar a prova pelo painel e confirmar que as regras aparecem normalmente após fechar a sala. Verificar que a tela cheia da prova não contabiliza a saída da sala anterior como ocorrência.
+
+
+## Notificações e curiosidades na sala de espera (26/11/2026)
+
+A sala de espera supervisionada apresenta 20 curiosidades curtas e autossuficientes sobre lógica de programação, hardware, redes, desenvolvimento web e história da computação. São frases educativas, não são questões da avaliação. Os conteúdos permanecem em `lobby-curiosities.js`, sem chamadas externas nem personalização por aluno.
+
+A primeira curiosidade aparece imediatamente quando o estudante entra na sala de espera. O botão **Outra curiosidade** mostra um novo fato; durante a espera, outro fato aparece a cada aproximadamente 24 segundos após a última mudança. A ordem é embaralhada, sem repetição até completar o ciclo. A rotação cessa quando a prova está liberada, para não dispersar o aluno.
+
+Quando a autorização de início chega por `student_lobby_state`, `lobby.js` exibe uma notificação destacada **Sua prova foi liberada!**, com instrução para clicar em **Entrar na avaliação**. O aviso aparece uma vez por entrada na sala e pode ser dispensado, sem modificar a autorização nem iniciar a prova. A sala mantém o mapa, a opção de tela cheia e o modo simples. Não há novos endpoints, tabelas, questionários ou dependências.
+
+**Validação recomendada:** entrar no laboratório com o aluno de teste; conferir a primeira curiosidade e o botão seguinte; aguardar a troca automática; liberar pelo painel de professor em outro navegador e conferir o aviso, botão de entrada e a ausência de repetições após fechar o aviso; confirmar o funcionamento em tela cheia e no modo simples. A prova continua começando somente após o estudante confirmar as regras.

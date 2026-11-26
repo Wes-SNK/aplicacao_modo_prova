@@ -842,3 +842,70 @@ body.lobby-no-scroll{overflow:hidden;}
 @media(max-width:650px) {
   .supervision-guide .toolbar>* { flex:1 1 100%; text-align:center; justify-content:center; }
 }
+
+
+/* Curiosidades de computação: área compacta, inclusive em tela cheia. */
+.lobby-curiosity {
+  display:grid;
+  grid-template-columns:minmax(110px,auto) minmax(0,1fr) auto;
+  align-items:center;gap:12px;
+  margin:10px 0 5px;padding:11px 14px;
+  background:#f4f8ed;
+  border:1px solid #bfd4b5;
+  border-left:5px solid #4b8766;
+  border-radius:11px;
+  color:#233e35;
+}
+.lobby-curiosity-heading{display:flex;flex-direction:column;gap:2px;}
+.lobby-curiosity-kicker{font-weight:850;letter-spacing:.02em;color:#286246;white-space:nowrap;}
+.lobby-curiosity-count{font-size:.72rem;color:#557568;font-variant-numeric:tabular-nums;}
+.lobby-curiosity-text{margin:0;font-size:.92rem;line-height:1.4;}
+.lobby-curiosity button{white-space:nowrap;border:1px solid #bbd1c6;}
+.lobby-release-notice{
+  position:absolute;
+  z-index:100;
+  top:110px;right:24px;
+  width:min(440px,calc(100% - 48px));
+  display:flex;align-items:flex-start;gap:12px;
+  padding:15px;
+  border:2px solid #43866b;
+  border-radius:13px;
+  background:#e3f5e9;color:#134c33;
+  box-shadow:0 12px 34px #143b3066;
+}
+.lobby-release-notice.hidden{display:none!important;}
+.lobby-release-symbol{
+  display:grid;place-items:center;
+  border-radius:50%;flex:0 0 35px;height:35px;
+  color:#fff;background:#21784e;font-weight:900;font-size:1.4rem;
+}
+.lobby-release-notice strong{display:block;font-size:1.08rem;}
+.lobby-release-notice p{margin:4px 0 0;font-size:.88rem;line-height:1.35;}
+.lobby-release-notice button{margin-left:auto;padding:6px 9px;white-space:nowrap;}
+.student-lobby:fullscreen .lobby-curiosity,
+.student-lobby.lobby-immersive .lobby-curiosity {
+  margin:2px 0;padding:5px 10px;
+  gap:9px;font-size:.85rem;
+}
+.student-lobby:fullscreen .lobby-curiosity-text,
+.student-lobby.lobby-immersive .lobby-curiosity-text{font-size:.82rem;}
+.student-lobby:fullscreen .lobby-release-notice,
+.student-lobby.lobby-immersive .lobby-release-notice{
+  top:72px;right:18px;
+}
+@media(max-width:720px) {
+  .lobby-curiosity{
+    grid-template-columns:1fr auto;
+    gap:5px 10px;padding:9px 11px;
+  }
+  .lobby-curiosity-heading{grid-column:1/-1;flex-direction:row;justify-content:space-between;}
+  .lobby-curiosity-text{font-size:.84rem;}
+  .lobby-curiosity button{font-size:.75rem;padding:7px 9px;}
+  .lobby-release-notice{top:88px;right:8px;width:calc(100% - 16px);padding:9px;gap:7px;}
+  .lobby-release-notice p{font-size:.77rem;}
+  .lobby-release-notice strong{font-size:.95rem;}
+  .lobby-release-notice button{font-size:.72rem;}
+}
+@media(prefers-reduced-motion:reduce) {
+ .lobby-curiosity,.lobby-release-notice{animation:none;}
+}

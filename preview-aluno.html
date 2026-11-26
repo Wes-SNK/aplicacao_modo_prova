@@ -57,7 +57,7 @@
       <div class="section-head">
         <div>
           <h1>Bem-vindo à escola virtual</h1>
-          <p class="muted">Aguarde a autorização do professor para entrar no laboratório.</p>
+          <p class="muted">Explore o pátio e descubra curiosidades enquanto aguarda o professor liberar sua prova.</p>
         </div>
         <div class="lobby-header-actions">
           <span id="lobbyStatusBadge" class="pill">Aguardando</span>
@@ -84,6 +84,22 @@
         </div>
       </div>
       <p id="lobbySimpleStatus" class="muted hidden">Você está na sala de espera. Aguarde o professor liberar a prova.</p>
+      <div class="lobby-curiosity" aria-label="Curiosidades sobre tecnologia">
+        <div class="lobby-curiosity-heading">
+          <span class="lobby-curiosity-kicker">Você sabia?</span>
+          <span id="lobbyCuriosityCount" class="lobby-curiosity-count" aria-hidden="true"></span>
+        </div>
+        <p id="lobbyCuriosityText" class="lobby-curiosity-text">Descubra curiosidades sobre tecnologia enquanto espera a prova.</p>
+        <button id="lobbyNextCuriosity" type="button" class="secondary small" aria-label="Mostrar outra curiosidade">Outra curiosidade</button>
+      </div>
+      <div id="lobbyReleaseNotice" class="lobby-release-notice hidden" role="status" aria-live="polite" aria-atomic="true">
+        <div class="lobby-release-symbol" aria-hidden="true">✓</div>
+        <div>
+          <strong>Sua prova foi liberada!</strong>
+          <p>O professor autorizou seu início. Clique em Entrar na avaliação quando estiver pronto.</p>
+        </div>
+        <button id="lobbyDismissRelease" type="button" class="secondary small" aria-label="Fechar aviso de prova liberada">Fechar</button>
+      </div>
       <div class="lobby-movement">
         <div class="lobby-directions" aria-label="Mover personagem">
           <button id="lobbyMoveUp" type="button" class="secondary" aria-label="Mover para cima">↑</button>
@@ -202,6 +218,7 @@
   <script src="common.js"></script>
   <script src="supervision-utils.js"></script>
   <script src="preview-aluno.js"></script>
+  <script src="lobby-curiosities.js"></script>
   <script src="lobby.js"></script>
   <script src="student.js"></script>
 </body>
