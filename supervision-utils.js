@@ -20,6 +20,7 @@
       if(s.status==="ready")return "Pronto para iniciar";
       if(s.waiting && s.authorized)return "Autorizado";
       if(s.waiting)return "Aguardando autorização";
+      if(s.authorized)return "Autorizado — ainda não entrou";
       return "Ainda não entrou";
     },
     connectionStatus(lastSeen,waiting,inProgress,now=Date.now()){
