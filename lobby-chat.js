@@ -77,16 +77,15 @@
   try{body=u.validate($("lobbyChatInput").value);}
   catch(e){error(e.message);return;}
   const selected=$("lobbyChatTarget").value;
-  if(selected==="teacher"){
-   // Não há identidade direta de professor anônima: mensagem pública
-   // com prefixo explícito, legível pela supervisão.
-   body=u.validate("@Professor "+body);
-  }
-  const recipient=selected&&selected!=="teacher"?selected:null;
+  // Mensagem a @Professor fica reservada ao professor e ao remetente,
+  // sem aparecer para os colegas nem virar uma mensagem pública.
+  const teacherOnly=selected==="teacher";
+  const recipient=selected&&!teacherOnly?selected:null;
   busy=true;$("lobbyChatSend").disabled=true;
   try{
    await mp.rpc("student_lobby_chat_send",{
-    p_lobby_token:token,p_body:body,p_recipient:recipient
+    p_lobby_token:token,p_body:body,p_recipient:recipient,
+    p_teacher_only:teacherOnly
    });
    $("lobbyChatInput").value="";
    await refresh();
