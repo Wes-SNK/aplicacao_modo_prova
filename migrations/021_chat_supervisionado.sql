@@ -72,7 +72,8 @@ BEGIN
    CASE WHEN m.teacher_sender THEN 'Professor'
      ELSE 'Colega-'||upper(substr(md5(m.sender_student_id::text),1,4)) END AS sender,
    m.sender_student_id=v_lobby.student_id AS self,
-   CASE WHEN m.recipient_student_id IS NULL THEN 'Todos'
+   CASE WHEN m.teacher_only THEN '@Professor'
+     WHEN m.recipient_student_id IS NULL THEN 'Todos'
      WHEN m.recipient_student_id=v_lobby.student_id THEN 'Você'
      ELSE 'Colega-'||upper(substr(md5(m.recipient_student_id::text),1,4)) END AS recipient
   FROM public.exam_lobby_chat_messages m
