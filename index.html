@@ -149,6 +149,8 @@
         <label for="lobbyChatInput">Mensagem (máximo de 150 caracteres)</label>
         <textarea id="lobbyChatInput" rows="2" maxlength="150"
           placeholder="Escreva sua mensagem. Use @Professor ou escolha um colega." autocomplete="off"></textarea>
+        <div id="lobbyChatMentions" class="lobby-chat-mentions hidden"
+          role="listbox" aria-label="Sugestões de destinatários"></div>
         <div class="lobby-chat-actions">
           <span class="field-help">Conversa monitorada pelo professor. Disponível apenas na sala de espera.</span>
           <button id="lobbyChatSend" type="button" class="primary">Enviar mensagem</button>
