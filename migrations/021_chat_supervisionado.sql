@@ -69,6 +69,10 @@ BEGIN
  INTO v_messages
  FROM (
   SELECT m.id,m.body,m.created_at,m.teacher_sender,
+   m.teacher_only,
+   (NOT m.teacher_only AND m.recipient_student_id IS NULL) AS public_message,
+   CASE WHEN m.sender_student_id IS NULL THEN NULL
+     ELSE substr(md5(m.sender_student_id::text),1,10) END AS sender_id,
    CASE WHEN m.teacher_sender THEN 'Professor'
      ELSE 'Colega-'||upper(substr(md5(m.sender_student_id::text),1,4)) END AS sender,
    m.sender_student_id=v_lobby.student_id AS self,
@@ -85,7 +89,6 @@ BEGIN
       (m.recipient_student_id IS NULL OR
        m.sender_student_id=v_lobby.student_id OR
        m.recipient_student_id=v_lobby.student_id)))
-    AND v_allowed
   ORDER BY m.id DESC LIMIT 40
  ) msg;
  RETURN jsonb_build_object('enabled',v_allowed,'peer_messages',
