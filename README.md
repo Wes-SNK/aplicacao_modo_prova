@@ -453,3 +453,50 @@ No painel autenticado do professor, o botão **Testar como aluno** fica à direi
 A prévia tem um aviso permanente identificando que não é uma aplicação real. Seus dados usam um namespace de cache separado no navegador; o cache de tentativas e respostas reais de estudantes nunca é reutilizado. Atualizar a aba reinicia a simulação. As ocorrências, notas e o tempo são calculados localmente — a experiência visual e a navegação são reais, **mas não se trata de um teste de conectividade, persistência ou controle de aplicação com o backend do aluno**. O desempenho pode diferir de uma tentativa real em laboratório. Recomenda-se homologação em navegador antes de disponibilizar aos estudantes.
 
 O botão só aparece depois do login do professor. As telas de prévia não liberam o simulado nem executam qualquer rotina de publicação; o preset **Colocar simulado online** continua separado.
+
+
+## Gerenciador de avaliações e presets personalizados — 26/11/2026
+
+### Objetivo
+
+O professor pode criar e reutilizar avaliações sem depender de criação manual de registros no Supabase. O módulo é independente da prova bimestral e do simulado de 01/12/2026. Presets são armazenados como avaliações reais (tabela `public.exams`), com registros de propriedade/arquivamento em `public.exam_presets`. Cada criação inicia **inativa**, sem horário de publicação automático.
+
+**Acesso:** no painel autenticado, abrir **Gerenciar avaliações e presets**, na parte superior.
+
+### Funcionalidades
+
+1. **Novo preset:** título (5 a 160 caracteres), modalidade (prova ou simulado), duração (60, 90, 120, 180, outra entre 5 e 300 minutos, ou sem limite), limite de ocorrências (1 a 20). Após clicar **Criar preset desativado**, a interface abre automaticamente o novo painel.
+2. **Começar vazio:** adicionar questões manualmente na seção **Banco de questões** do painel, com busca por palavras, disciplina e dificuldade.
+3. **Composição automática:** quando o preset está vazio, o professor pode preencher uma matriz de quatro disciplinas por três dificuldades, indicando quantidades de fáceis, médias e difíceis. O padrão inicial é 20 questões (8 fáceis, 9 médias e 3 difíceis); a matriz pode ser livremente modificada de 1 a 80 questões. A montagem seleciona apenas questões válidas e classificadas do banco; se faltarem itens em alguma categoria, a transação é desfeita sem inclusão parcial.
+4. **Duplicar:** qualquer avaliação à qual o professor tem acesso pode servir de modelo (questões e configurações). A cópia recebe identificador e link próprios e fica inativa. Nenhuma tentativa é copiada.
+5. **Editar:** abrir a avaliação criada e usar as mesmas opções do painel de professor para configurações, questões, gabaritos e filtros. Regras de bloqueio após o registro de tentativas continuam válidas.
+6. **Publicar/retirar do ar:** botões específicos da lista, com confirmação, alteram apenas `is_active`. A publicação exige ao menos uma questão objetiva válida e ativa, respeitando questões voluntariamente desativadas. O simulado original de 01/12 mantém seu botão de publicação rápida independente.
+7. **Compartilhar/testar:** a listagem traz **Link do aluno**, **Copiar link** e **Prévia do aluno**. A prévia usa a sessão autenticada do professor e não gera tentativas no banco.
+8. **Arquivar/restaurar:** não apaga questões nem resultados; para arquivar, o preset deve estar fora do ar e não pode ter tentativas pendentes. A restauração o retorna à lista utilizável.
+
+### Endereços e arquitetura
+
+Cada preset recebe `slug` de formato `preset-<32 caracteres hexadecimais>`, gerado aleatoriamente no servidor. O parâmetro `exame` permite acessar um preset de forma independente:
+
+- Professor: `professor.html?exame=preset-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+- Aluno: `index.html?exame=preset-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+- Prévia: `preview-aluno.html?exame=preset-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx`
+
+A aplicação aceita apenas slugs de preset com formato válido, evitando trocar silenciosamente para uma avaliação anterior caso o link esteja incorreto. O servidor também verifica se a avaliação existe e está disponível antes de permitir seu início.
+
+Arquivos principais:
+- `presets.js`: listagem, formulário de criação, clonagem, matriz de distribuição, publicação e arquivamento.
+- `professor.html`: seção **Gerenciar avaliações e presets** e controles do módulo.
+- `professor.js`: eventos de login e navegação para a prévia personalizada, mantendo o gerenciador de questões existente.
+- `config.js`: leitura do parâmetro seguro `?exame=`, sem remover os links legados `?avaliacao=simulado` e `?avaliacao=prova`.
+- `preview-aluno.js`: suporte à prévia dos novos slugs, com ações locais sem escrita de tentativa.
+- `migration_011_gerenciador_presets.sql`: tabela e operações autenticadas.
+- `migration_012_publicacao_questoes_ativas.sql`: validação de publicação baseada nas questões efetivamente ativas.
+
+### Integridade e segurança
+
+A tabela de propriedade dos presets está sob RLS, sem acesso direto para usuários `anon` ou `authenticated`. As operações específicas do módulo usam funções autenticadas e verificam `created_by = auth.uid()` nos presets personalizados. As avaliações preexistentes continuam separadas e disponíveis para consulta e duplicação conforme o painel existente. Não publicar gabaritos, dados pessoais, tokens ou enunciados no GitHub.
+
+Foram testados no Supabase, em transações revertidas: criar vazio, montar 20 questões na matriz 8/9/3, publicar, desativar, duplicar, arquivar, restaurar, rejeitar publicação sem questões, ignorar questões marcadas inativas na validação e bloquear a publicação de um preset de outro proprietário. Nenhuma avaliação fictícia ou tentativa foi mantida.
+
+**Validação pendente:** conferência visual em navegador/GitHub Pages, incluindo login e links dinâmicos, antes de aplicar um preset novo a estudantes. Não confundir a prévia em memória com uma tentativa real de homologação do backend. O status dos três exames legados não foi alterado durante a implementação.
