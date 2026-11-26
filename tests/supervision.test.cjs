@@ -159,7 +159,7 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  vm.runInNewContext(src,{
   window:win,document:doc,navigator:{userAgent:"test"},sessionStorage,
   setInterval:fn=>{intervals.push(fn);return intervals.length;},
-  clearInterval(){},Date,console,Promise
+  clearInterval(){},setTimeout,clearTimeout,Date,console,Promise
  });
  const present=await mp.lobbyBridge.join("Estudante Teste",payload=>received=payload);
  assert.equal(present,true);
