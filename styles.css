@@ -591,7 +591,7 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
 .lobby-avatars{position:absolute;inset:0;pointer-events:none;z-index:3;}
 .lobby-avatar{
   position:absolute;
-  transform:translate(-50%,-54%);
+  transform:translate(-50%,-54%) scale(.75);
   width:48px;height:66px;
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
   transition:left .16s linear,top .16s linear;
@@ -717,7 +717,7 @@ body.lobby-no-scroll{overflow:hidden;}
  .school-map{border-width:2px;}
  .lobby-map-caption{font-size:.57rem;flex-wrap:wrap;}
  .lobby-map-caption span:last-child{display:none;}
- .lobby-avatar{transform:translate(-50%,-53%) scale(.67);}
+ .lobby-avatar{transform:translate(-50%,-53%) scale(.52);}
  .lobby-movement{align-items:flex-start;}
  .student-lobby:fullscreen,.student-lobby.lobby-immersive{padding:7px;}
  .student-lobby:fullscreen .school-map,

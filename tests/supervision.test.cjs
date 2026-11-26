@@ -354,3 +354,11 @@ test("Troca de turma no painel não mantém alunos de TESTE nem libera outra tur
  assert.match(sql,/IF auth\.uid\(\) IS NULL/);
  assert.match(read(".github/workflows/supervision-tests.yml"),/tests\/supervision-class-switch\.sql/);
 });
+
+test("Avatares reduzidos no mapa sem alterar a lógica de movimentação",()=>{
+ const css=read("styles.css");
+ assert.match(css,/transform:translate\(-50%,-54%\) scale\(\.75\)/);
+ assert.match(css,/\.lobby-avatar\{transform:translate\(-50%,-53%\) scale\(\.52\);\}/);
+ assert.match(css,/\.lobby-avatar\.own-avatar/);
+ assert.match(read("lobby.js"),/student_lobby_move/);
+});
