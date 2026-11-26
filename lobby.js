@@ -196,6 +196,11 @@
         p_lobby_token:token,p_user_agent:navigator.userAgent
       });
       hasEntered=true;
+      // A prova usa sua própria política de tela cheia. Saia primeiro da
+      // sala virtual para não exibir uma tela vazia durante a transição.
+      if(document.fullscreenElement===lobbyScreen()){
+        try { await document.exitFullscreen(); } catch {}
+      }
       resetRoom();
       acceptEntry(payload);
     } catch(err) {
