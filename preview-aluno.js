@@ -32,8 +32,8 @@
   }
 
   $("previewBackToTeacher").href = customSlug
-    ? "professor.html?exame=" + encodeURIComponent(customSlug)
-    : "professor.html" + (query === "prova" ? "?avaliacao=prova" :
+    ? "painel.html?exame=" + encodeURIComponent(customSlug)
+    : "painel.html" + (query === "prova" ? "?avaliacao=prova" :
       query === "anterior" ? "" : "?avaliacao=simulado");
 
   let preview = null;
