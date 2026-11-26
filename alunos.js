@@ -16,7 +16,8 @@
     return n;
   };
   async function refresh(){
-    if(busy || $("teacherDashboard").classList.contains("hidden"))return;
+    if(document.body.dataset.teacherPage!=="alunos" ||
+       busy || $("teacherDashboard").classList.contains("hidden"))return;
     try{
       const r=await trpc("teacher_students_list");
       if(!Array.isArray(r))throw new Error("Dados inválidos.");
