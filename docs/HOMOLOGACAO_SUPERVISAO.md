@@ -126,3 +126,31 @@ Abrir `http://localhost:8000/professor.html?avaliacao=simulado` e, em outra aba/
 | Aprovação final | Pendente | |
 
 **Não realizar merge antes de o professor registrar a aprovação final.**
+
+
+## 10. Navegação multipágina e login independente (26/11/2026)
+
+A interface do professor agora possui páginas separadas, compartilhando o mesmo shell e os módulos existentes, sem duplicar as regras de negócio:
+
+| Página | Arquivo | Conteúdo |
+|---|---|---|
+| Acesso | `professor.html` | Somente login, sem lista de avaliações ou presets |
+| Painel de controle | `painel.html` | Monitoramento, autorização, tentativas, ocorrências, resultados |
+| Questões | `questoes.html` | Questões da avaliação e banco de questões |
+| Avaliações e presets | `avaliacoes.html` | Presets, duplicação, regras, duração e publicação |
+| Alunos e turmas | `alunos.html` | Cadastro, edição, situação e vínculo de turma |
+
+O shell `professor-shell.html` contém os IDs históricos necessários aos scripts; `teacher-pages.js` seleciona a área visível com base na página, sem duplicar o HTML integral e sem mostrar o login após autenticação. `teacher-login.js` cuida exclusivamente do acesso; os links internos preservam a seleção da avaliação (`?avaliacao=simulado`, `?avaliacao=prova` ou `?exame=preset-...`).
+
+**Validações manuais adicionais:**
+
+- [ ] Abrir `professor.html` desautenticado: devem aparecer apenas e-mail, senha e identificação do sistema, sem presets, questões ou dados de alunos.
+- [ ] Tentar abrir diretamente `painel.html`, `questoes.html`, `avaliacoes.html` e `alunos.html` sem sessão: o sistema deve redirecionar ao login.
+- [ ] Autenticar e conferir redirecionamento à página originalmente solicitada.
+- [ ] Usar a navegação e confirmar que somente o módulo correspondente aparece em cada página.
+- [ ] Trocar entre simulado, prova bimestral e um preset fictício; os links de navegação devem manter o contexto selecionado.
+- [ ] Criar e duplicar um preset em **Avaliações**, depois selecionar **Editar questões** e confirmar abertura de **Questões** na avaliação correta.
+- [ ] Utilizar **Testar como aluno** no painel e confirmar que o link de retorno abre `painel.html`.
+- [ ] Encerrar sessão e atualizar uma página interna: os dados não devem reaparecer sem autenticação.
+- [ ] Validar o menu em desktop e celular, com teclado e leitor de tela quando disponível.
+- [ ] Confirmar que botão de liberação rápida do simulado aparece apenas no Painel de controle, e não no login.
