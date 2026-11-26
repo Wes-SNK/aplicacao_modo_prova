@@ -77,9 +77,12 @@
       setMessage($("teacherLoginMessage"), "", "info");
       showDashboard();
       await refreshDashboard();
-      await loadQuestions();
-      await loadBankQuestions();
-      startPolling();
+      if (document.body.dataset.teacherPage === "questoes") {
+        await loadQuestions();
+        await loadBankQuestions();
+      }
+      if (["painel","avaliacoes"].includes(document.body.dataset.teacherPage))
+        startPolling();
     } catch (err) {
       setMessage($("teacherLoginMessage"), "Falha no login. Verifique as credenciais.", "error");
     } finally {
@@ -956,9 +959,12 @@
     if (session) {
       showDashboard();
       await refreshDashboard();
-      await loadQuestions();
-      await loadBankQuestions();
-      startPolling();
+      if (document.body.dataset.teacherPage === "questoes") {
+        await loadQuestions();
+        await loadBankQuestions();
+      }
+      if (["painel","avaliacoes"].includes(document.body.dataset.teacherPage))
+        startPolling();
     } else {
       showLogin();
     }
