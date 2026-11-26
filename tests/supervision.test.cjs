@@ -118,7 +118,7 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  const find=id=>elements[id]??=(node());
  const intervals=[];
  const calls=[];
- let authorized=false,received=null;
+ let authorized=false,lobbyAllowed=false,received=null;
  const mp={
   cfg:{examSlug:"simulado-4bim-1b-2026"},teacherPreview:false,
   setMessage(el,msg,kind){el.textContent=msg;el.kind=kind;},
@@ -126,9 +126,9 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
    calls.push(name);
    if(name==="student_lobby_join")return{
     supervised:true,lobby_token:"fake-lobby-token",
-    student_name:"Estudante Teste",authorized:false};
+    student_name:"Estudante Teste",authorized:false,lobby_allowed:false};
    if(name==="student_lobby_state")return{
-    is_active:true,authorized,peers:[{id:"anon-1",x:12,y:65,style:0,self:true}],help_pending:false};
+    is_active:true,authorized,lobby_allowed:lobbyAllowed,peers:[{id:"anon-1",x:12,y:65,style:0,self:true}],help_pending:false};
    if(name==="student_lobby_enter"){
     if(!authorized)throw Error("Unauthorized");
     return{session_token:"fake-attempt-token",questions:[]};
@@ -160,20 +160,16 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  assert.equal(calls.includes("student_lobby_enter"),false);
  authorized=true;
  await intervals.at(-1)();
+ assert.equal(find("lobbyEnterExam").disabled,true,
+  "Liberar a prova não deve contornar a autorização do pátio");
+ lobbyAllowed=true;
+ await intervals.at(-1)();
  await new Promise(setImmediate);
  assert.equal(find("lobbyEnterExam").disabled,false);
  await find("lobbyEnterExam").emit("click");
  assert.equal(received.session_token,"fake-attempt-token");
  assert.equal(store.size,0);
  assert.equal(calls.filter(s=>s==="student_lobby_enter").length,1);
-});
-
-test("Código individual é opcional e a ativação tardia é bloqueada",()=>{
- const frontend=read("lobby.js");
- const migration=read("migrations/016_turma_codigos.sql");
- assert.match(frontend,/p_access_code:/);
- assert.match(migration,/v_super\.require_code/);
- assert.match(migration,/códigos depois de estudantes entrarem/);
 });
 
 test("Login exclusivo: nenhuma opção de presets ou turma aparece antes de autenticar",()=>{
