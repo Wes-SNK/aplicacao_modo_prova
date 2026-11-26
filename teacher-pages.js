@@ -86,6 +86,11 @@
     for(const src of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
       await loadScript(src);
     }
+    // Chat só é carregado na área de supervisão, depois de validar a sessão.
+    if(page==="painel"){
+      await loadScript("lobby-chat-utils.js");
+      await loadScript("chat-professor.js");
+    }
     // Mensagens são modulares e só devem ser inicializadas no painel de
     // monitoramento. Demais páginas não executam consultas de chat.
     if(page==="painel"){
