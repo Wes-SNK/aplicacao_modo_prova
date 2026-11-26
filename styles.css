@@ -642,3 +642,42 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
  .student-manager-form{grid-template-columns:1fr;}
  .student-manager-form .toolbar{display:flex;flex-wrap:wrap;}
 }
+
+
+/* Navegação do professor separada do login; layout compartilhado por página. */
+.teacher-area-disabled { display: none !important; }
+.teacher-login-page { min-height: 100vh; }
+.teacher-login-shell { width: min(480px, calc(100% - 32px)); margin-top: 8vh; }
+.teacher-login-shell .card { padding: 28px; }
+.teacher-login-shell button { width: 100%; margin-top: 16px; }
+.teacher-main-nav {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  margin-bottom: 24px; padding: 8px;
+  background: #fff; border: 1px solid #d6dee8; border-radius: 12px;
+}
+.teacher-main-nav a {
+  padding: 10px 15px; border-radius: 9px; text-decoration: none;
+  color: #334155; font-weight: 650;
+}
+.teacher-main-nav a:hover,
+.teacher-main-nav a:focus-visible { background: #edf4ff; color: #1e40af; }
+.teacher-main-nav a[aria-current="page"] { color: #fff; background: #1e40af; }
+.teacher-page-heading {
+  display: flex; align-items: flex-end; justify-content: space-between;
+  gap: 20px; margin-bottom: 22px;
+}
+.teacher-page-heading h1 { margin: 0 0 4px; font-size: 1.8rem; }
+.teacher-page-heading p { margin: 0; }
+.teacher-assessment-picker { display: grid; gap: 5px; min-width: 240px;
+  font-size: .85rem; margin: 0; }
+.teacher-assessment-picker select { padding: 10px; border-radius: 8px;
+  border: 1px solid #c4cedb; background: #fff; max-width: 350px; }
+.teacher-retry-link { display: inline-block; text-decoration: none; }
+@media (max-width: 720px) {
+  .teacher-main-nav { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); }
+  .teacher-main-nav a { text-align: center; padding: 10px 5px; font-size: .9rem; }
+  .teacher-page-heading { flex-direction: column; align-items: stretch; }
+  .teacher-assessment-picker { min-width: 0; }
+  .teacher-assessment-picker select { max-width: 100%; width: 100%; }
+  .teacher-login-shell .card { padding: 18px; }
+}
