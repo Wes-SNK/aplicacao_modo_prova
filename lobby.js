@@ -99,6 +99,8 @@
     mp.setMessage($("lobbyApprovalMessage"),message,kind);
   }
   function resetRoom() {
+    // A comunicação não persiste durante a avaliação, nem mantém polling ativo.
+    mp.lobbyChat?.close();
     clearInterval(roomTimer);
     clearInterval(walkingTimer);walkingTimer=null;
     mp.lobbyChat?.close();
@@ -243,6 +245,7 @@
     showRoom(studentName);
     updateAccessView();
     beginPoll();
+    mp.lobbyChat?.open(token);
   }
   async function join(name,onEntry) {
     // Na prévia, o interceptador não tem acesso a dados reais de estudante.
@@ -273,6 +276,7 @@
     token=stored.token;
     showRoom(stored.studentName);
     beginPoll();
+    mp.lobbyChat?.open(token);
     return true;
   }
   async function enter() {
