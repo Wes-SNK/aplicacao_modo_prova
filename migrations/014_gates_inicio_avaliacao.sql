@@ -116,7 +116,7 @@ begin
     'review_flags',coalesce(a.review_flags,'{}'::jsonb)
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.start_attempt(p_exam_slug text, p_access_code text, p_user_agent text DEFAULT NULL::text)
  RETURNS jsonb
@@ -197,7 +197,7 @@ begin
     'answers', '{}'::jsonb
   );
 end;
-$function$
+$function$;
 
 CREATE OR REPLACE FUNCTION public.begin_attempt(p_session_token uuid)
  RETURNS jsonb
@@ -244,7 +244,7 @@ begin
     'occurrences', a.occurrences
   );
 end;
-$function$
+$function$;
 
 
 CREATE FUNCTION public.student_lobby_enter(p_lobby_token uuid,p_user_agent text DEFAULT NULL)
@@ -380,4 +380,4 @@ begin
       where exam_id=e.id and enabled)
   );
 end;
-$function$
+$function$;
