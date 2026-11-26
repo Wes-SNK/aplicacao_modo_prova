@@ -300,7 +300,84 @@ BEGIN
  'occurrences',a.occurrences,'started_at',a.started_at,
  'ends_at',CASE WHEN a.started_at IS NULL THEN NULL
    ELSE a.started_at+make_interval(mins=>e.duration_minutes) END,
- 'questions',q,'answers',ans,'review_flags',coalesce(a.review_flags,'{}'::jsonb));
+ 'questions',q,'answers',ans,'review_flags',coalesce(a.review_flags,'{}'::jsonb),
+ 'supervised',true);
 END;$fn$;
 REVOKE ALL ON FUNCTION public.student_lobby_enter(uuid,text) FROM PUBLIC;
 GRANT EXECUTE ON FUNCTION public.student_lobby_enter(uuid,text) TO anon,authenticated;
+
+
+-- Ao retomar, preservar o indicador de supervisão para o botão de ajuda.
+CREATE OR REPLACE FUNCTION public.resume_attempt(p_session_token uuid)
+ RETURNS jsonb
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+declare
+  a public.attempts;
+  e public.exams;
+  s public.students;
+  q jsonb;
+  ans jsonb;
+begin
+  select * into a from public.attempts where session_token=p_session_token;
+  if a.id is null then raise exception 'Sessão inválida'; end if;
+
+  select * into e from public.exams where id=a.exam_id;
+  select * into s from public.students where id=a.student_id;
+
+  if a.status='in_progress'
+     and a.started_at + make_interval(mins=>e.duration_minutes) <= now() then
+    perform public._grade_attempt(a.id);
+    update public.attempts
+       set status='auto_submitted',
+           submitted_at=now(),
+           submission_reason='time_expired'
+     where id=a.id
+     returning * into a;
+  end if;
+
+  select coalesce(jsonb_agg(
+    jsonb_build_object(
+      'id',x.id,
+      'type',x.type,
+      'stem',x.stem,
+      'options',x.options
+    ) order by x.sort_key
+  ),'[]'::jsonb)
+  into q
+  from (
+    select q.*,md5(a.session_token::text || q.id::text) as sort_key
+    from public.questions q
+    where q.exam_id=e.id
+      and q.active=true
+      and q.type='objective'
+  ) x;
+
+  select coalesce(jsonb_object_agg(question_id::text,answer),'{}'::jsonb)
+  into ans
+  from public.answers
+  where attempt_id=a.id;
+
+  return jsonb_build_object(
+    'attempt_id',a.id,
+    'session_token',a.session_token,
+    'status',a.status,
+    'student_name',s.name,
+    'exam_title',e.title,
+    'assessment_mode',e.assessment_mode,
+    'duration_minutes',e.duration_minutes,
+    'max_occurrences',e.max_occurrences,
+    'occurrences',a.occurrences,
+    'started_at',a.started_at,
+    'ends_at',case when a.started_at is null then null
+                   else a.started_at + make_interval(mins=>e.duration_minutes) end,
+    'questions',q,
+    'answers',ans,
+    'review_flags',coalesce(a.review_flags,'{}'::jsonb),
+    'supervised',exists(select 1 from public.exam_supervision
+      where exam_id=e.id and enabled)
+  );
+end;
+$function$
