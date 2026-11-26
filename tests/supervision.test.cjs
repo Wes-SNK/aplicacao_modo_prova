@@ -20,9 +20,10 @@ test("Progresso: porcentagem sem valores negativos ou acima do total",()=>{
 });
 test("Estados distintos: ausente, espera, autorizado, realizando e finalizado",()=>{
  assert.equal(rules.studentStatus({status:"not_started"}),"Ainda não entrou");
- assert.equal(rules.studentStatus({waiting:true,status:"not_started"}),"Aguardando autorização");
+ assert.equal(rules.studentStatus({waiting:true,status:"not_started"}),"No pátio — aguardando liberação");
+ assert.equal(rules.studentStatus({lobby_requested:true,lobby_allowed:false,status:"not_started"}),"Aguardando entrada no pátio");
  assert.equal(rules.studentStatus({waiting:true,authorized:true,status:"not_started"}),"Autorizado");
- assert.equal(rules.studentStatus({waiting:false,authorized:true,status:"not_started"}),"Autorizado — ainda não entrou");
+ assert.equal(rules.studentStatus({waiting:false,authorized:true,status:"not_started"}),"Prova liberada — ainda não entrou");
  assert.equal(rules.studentStatus({status:"in_progress"}),"Realizando");
  assert.equal(rules.studentStatus({status:"auto_submitted"}),"Finalizado");
 });
@@ -223,4 +224,22 @@ test("Pré-autorização tem controle próprio e não confunde presença",()=>{
  assert.match(shell,/id="supervisionStudentLink"/);
  assert.match(shell,/id="supervisionCopyLink"/);
  assert.match(read(".github/workflows/supervision-tests.yml"),/supervision-preauth\.sql/);
+});
+
+test("Duas permissões independentes; códigos individuais removidos da interface",()=>{
+ const sql=read("migrations/018_duas_permissoes_sem_codigos.sql");
+ assert.match(sql,/teacher_supervision_lobby_access/);
+ assert.match(sql,/lobby_allowed/);
+ assert.match(sql,/DROP FUNCTION IF EXISTS public.student_lobby_join\(text,text,text\)/);
+ assert.match(sql,/DROP FUNCTION IF EXISTS public.teacher_student_issue_codes/);
+ assert.match(sql,/UPDATE public.students SET access_code=NULL/);
+ for(const name of ["index.html","preview-aluno.html","professor-shell.html"]){
+  assert.doesNotMatch(read(name),/studentAccessCodeInput|supervisionRequireCode|supervisionIssueCodes/);
+ }
+ assert.doesNotMatch(read("lobby.js"),/p_access_code|studentAccessCodeInput/);
+ assert.doesNotMatch(read("monitoramento.js"),/teacher_student_issue_codes|teacher_supervision_configure_v2/);
+ assert.match(read("monitoramento.js"),/teacher_supervision_configure_v3/);
+ assert.match(read("monitoramento.js"),/teacher_supervision_lobby_access/);
+ assert.match(read("lobby.js"),/lobbyAllowed/);
+ assert.match(read("lobby.js"),/Aguarde a autorização do professor para ingressar na sala de espera/);
 });
