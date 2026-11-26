@@ -146,6 +146,14 @@
             <span><strong>Exigir autorização para iniciar</strong>
             <small>Quando habilitada, os estudantes entram na sala de espera antes de receber a prova.</small></span>
           </label>
+          <label class="switch-row">
+            <input id="supervisionRequireCode" type="checkbox">
+            <span><strong>Exigir código individual na sala de espera</strong>
+            <small>Opcional. Gere e distribua os códigos previamente, de forma privada.</small></span>
+          </label>
+          <div class="toolbar">
+            <button id="supervisionIssueCodes" type="button" class="secondary">Gerar códigos da turma (CSV)</button>
+          </div>
           <div class="toolbar">
             <button id="supervisionSave" type="button" class="primary">Salvar supervisão</button>
             <button id="supervisionRefresh" type="button" class="secondary">Atualizar monitoramento</button>
@@ -175,6 +183,40 @@
           </table>
         </div>
         <p class="field-help">Conexão estimada pela última comunicação; a ausência de sinal não é considerada infração. Progresso representa respostas registradas, não acertos.</p>
+      </section>
+
+      <!-- Cadastro de alunos, separado do banco e das tentativas da prova. -->
+      <section id="studentManager" class="card student-manager">
+        <div class="section-head">
+          <div>
+            <h1>Alunos e turmas</h1>
+            <p class="muted">Confira a lista, cadastre alunos e corrija vínculos. Alterações não apagam resultados.</p>
+          </div>
+          <button id="studentRefresh" class="secondary" type="button">Atualizar lista</button>
+        </div>
+        <div class="student-manager-form">
+          <div>
+            <label for="studentAdminName">Nome completo</label>
+            <input id="studentAdminName" placeholder="Nome do estudante" maxlength="120" autocomplete="off">
+          </div>
+          <div>
+            <label for="studentAdminClass">Turma</label>
+            <input id="studentAdminClass" placeholder="Ex.: 1º INF - B" maxlength="80" autocomplete="off">
+          </div>
+          <div class="toolbar">
+            <button id="studentSave" class="primary" type="button">Cadastrar aluno</button>
+            <button id="studentCancel" class="secondary hidden" type="button">Cancelar edição</button>
+          </div>
+        </div>
+        <p id="studentManagerMessage" class="field-help" role="status" aria-live="polite"></p>
+        <label for="studentSearch">Pesquisar aluno</label>
+        <input id="studentSearch" type="search" placeholder="Nome ou turma…">
+        <div class="table-wrap">
+          <table class="student-manager-table">
+            <thead><tr><th>Nome</th><th>Turma</th><th>Estado</th><th>Código</th><th>Ações</th></tr></thead>
+            <tbody id="studentAdminRows"></tbody>
+          </table>
+        </div>
       </section>
 
       <section class="card teacher-settings">
@@ -511,5 +553,6 @@
   <script src="professor.js"></script>
   <script src="presets.js"></script>
   <script src="monitoramento.js"></script>
+  <script src="alunos.js"></script>
 </body>
 </html>
