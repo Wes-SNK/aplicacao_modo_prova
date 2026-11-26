@@ -188,6 +188,31 @@
           </table>
         </div>
         <p class="field-help">A entrada na sala de espera é automática após a identificação. Use Liberar prova para autorizar o início. Uma perda de conexão não é uma infração.</p>
+        <section class="teacher-chat-controls" aria-label="Comunicação supervisionada da turma">
+          <h2>Mensagens da sala de espera</h2>
+          <p class="field-help">Mensagens monitoradas pelo professor. Desativadas por padrão. O chat é encerrado quando o aluno ingressa na avaliação.</p>
+          <div class="toolbar">
+            <label class="switch-row"><input id="teacherChatEnabled" type="checkbox"> Habilitar mensagens</label>
+            <label class="switch-row"><input id="teacherChatPeerEnabled" type="checkbox"> Permitir mensagens entre alunos com @</label>
+            <button id="teacherChatSave" class="secondary" type="button">Salvar comunicação</button>
+          </div>
+          <div id="teacherChatMessages" class="teacher-chat-messages" role="log" aria-label="Histórico das mensagens"></div>
+          <div class="teacher-chat-send">
+            <label for="teacherChatRecipient">Destinatário</label>
+            <select id="teacherChatRecipient"><option value="">Toda a turma</option></select>
+            <label for="teacherChatInput">Mensagem ou comunicado</label>
+            <input id="teacherChatInput" maxlength="150" placeholder="Digite uma mensagem para a turma…">
+            <button id="teacherChatSend" class="primary" type="button">Enviar comunicado</button>
+          </div>
+          <div class="teacher-chat-mute">
+            <label for="teacherChatMuteStudent">Moderação</label>
+            <select id="teacherChatMuteStudent"><option value="">Selecione um aluno</option></select>
+            <button id="teacherChatMute" type="button" class="secondary">Silenciar</button>
+            <button id="teacherChatUnmute" type="button" class="secondary">Retirar silêncio</button>
+          </div>
+          <p id="teacherChatStatus" role="status" aria-live="polite" class="field-help"></p>
+        </section>
+
       </section>
 
       <!-- Cadastro de alunos, separado do banco e das tentativas da prova. -->
