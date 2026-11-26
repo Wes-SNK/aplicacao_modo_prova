@@ -40,7 +40,7 @@ test("Liberação coletiva: somente estudantes que realmente chegaram",()=>{
 });
 test("Todos os arquivos JavaScript passam no parser",()=>{
  for(const name of ["config.js","common.js","student.js","professor.js","presets.js",
- "preview-aluno.js","supervision-utils.js","lobby.js","monitoramento.js"]){
+ "preview-aluno.js","supervision-utils.js","lobby.js","monitoramento.js","alunos.js"]){
   assert.doesNotThrow(()=>new Function(read(name)),name);
  }
 });
@@ -49,7 +49,7 @@ test("Todos os IDs usados pelos módulos existem nas páginas correspondentes",(
  const lookup=js=>[...new Set([...js.matchAll(/\$\("([^"]+)"\)/g)].map(x=>x[1]))];
  const teacher=ids(read("professor.html")),student=ids(read("index.html")),
  preview=ids(read("preview-aluno.html"));
- for(const name of ["professor.js","presets.js","monitoramento.js"]){
+ for(const name of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
   assert.deepEqual(lookup(read(name)).filter(x=>!teacher.has(x)),[],name);
  }
  for(const name of ["student.js","lobby.js"]){
@@ -72,6 +72,7 @@ test("O fluxo SQL exige autorização no servidor e bloqueia atalhos legados",()
  const a=read("migrations/013_supervisao_sala_espera.sql");
  const b=read("migrations/014_gates_inicio_avaliacao.sql");
  const c=read("migrations/015_ajuda_auditoria.sql");
+ const d=read("migrations/016_turma_codigos.sql");
  assert.match(a,/CREATE TABLE public\.exam_supervision/);
  assert.match(a,/CREATE TABLE public\.exam_lobby/);
  assert.match(a,/student_lobby_join/);
@@ -82,7 +83,11 @@ test("O fluxo SQL exige autorização no servidor e bloqueia atalhos legados",()
  assert.match(b,/IF NOT l\.authorized THEN/);
  assert.match(c,/CREATE TABLE public\.exam_supervision_audit/);
  assert.match(c,/student_exam_help/);
- assert.doesNotMatch(a+b+c,/service_role|sb_secret_/);
+ assert.match(d,/teacher_student_save/);
+ assert.match(d,/teacher_student_issue_codes/);
+ assert.match(d,/Código individual inválido/);
+ assert.match(d,/teacher_supervision_configure_v2/);
+ assert.doesNotMatch(a+b+c+d,/service_role|sb_secret_/);
 });
 test("A supervisão é opt-in; uma queda de internet não deve criar ocorrência",()=>{
  const code=read("student.js")+read("lobby.js")+read("monitoramento.js");
@@ -96,7 +101,7 @@ function node(tag="div"){
  return {
   tagName:tag.toUpperCase(),className:"",classList:{
     add(){},remove(){},toggle(){}},
-  textContent:"",disabled:false,checked:false,style:{},children:[],
+  textContent:"",value:"",disabled:false,checked:false,style:{},children:[],
   addEventListener(name,fn){events[name]=fn;},
   async emit(name,evt={}){return events[name]?.(evt);},
   append(...items){this.children.push(...items);},
@@ -158,4 +163,12 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  assert.equal(received.session_token,"fake-attempt-token");
  assert.equal(store.size,0);
  assert.equal(calls.filter(s=>s==="student_lobby_enter").length,1);
+});
+
+test("Código individual é opcional e a ativação tardia é bloqueada",()=>{
+ const frontend=read("lobby.js");
+ const migration=read("migrations/016_turma_codigos.sql");
+ assert.match(frontend,/p_access_code:/);
+ assert.match(migration,/v_super\.require_code/);
+ assert.match(migration,/códigos depois de estudantes entrarem/);
 });
