@@ -691,13 +691,13 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
 }
 .student-lobby:fullscreen .school-map,
 .student-lobby.lobby-immersive .school-map{
-  width:min(100%, calc((100dvh - 300px)*5/3));
+  width:auto;
+  height:min(65vh, calc(100dvh - 265px));
   max-width:100%;max-height:calc(100% - 24px);
-  aspect-ratio:5/3;height:auto;
-  flex-shrink:1;
+  aspect-ratio:5/3;flex-shrink:1;
 }
 .student-lobby:fullscreen .lobby-map-caption,
-.student-lobby.lobby-immersive .lobby-map-caption{max-width:calc((100dvh - 300px)*5/3);}
+.student-lobby.lobby-immersive .lobby-map-caption{max-width:1200px;}
 .student-lobby:fullscreen .lobby-movement,
 .student-lobby.lobby-immersive .lobby-movement{margin:2px 0;}
 .student-lobby:fullscreen .lobby-directions button,
