@@ -516,3 +516,20 @@ Para evitar HTML duplicado, o arquivo `professor-shell.html` reúne a estrutura 
 A navegação preserva os parâmetros `?avaliacao=simulado`, `?avaliacao=prova` e `?exame=preset-...`. Os presets continuam sendo criados e duplicados na área **Avaliações e presets**, enquanto a edição manual de questões ocorre em **Questões**.
 
 As mudanças estão exclusivamente na branch `feature/sala-espera-monitoramento-gather`, vinculada ao PR em rascunho #2. Não foram integradas à `main`, nem aplicaram alterações ao banco do Modo Prova. Verificações para a aprovação manual: `docs/HOMOLOGACAO_SUPERVISAO.md`.
+
+
+## Controle de entrada em duas etapas (migração 018)
+
+O modo supervisionado passa a usar **duas autorizações individuais independentes**, gerenciadas na página `painel.html`, na avaliação selecionada:
+
+1. **Permitir sala de espera:** após o aluno informar o nome completo, o professor permite sua entrada no mapa lúdico da escola. Sem essa liberação, o aluno permanece numa tela de espera sem acesso ao pátio, seus avatares nem as questões.
+2. **Liberar prova:** o professor libera o acesso às questões daquele aluno. A liberação pode ocorrer antes ou depois da entrada na sala, mas **não substitui a autorização do pátio**. A avaliação também precisa estar publicada.
+3. O cronômetro e a tentativa só começam depois que o aluno entra na prova e confirma as regras.
+
+O nome é a única identificação exigida no ingresso. O campo **código individual** e a opção de gerar códigos foram retirados da UI; o banco deixa de exigir códigos e limpa valores previamente emitidos. O endpoint que emite novos códigos é removido e a configuração antiga que permitia obrigatoriedade de código não pode mais ser utilizada.
+
+O professor dispõe de dois botões por estudante, com ações de bloqueio/revogação correspondentes. A opção de liberação coletiva de prova só se aplica aos alunos efetivamente presentes. A supervisão continua opt-in por avaliação; as provas não supervisionadas seguem o fluxo anterior.
+
+**Limitação:** identificação apenas pelo nome não autentica a identidade de quem digita. Em aplicação presencial, o professor deve conferir quem utiliza cada terminal. Nenhum sistema pode afirmar, apenas pelo nome digitado, que a pessoa é de fato aquele aluno.
+
+Arquivo da migração: `migrations/018_duas_permissoes_sem_codigos.sql`. Testes: `tests/supervision-two-gates.sql` e `tests/supervision.test.cjs`.
