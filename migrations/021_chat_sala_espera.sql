@@ -52,8 +52,7 @@ BEGIN
    WHERE g.exam_id=l.exam_id AND g.enabled AND g.class_group=s.class_group)
  THEN RAISE EXCEPTION 'Turma não autorizada';END IF;
  IF EXISTS(SELECT 1 FROM public.attempts a
-  WHERE a.exam_id=l.exam_id AND a.student_id=l.student_id
-    AND a.started_at IS NOT NULL)
+  WHERE a.exam_id=l.exam_id AND a.student_id=l.student_id)
  THEN RAISE EXCEPTION 'Conversa encerrada após início da prova';END IF;
  RETURN l;
 END;$fn$;
@@ -81,8 +80,7 @@ BEGIN
   AND q.requested_at IS NOT NULL
   AND q.last_seen_at>now()-interval '45 seconds'
   AND NOT EXISTS(SELECT 1 FROM public.attempts a
-    WHERE a.exam_id=q.exam_id AND a.student_id=q.student_id
-     AND a.started_at IS NOT NULL);
+    WHERE a.exam_id=q.exam_id AND a.student_id=q.student_id);
  SELECT coalesce(jsonb_agg(jsonb_build_object(
   'id',m.id,'body',m.body,
   'sender',CASE WHEN m.sender_teacher THEN 'Professor'
@@ -133,8 +131,7 @@ BEGIN
     AND substr(md5(q.student_id::text),1,10)=lower(p_recipient)
     AND q.last_seen_at>now()-interval '45 seconds'
     AND NOT EXISTS(SELECT 1 FROM public.attempts a WHERE
-      a.exam_id=q.exam_id AND a.student_id=q.student_id
-      AND a.started_at IS NOT NULL);
+      a.exam_id=q.exam_id AND a.student_id=q.student_id);
    IF NOT FOUND THEN RAISE EXCEPTION 'Destinatário não está na sala';END IF;
  ELSIF NOT c.peer_messages THEN
    RAISE EXCEPTION 'Somente mensagens ao professor estão habilitadas';
