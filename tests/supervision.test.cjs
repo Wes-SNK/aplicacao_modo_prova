@@ -139,7 +139,8 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  };
  const win={ModeProva:mp,SupervisionUtils:rules};
  const doc={
-  hidden:false,activeElement:node(),
+  hidden:false,activeElement:node(),body:node("body"),
+  fullscreenElement:null,
   getElementById:find,createElement:node,
   querySelector(){return node();},addEventListener(){}
  };
@@ -156,6 +157,20 @@ test("Fluxo integrado simulado: aguardar -> autorização -> entrada, sem anteci
  const present=await mp.lobbyBridge.join("Estudante Teste",payload=>received=payload);
  assert.equal(present,true);
  await new Promise(setImmediate);
+ // Navegadores sem requestFullscreen usam modo imersivo CSS sem
+ // desativar o restante da interface da sala de espera.
+ await find("lobbyFullscreenButton").emit("click");
+ assert.match(find("lobbyFullscreenButton").textContent,/Sair da tela cheia/);
+ await find("lobbyFullscreenButton").emit("click");
+ assert.match(find("lobbyFullscreenButton").textContent,/Tela cheia/);
+ // Em navegadores com API de tela cheia, o componente completo é expandido.
+ find("screenLobby").requestFullscreen=async()=>{doc.fullscreenElement=find("screenLobby");};
+ doc.exitFullscreen=async()=>{doc.fullscreenElement=null;};
+ await find("lobbyFullscreenButton").emit("click");
+ assert.equal(doc.fullscreenElement,find("screenLobby"));
+ assert.match(find("lobbyFullscreenButton").textContent,/Sair da tela cheia/);
+ await find("lobbyFullscreenButton").emit("click");
+ assert.equal(doc.fullscreenElement,null);
  assert.equal(find("lobbyEnterExam").disabled,true);
  assert.equal(calls.includes("student_lobby_enter"),false);
  authorized=true;
@@ -248,4 +263,28 @@ test("Ingresso direto na sala: único bloqueio é a liberação da prova",()=>{
  assert.doesNotMatch(lobby,/Aguarde a autorização do professor para ingressar/);
  assert.doesNotMatch(monitor,/function allowLobby/);
  assert.match(monitor,/Liberar prova/);
+});
+
+test("Mapa de escola detalhado, responsivo e com expansão explícita",()=>{
+ const svg=read("school-map.svg");
+ const css=read("styles.css");
+ const js=read("lobby.js");
+ for(const label of ["ESCOLA VIRTUAL","LABORATÓRIO DE INFORMÁTICA","BIBLIOTECA","PÁTIO","QUADRA"]){
+  assert.ok(svg.includes(label),"Mapa sem área: "+label);
+ }
+ assert.match(svg,/viewBox="0 0 1200 720"/);
+ assert.match(css,/background:[^;]*school-map\.svg/);
+ assert.match(css,/\.student-lobby:fullscreen/);
+ assert.match(css,/\.student-lobby\.lobby-immersive/);
+ assert.match(css,/aspect-ratio:5\/3/);
+ assert.match(js,/requestFullscreen\(\)/);
+ assert.match(js,/exitFullscreen/);
+ assert.match(js,/fullscreenchange/);
+ assert.match(js,/lobbyFullscreenButton/);
+ for(const name of ["index.html","preview-aluno.html"]){
+  const html=read(name);
+  assert.match(html,/id="lobbyFullscreenButton"/);
+  assert.match(html,/id="lobbyMap"/);
+  assert.match(html,/id="lobbyAvatars"/);
+ }
 });

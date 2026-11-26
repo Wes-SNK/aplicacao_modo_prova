@@ -48,6 +48,15 @@ jobs:
           for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby.js monitoramento.js alunos.js teacher-login.js teacher-pages.js; do
             node --check "$file"
           done
+      - name: Validate SVG map structure without external assets
+        run: |
+          python3 - <<'PY'
+          import xml.etree.ElementTree as ET
+          root = ET.parse("school-map.svg").getroot()
+          assert root.tag.endswith("svg")
+          assert root.get("viewBox") == "0 0 1200 720"
+          print("School SVG valid:", len(list(root.iter())), "elements")
+          PY
       - name: Run automated tests
         run: node --test tests/supervision.test.cjs
       - name: Confirm database schema is staged but not applied

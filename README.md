@@ -533,3 +533,18 @@ O professor dispõe de dois botões por estudante, com ações de bloqueio/revog
 **Limitação:** identificação apenas pelo nome não autentica a identidade de quem digita. Em aplicação presencial, o professor deve conferir quem utiliza cada terminal. Nenhum sistema pode afirmar, apenas pelo nome digitado, que a pessoa é de fato aquele aluno.
 
 Arquivo da migração: `migrations/018_duas_permissoes_sem_codigos.sql`. Testes: `tests/supervision-two-gates.sql` e `tests/supervision.test.cjs`.
+
+
+## Sala de espera 2D imersiva — mapa inspirado em jogos sociais
+
+O módulo `lobby.js` usa `school-map.svg` como cenário de **escola virtual visto de cima**. É um mapa original com pátio, árvores, quadra, portaria, corredor, computadores no laboratório e biblioteca. Os avatares são desenhados por HTML/CSS, posicionados pelo estado de presença devolvido pela RPC `student_lobby_state`. A movimentação permanece salva pelo serviço `student_lobby_move`.
+
+Na avaliação supervisionada, o estudante entra diretamente no mapa após informar o nome, sem acessar questões. O professor utiliza apenas **Liberar prova**. O cenário não afeta as questões, o cronômetro, a política de tela cheia da prova nem os dados existentes.
+
+**Comandos:** setas do teclado, W/A/S/D, botões direcionais ou clique/toque no mapa para caminhar. A movimentação por clique é interpolada em pequenos passos e interrompida ao usar manualmente um comando de movimento.
+
+**Tela cheia:** botão **⛶ Tela cheia** no cabeçalho da sala, ou tecla F enquanto estiver no mapa. O elemento completo `#screenLobby` usa a Fullscreen API, incluindo mapa, controles e avisos. Quando a API não é permitida (por exemplo, em alguns navegadores móveis), a interface usa um modo imersivo por CSS, sem ocultar os controles. Escape ou o próprio botão deixam o modo imersivo. Ao avançar às regras, o módulo sai da tela cheia da sala; o modo de prova permanece independente.
+
+**Acessibilidade:** o aluno mantém a opção **Modo simples (sem mapa)**, com estado textual de espera. O `school-map.svg` não depende de CDN, sprite externo, biblioteca gráfica ou serviços pagos. A sala utiliza as rotinas de presença já existentes no Supabase; não houve migrações.
+
+**Validação manual:** abrir o link do laboratório de testes como aluno; verificar se a escola ocupa boa parte da largura; usar setas/WASD, clique, F, botão de tela cheia e sair da tela cheia; conferir o comportamento em outro navegador e com tela pequena; liberar a prova pelo painel e confirmar que as regras aparecem normalmente após fechar a sala. Verificar que a tela cheia da prova não contabiliza a saída da sala anterior como ocorrência.

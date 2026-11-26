@@ -10,16 +10,61 @@
   const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug;
   let token = null, approved = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
+  let walkingTimer = null;
   let acceptEntry = null;
   let onScreen = false;
   let hasEntered = false;
+  let immersiveFallback = false;
+  const lobbyScreen = () => $("screenLobby");
+  function isImmersive() {
+    return immersiveFallback || document.fullscreenElement === lobbyScreen();
+  }
+  function syncFullscreenButton() {
+    const expanded = isImmersive();
+    const button = $("lobbyFullscreenButton");
+    button.textContent = expanded ? "⤢ Sair da tela cheia" : "⛶ Tela cheia";
+    button.setAttribute("aria-pressed",String(expanded));
+    button.title = expanded ? "Voltar ao tamanho normal" : "Expandir a escola para toda a tela";
+  }
+  function fallbackImmersive(enable) {
+    immersiveFallback=enable;
+    lobbyScreen().classList.toggle("lobby-immersive",enable);
+    document.body.classList.toggle("lobby-no-scroll",enable);
+    syncFullscreenButton();
+  }
+  async function toggleFullscreen() {
+    if(!onScreen)return;
+    if(isImmersive()){
+      if(document.fullscreenElement===lobbyScreen() && document.exitFullscreen){
+        try { await document.exitFullscreen(); } catch { fallbackImmersive(false); }
+      }else fallbackImmersive(false);
+      syncFullscreenButton();
+      return;
+    }
+    if(typeof lobbyScreen().requestFullscreen==="function"){
+      try {
+        await lobbyScreen().requestFullscreen();
+        syncFullscreenButton();
+        return;
+      }catch { /* Alguns navegadores móveis impedem tela cheia nativa. */ }
+    }
+    fallbackImmersive(true);
+  }
+  function exitImmersive() {
+    if(document.fullscreenElement===lobbyScreen()){
+      document.exitFullscreen?.().catch(()=>{});
+    }
+    fallbackImmersive(false);
+  }
 
   function displayMessage(message,kind="info") {
     mp.setMessage($("lobbyApprovalMessage"),message,kind);
   }
   function resetRoom() {
     clearInterval(roomTimer);
+    clearInterval(walkingTimer);walkingTimer=null;
     roomTimer = null; onScreen = false; approved = false;
+    exitImmersive();
     token = null; peers = []; busy = false;
     sessionStorage.removeItem(cacheKey);
   }
@@ -51,9 +96,11 @@
       head.className="avatar-head";
       const body=document.createElement("span");
       body.className="avatar-body";
+      const feet=document.createElement("span");
+      feet.className="avatar-feet";
       const label=document.createElement("small");
-      label.textContent = p.self ? "Você" : "Aluno";
-      a.append(head,body,label);
+      label.textContent = p.self ? "Você" : "Colega";
+      a.append(head,body,feet,label);
       if (p.emote) {
         const emote=document.createElement("span");
         emote.className="avatar-emote";
@@ -151,6 +198,11 @@
         p_lobby_token:token,p_user_agent:navigator.userAgent
       });
       hasEntered=true;
+      // A prova usa sua própria política de tela cheia. Saia primeiro da
+      // sala virtual para não exibir uma tela vazia durante a transição.
+      if(document.fullscreenElement===lobbyScreen()){
+        try { await document.exitFullscreen(); } catch {}
+      }
       resetRoom();
       acceptEntry(payload);
     } catch(err) {
@@ -158,7 +210,8 @@
       busy=false; $("lobbyEnterExam").disabled=!approved;
     }
   }
-  async function move(dx,dy,emote=null) {
+  async function move(dx,dy,emote=null,auto=false) {
+    if(!auto){clearInterval(walkingTimer);walkingTimer=null;}
     if(!token || !onScreen || $("lobbySimpleMode").checked) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
@@ -171,6 +224,29 @@
         p_lobby_token:token,p_x:pos.x,p_y:pos.y,p_emote:emote
       });
     } catch{status("Reconectando movimentação…");}
+  }
+  function walkToPoint(event) {
+    if(!onScreen || !token || $("lobbySimpleMode").checked)return;
+    const map=$("lobbyMap");
+    const bounds=map.getBoundingClientRect();
+    if(!bounds.width||!bounds.height)return;
+    const target=window.SupervisionUtils.clampPosition(
+      (event.clientX-bounds.left)/bounds.width*100,
+      (event.clientY-bounds.top)/bounds.height*100);
+    clearInterval(walkingTimer);
+    walkingTimer=setInterval(()=>{
+      if(!onScreen || $("lobbySimpleMode").checked){
+        clearInterval(walkingTimer);walkingTimer=null;return;
+      }
+      const dx=target.x-pos.x,dy=target.y-pos.y;
+      if(Math.abs(dx)<2.4 && Math.abs(dy)<2.4){
+        clearInterval(walkingTimer);walkingTimer=null;return;
+      }
+      // Um passo por atualização: evita teletransporte e preserva os
+      // controles de posição já existentes no Supabase.
+      move(Math.sign(dx)*Math.min(5,Math.abs(dx)),
+        Math.sign(dy)*Math.min(5,Math.abs(dy)),null,true);
+    },180);
   }
   async function requestHelp() {
     if(!token || !onScreen) return;
@@ -194,15 +270,29 @@
       ["lobbyEmoteReady","ready"]].forEach(([id,name])=>
       $(id).addEventListener("click",()=>move(0,0,name)));
     $("lobbyHelpButton").addEventListener("click",requestHelp);
+    $("lobbyFullscreenButton").addEventListener("click",toggleFullscreen);
+    $("lobbyMap").addEventListener("click",walkToPoint);
+    document.addEventListener("fullscreenchange",syncFullscreenButton);
     $("lobbyEnterExam").addEventListener("click",enter);
     $("lobbySimpleMode").addEventListener("change",updateAccessView);
     document.addEventListener("keydown",e=>{
-      if (!onScreen || $("lobbySimpleMode").checked ||
-        ["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) return;
+      if (!onScreen)return;
+      if(e.key==="Escape" && immersiveFallback){
+        fallbackImmersive(false);
+        return;
+      }
+      if (["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) return;
+      if ((e.key==="f"||e.key==="F") && !$("lobbySimpleMode").checked){
+        e.preventDefault();
+        toggleFullscreen();
+        return;
+      }
+      if($("lobbySimpleMode").checked)return;
       const dirs={ArrowUp:[0,-5],ArrowDown:[0,5],ArrowLeft:[-5,0],
         ArrowRight:[5,0],w:[0,-5],s:[0,5],a:[-5,0],d:[5,0]};
       const d=dirs[e.key];if(d){e.preventDefault();move(...d);}
     });
+    syncFullscreenButton();
     document.addEventListener("visibilitychange",()=>{
       if(onScreen && !document.hidden)poll();
     });

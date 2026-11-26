@@ -59,7 +59,10 @@
           <h1>Bem-vindo à escola virtual</h1>
           <p class="muted">Aguarde a autorização do professor para entrar no laboratório.</p>
         </div>
-        <span id="lobbyStatusBadge" class="pill">Aguardando</span>
+        <div class="lobby-header-actions">
+          <span id="lobbyStatusBadge" class="pill">Aguardando</span>
+          <button id="lobbyFullscreenButton" type="button" class="lobby-fullscreen-button secondary" aria-pressed="false" title="Expandir mapa para toda a tela">⛶ Tela cheia</button>
+        </div>
       </div>
       <p id="lobbyStudentName" class="lead"></p>
       <p id="lobbyConnection" class="field-help" role="status">Conectando à sala…</p>
@@ -70,15 +73,17 @@
         </label>
         <button id="lobbyHelpButton" class="secondary" type="button">Preciso de ajuda</button>
       </div>
-      <div id="lobbyMap" class="school-map" role="group" aria-label="Mapa acessível da escola. Use as setas do teclado ou os botões de direção.">
-        <div class="school-zone zone-gate"><strong>Portão</strong></div>
-        <div class="school-zone zone-yard"><strong>Pátio</strong><small>Espere aqui</small></div>
-        <div class="school-zone zone-hall"><strong>Corredor</strong></div>
-        <div class="school-zone zone-lab"><strong>Laboratório</strong><small>Entrada autorizada</small></div>
-        <div class="school-zone zone-teacher"><strong>Professor</strong></div>
-        <div id="lobbyAvatars" class="lobby-avatars" aria-live="off"></div>
+      <div class="lobby-map-stage">
+        <div id="lobbyMap" class="school-map" role="group" aria-label="Mapa da escola visto de cima. Use as setas do teclado ou W, A, S, D para movimentar o avatar.">
+          <div id="lobbyAvatars" class="lobby-avatars" aria-live="off"></div>
+        </div>
+        <div class="lobby-map-caption" aria-hidden="true">
+          <span>ESCOLA VIRTUAL</span>
+          <span>Explore o pátio • Encontre seus colegas</span>
+          <span>Setas / W A S D ou clique no mapa para caminhar</span>
+        </div>
       </div>
-      <p id="lobbySimpleStatus" class="muted hidden">Você está na sala de espera. O professor poderá autorizar sua entrada.</p>
+      <p id="lobbySimpleStatus" class="muted hidden">Você está na sala de espera. Aguarde o professor liberar a prova.</p>
       <div class="lobby-movement">
         <div class="lobby-directions" aria-label="Mover personagem">
           <button id="lobbyMoveUp" type="button" class="secondary" aria-label="Mover para cima">↑</button>
@@ -95,7 +100,7 @@
           <button id="lobbyEmoteQuestion" type="button" class="secondary" aria-label="Tenho uma dúvida">Dúvida</button>
         </div>
       </div>
-      <div id="lobbyApprovalMessage" class="message info">O professor ainda não autorizou sua entrada.</div>
+      <div id="lobbyApprovalMessage" class="message info">Você entrou no pátio virtual. Aguarde o professor liberar sua prova.</div>
       <button id="lobbyEnterExam" type="button" class="primary" disabled>Entrar na avaliação</button>
     </section>
 
