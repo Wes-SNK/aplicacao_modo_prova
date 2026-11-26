@@ -34,6 +34,11 @@ BEGIN
   PERFORM public.student_lobby_enter(v,'ci');
  EXCEPTION WHEN OTHERS THEN denied:=position('Aguarde autorização de entrada' IN SQLERRM)>0;END;
  IF NOT denied THEN RAISE EXCEPTION 'Sala não controlou ingresso';END IF;
+
+END;$test$;
+SET LOCAL ROLE postgres;
+DO $test$
+BEGIN
  IF EXISTS(SELECT 1 FROM public.attempts WHERE exam_id=
    'aaaa2222-aaaa-4222-8222-aaaaaaaa2222') THEN
    RAISE EXCEPTION 'A espera criou tentativa antes da prova';END IF;
