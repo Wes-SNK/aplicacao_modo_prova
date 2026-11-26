@@ -124,11 +124,13 @@
     }
     try{body=u.validate(mention[2]);}catch(e){error(e.message);return;}
   }
-  const recipient=selected||null;
+  const teacherOnly=selected==="teacher";
+  const recipient=selected&&!teacherOnly?selected:null;
   busy=true;$("lobbyChatSend").disabled=true;
   try{
    await mp.rpc("student_lobby_chat_send",{
-    p_lobby_token:token,p_body:body,p_recipient:recipient
+    p_lobby_token:token,p_body:body,p_recipient:recipient,
+    p_teacher_only:teacherOnly
    });
    $("lobbyChatInput").value="";
    await refresh();
