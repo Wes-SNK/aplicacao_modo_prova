@@ -86,6 +86,12 @@
     for(const src of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
       await loadScript(src);
     }
+    // Mensagens são modulares e só devem ser inicializadas no painel de
+    // monitoramento. Demais páginas não executam consultas de chat.
+    if(page==="painel"){
+      await loadScript("lobby-chat-utils.js");
+      await loadScript("lobby-chat-teacher.js");
+    }
     // Diagnóstico: falhas assíncronas devem aparecer no próprio painel.
     // Carregamento completo do shell não é garantia de RPC bem-sucedida.
     // Permite que os presets personalizados também sejam selecionados no
