@@ -21,7 +21,7 @@ CREATE OR REPLACE FUNCTION public.student_lobby_join(p_exam_slug text, p_student
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE v_exam public.exams;v_super public.exam_supervision;
  v_student public.students;v_matches integer;v_lobby public.exam_lobby;
 BEGIN
@@ -65,7 +65,7 @@ CREATE OR REPLACE FUNCTION public.student_lobby_state(p_lobby_token uuid)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE v_lobby public.exam_lobby;v_exam public.exams;v_peers jsonb;
 BEGIN
  SELECT * INTO v_lobby FROM public.exam_lobby WHERE lobby_token=p_lobby_token;
@@ -100,7 +100,7 @@ CREATE OR REPLACE FUNCTION public.student_lobby_enter(p_lobby_token uuid, p_user
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE l public.exam_lobby;e public.exams;s public.students;a public.attempts;
  q jsonb;ans jsonb;
 BEGIN
@@ -161,7 +161,7 @@ CREATE OR REPLACE FUNCTION public.student_lobby_move(p_lobby_token uuid, p_x int
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 BEGIN
  IF p_x NOT BETWEEN 0 AND 100 OR p_y NOT BETWEEN 0 AND 100
  OR p_emote IS NOT NULL AND p_emote NOT IN('wave','question','ready') THEN
@@ -179,7 +179,7 @@ CREATE OR REPLACE FUNCTION public.student_lobby_help(p_lobby_token uuid, p_reque
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 BEGIN
  IF p_request IS NULL THEN RAISE EXCEPTION 'Informe a solicitação';END IF;
  IF NOT EXISTS(SELECT 1 FROM public.exam_lobby WHERE lobby_token=p_lobby_token
@@ -198,7 +198,7 @@ CREATE OR REPLACE FUNCTION public.teacher_supervision_roster(p_exam_slug text)
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE v_exam public.exams;v_super public.exam_supervision;v_students jsonb;v_groups jsonb;
 BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Acesso negado';END IF;
@@ -252,7 +252,7 @@ CREATE OR REPLACE FUNCTION public.teacher_supervision_authorize_all(p_exam_slug 
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE v_exam public.exams;v_super public.exam_supervision;v_count integer;
 BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Acesso negado';END IF;
@@ -273,7 +273,7 @@ CREATE OR REPLACE FUNCTION public.teacher_supervision_configure_v3(p_exam_slug t
  LANGUAGE plpgsql
  SECURITY DEFINER
  SET search_path TO 'public'
-AS $function$;
+AS $function$
 DECLARE v_exam public.exams;v_count int;
 BEGIN
  IF auth.uid() IS NULL THEN RAISE EXCEPTION 'Acesso negado';END IF;
