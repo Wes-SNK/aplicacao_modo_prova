@@ -61,9 +61,10 @@ test("Política de otimização não pode alterar correção nem criar ocorrênc
   assert.match(student,/flushPendingAnswers/);
   assert.match(student,/record_violation/);
   for(const page of [html,preview]){
-    assert.ok(page.indexOf('src="client-performance.js"') <
-      page.indexOf('src="lobby.js"'));
+    assert.ok(page.indexOf('src="client-performance.js?v=20261126-turma30"') <
+      page.indexOf('src="lobby.js?v=20261126-turma30"'));
     assert.match(page,/id="lobbySimpleMode"/);
+    assert.match(page,/styles\\.css\\?v=20261126-turma30/);
   }
   const css=read("styles.css");
   assert.match(css,/@media \(pointer: coarse\)/);
