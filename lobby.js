@@ -10,6 +10,7 @@
   const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug;
   let token = null, approved = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
+  let walkingTimer = null;
   let acceptEntry = null;
   let onScreen = false;
   let hasEntered = false;
@@ -61,6 +62,7 @@
   }
   function resetRoom() {
     clearInterval(roomTimer);
+    clearInterval(walkingTimer);walkingTimer=null;
     roomTimer = null; onScreen = false; approved = false;
     exitImmersive();
     token = null; peers = []; busy = false;
@@ -208,7 +210,8 @@
       busy=false; $("lobbyEnterExam").disabled=!approved;
     }
   }
-  async function move(dx,dy,emote=null) {
+  async function move(dx,dy,emote=null,auto=false) {
+    if(!auto){clearInterval(walkingTimer);walkingTimer=null;}
     if(!token || !onScreen || $("lobbySimpleMode").checked) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
@@ -221,6 +224,29 @@
         p_lobby_token:token,p_x:pos.x,p_y:pos.y,p_emote:emote
       });
     } catch{status("Reconectando movimentação…");}
+  }
+  function walkToPoint(event) {
+    if(!onScreen || !token || $("lobbySimpleMode").checked)return;
+    const map=$("lobbyMap");
+    const bounds=map.getBoundingClientRect();
+    if(!bounds.width||!bounds.height)return;
+    const target=window.SupervisionUtils.clampPosition(
+      (event.clientX-bounds.left)/bounds.width*100,
+      (event.clientY-bounds.top)/bounds.height*100);
+    clearInterval(walkingTimer);
+    walkingTimer=setInterval(()=>{
+      if(!onScreen || $("lobbySimpleMode").checked){
+        clearInterval(walkingTimer);walkingTimer=null;return;
+      }
+      const dx=target.x-pos.x,dy=target.y-pos.y;
+      if(Math.abs(dx)<2.4 && Math.abs(dy)<2.4){
+        clearInterval(walkingTimer);walkingTimer=null;return;
+      }
+      // Um passo por atualização: evita teletransporte e preserva os
+      // controles de posição já existentes no Supabase.
+      move(Math.sign(dx)*Math.min(5,Math.abs(dx)),
+        Math.sign(dy)*Math.min(5,Math.abs(dy)),null,true);
+    },180);
   }
   async function requestHelp() {
     if(!token || !onScreen) return;
@@ -245,6 +271,7 @@
       $(id).addEventListener("click",()=>move(0,0,name)));
     $("lobbyHelpButton").addEventListener("click",requestHelp);
     $("lobbyFullscreenButton").addEventListener("click",toggleFullscreen);
+    $("lobbyMap").addEventListener("click",walkToPoint);
     document.addEventListener("fullscreenchange",syncFullscreenButton);
     $("lobbyEnterExam").addEventListener("click",enter);
     $("lobbySimpleMode").addEventListener("change",updateAccessView);
