@@ -10,8 +10,10 @@ const MODOPROVA_CUSTOM = MODOPROVA_QUERY.get("exame");
 window.APP_CONFIG = {
   supabaseUrl: "https://lqfchjfyftfopgzdwggi.supabase.co",
   supabasePublishableKey: "sb_publishable_bmpIRHQSvcGrU6QV62rYvA_w0rec269",
-  examSlug: MODOPROVA_CUSTOM && /^preset-[0-9a-f]{32}$/.test(MODOPROVA_CUSTOM)
-    ? MODOPROVA_CUSTOM
+  // URLs malformadas não podem recair silenciosamente na avaliação antiga.
+  examSlug: MODOPROVA_QUERY.has("exame")
+    ? (/^preset-[0-9a-f]{32}$/.test(MODOPROVA_CUSTOM || "")
+      ? MODOPROVA_CUSTOM : "preset-invalido")
     : MODOPROVA_LEGACY[MODOPROVA_QUERY.get("avaliacao")] || "4bim-1b-2026",
   appTitle: "Modo Prova — Técnico em Informática"
 };
