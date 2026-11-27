@@ -8,7 +8,9 @@
   const page=document.body.dataset.teacherPage;
   const definitions={
     painel:{title:"Painel de controle",
-      description:"Monitoramento da turma, autorizações, acompanhamento e resultados."},
+      description:"Acompanhamento de provas, ocorrências, finalizações e histórico de notas."},
+    sala:{title:"Sala de espera",
+      description:"Turma vinculada, presença, autorizações, pedidos de ajuda e comunicação."},
     questoes:{title:"Questões",
       description:"Questões da avaliação selecionada e banco reutilizável."},
     avaliacoes:{title:"Avaliações e presets",
@@ -24,7 +26,7 @@
   const goToLogin=()=>window.location.replace(loginURL);
   // Versionamento único impede combinar o shell atualizado com módulos antigos
   // eventualmente retidos pelo cache do navegador.
-  const appRevision="20261127-historico-notas-1";
+  const appRevision="20261127-sala-dedicada-1";
   const loadScript=src=>new Promise((resolve,reject)=>{
     const script=document.createElement("script");
     script.src=src+"?rev="+encodeURIComponent(appRevision);script.async=false;
@@ -83,14 +85,17 @@
 
     // Carrega módulos em sequência; professor.js registra login e inicia o
     // painel. Os componentes especializados verificam a sessão existente.
-    for(const src of ["professor.js","presets.js","monitoramento.js","alunos.js"]){
+    for(const src of ["professor.js","presets.js","alunos.js"]){
       await loadScript(src);
     }
-    // Chat só é carregado na área de supervisão, depois de validar a sessão.
-    if(page==="painel"){
+    // Os módulos da sala só executam na página dedicada.
+    if(page==="sala"){
+      await loadScript("monitoramento.js");
       await loadScript("lobby-chat-utils.js");
       await loadScript("chat-professor.js");
     }
+    // O painel mantém somente um alerta leve de ajuda, sem duplicar controles.
+    if(page==="painel")await loadScript("teacher-help-summary.js");
     // Diagnóstico: falhas assíncronas devem aparecer no próprio painel.
     // Carregamento completo do shell não é garantia de RPC bem-sucedida.
     // Permite que os presets personalizados também sejam selecionados no
