@@ -43,7 +43,6 @@
     $("teacherLogin").classList.remove("hidden");
     $("teacherDashboard").classList.add("hidden");
     $("btnLogout").classList.add("hidden");
-    $("btnTestStudentMode").classList.add("hidden");
     window.dispatchEvent(new Event("modo-prova:teacher-logout"));
     if (pollTimer) clearInterval(pollTimer);
   }
@@ -52,7 +51,6 @@
     $("teacherLogin").classList.add("hidden");
     $("teacherDashboard").classList.remove("hidden");
     $("btnLogout").classList.remove("hidden");
-    $("btnTestStudentMode").classList.remove("hidden");
     window.dispatchEvent(new Event("modo-prova:teacher-ready"));
   }
 
@@ -88,16 +86,6 @@
     } finally {
       $("btnTeacherLogin").disabled = false;
     }
-  }
-
-  // Apenas uma prévia no navegador: sem liberar a avaliação aos estudantes.
-  function openStudentPreview() {
-    const assessment = cfg.examSlug === "simulado-4bim-1b-2026" ? "simulado"
-      : (cfg.examSlug === "prova-4bim-1b-2026" ? "prova" : "anterior");
-    const url = /^preset-[0-9a-f]{32}$/.test(cfg.examSlug)
-      ? "preview-aluno.html?exame=" + encodeURIComponent(cfg.examSlug)
-      : "preview-aluno.html?avaliacao=" + assessment;
-    window.open(url, "_blank", "noopener");
   }
 
   function statusLabel(status) {
@@ -911,7 +899,6 @@
   async function boot() {
     setConnectionBadge($("teacherConnectionBadge"));
     $("btnTeacherLogin").addEventListener("click", login);
-    $("btnTestStudentMode").addEventListener("click", openStudentPreview);
     $("teacherPassword").addEventListener("keydown", e => { if (e.key === "Enter") login(); });
     $("btnLogout").addEventListener("click", () => {
       clearTeacherSession();
