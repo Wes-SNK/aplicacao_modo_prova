@@ -24,7 +24,7 @@
   const goToLogin=()=>window.location.replace(loginURL);
   // Versionamento único impede combinar o shell atualizado com módulos antigos
   // eventualmente retidos pelo cache do navegador.
-  const appRevision="20261126-panel-regression-1";
+  const appRevision="20261127-help-alert-1";
   const loadScript=src=>new Promise((resolve,reject)=>{
     const script=document.createElement("script");
     script.src=src+"?rev="+encodeURIComponent(appRevision);script.async=false;
