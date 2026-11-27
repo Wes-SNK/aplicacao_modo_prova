@@ -423,6 +423,22 @@
           </table>
         </div>
         <p id="dashboardMessage" class="muted"></p>
+        <section class="grade-history-panel" aria-label="Histórico permanente de notas">
+          <div class="section-head">
+            <div>
+              <h2>Histórico de notas</h2>
+              <p class="muted">Registros permanentes de todas as finalizações, inclusive após nova tentativa.</p>
+            </div>
+            <button type="button" id="btnExportGradeHistory" class="secondary">Exportar histórico CSV</button>
+          </div>
+          <p id="gradeHistorySummary" class="muted" role="status">Consultando histórico…</p>
+          <div class="table-wrap">
+            <table id="gradeHistoryTable">
+              <thead><tr><th>Estudante</th><th>Turma</th><th>Finalização</th><th>Nota</th><th>Motivo</th></tr></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </section>
       </section>
     </section>
   </main>
