@@ -38,7 +38,6 @@
 
   let preview = null;
   let previewLobby = null;
-  let loggedIn = false;
   const tokenFailure = () => new Error(
     "Entre primeiro no painel do professor. A prévia exige sessão autenticada."
   );
@@ -150,7 +149,6 @@
           teacherRead("teacher_dashboard", { p_exam_slug: currentSlug }),
           teacherRead("teacher_questions", { p_exam_slug: currentSlug })
         ]);
-        loggedIn = true;
         const originalQuestions = (set.questions || [])
           .filter(q => q.active && q.type === "objective")
           .sort((a,b) => a.position - b.position);
