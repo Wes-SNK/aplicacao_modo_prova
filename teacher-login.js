@@ -4,7 +4,7 @@
   const mp=window.ModeProva;
   const $=id=>document.getElementById(id);
   mp.setConnectionBadge($("teacherConnectionBadge"));
-  const allowed=/^(?:painel|questoes|avaliacoes|alunos)\.html$/;
+  const allowed=/^(?:painel|sala-espera|questoes|avaliacoes|alunos)\.html$/;
   const requested=new URLSearchParams(window.location.search).get("next");
   function destination(){
     if(requested){
