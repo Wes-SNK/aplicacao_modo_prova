@@ -598,3 +598,7 @@ Migração `migrations/022_historico_notas_imutavel.sql`, aplicada ao Supabase e
 **Testes:** `tests/grade-history.test.cjs` (contratos) e `tests/grade-history-db.sql` (integração transacional com duas finalizações de notas diferentes, reenvio, bloqueios e exclusão da tentativa original). Para execução manual: abrir duas sessões fictícias no laboratório, concluir a primeira e a segunda, verificar a permanência de ambas no histórico e testar a exportação CSV. Não apagar histórico para reiniciar provas.
 
 **Limite da proteção:** essas salvaguardas não substituem backup periódico do banco de dados. Perda de conexão durante uma finalização automática (tempo esgotado ou limite de ocorrências) ainda exige acompanhamento do professor.
+
+## Sala de espera em página própria (27/11/2026)
+
+A navegação do professor inclui `sala-espera.html`, acessível somente após validação da sessão. Esta página concentra o monitoramento da turma (`monitoramento.js`), vínculo da avaliação, autorização de entrada, notificações de ajuda e chat supervisionado (`chat-professor.js`). A separação é de interface e carregamento: as RPCs, o banco, as regras de autorização e a experiência do aluno não foram modificados. O Painel de controle mantém tentativas, ocorrências e histórico permanente de notas; um alerta resumido em amarelo (`teacher-help-summary.js`) consulta apenas os pedidos pendentes da turma vinculada e encaminha à página da sala. Todos os links preservam a avaliação selecionada pela URL. Regressão em `tests/sala-espera-navigation.test.cjs`.
