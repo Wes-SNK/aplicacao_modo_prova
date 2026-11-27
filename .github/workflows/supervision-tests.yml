@@ -71,6 +71,7 @@ jobs:
           test -s migrations/019_entrada_direta_patio.sql
           test -s migrations/020_visualizacao_turma_selecionada.sql
           test -s migrations/021_chat_sala_espera.sql
+          test -s migrations/022_historico_notas_imutavel.sql
       - name: Apply migrations to isolated PostgreSQL and test real authorization rules
         run: |
           psql -v ON_ERROR_STOP=1 -f tests/bootstrap-postgres.sql
@@ -87,3 +88,5 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f tests/supervision-class-switch.sql
           psql -v ON_ERROR_STOP=1 -f migrations/021_chat_sala_espera.sql
           psql -v ON_ERROR_STOP=1 -f tests/chat-supervised.sql
+          psql -v ON_ERROR_STOP=1 -f migrations/022_historico_notas_imutavel.sql
+          psql -v ON_ERROR_STOP=1 -f tests/grade-history-db.sql
