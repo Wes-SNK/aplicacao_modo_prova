@@ -37,6 +37,7 @@
       query === "anterior" ? "" : "?avaliacao=simulado");
 
   let preview = null;
+  let previewLobby = null;
   let loggedIn = false;
   const tokenFailure = () => new Error(
     "Entre primeiro no painel do professor. A prévia exige sessão autenticada."
@@ -86,7 +87,59 @@
 
   async function previewRpc(name, args = {}) {
     switch (name) {
+      case "student_lobby_join": {
+        if (args.p_exam_slug !== currentSlug) {
+          throw new Error("Avaliação diferente da selecionada no painel.");
+        }
+        const session = await mp.validTeacherSession();
+        if (!session?.access_token) throw tokenFailure();
+        const studentName = String(args.p_student_name || "").trim();
+        if (!studentName) throw new Error("Informe o nome do estudante.");
+        previewLobby = {
+          token: crypto.randomUUID(), studentName,
+          authorized: false, helpPending: false, x: 12, y: 65, emote: null
+        };
+        return { supervised: true, lobby_allowed: true,
+          lobby_token: previewLobby.token, student_name: studentName };
+      }
+      case "student_lobby_state": {
+        if (!previewLobby || args.p_lobby_token !== previewLobby.token) {
+          throw new Error("Sala de espera de prévia inválida.");
+        }
+        return {
+          authorized: previewLobby.authorized, is_active: true,
+          lobby_allowed: true, help_pending: previewLobby.helpPending,
+          peers: [{ id: "preview-self", self: true, style: 0,
+            x: previewLobby.x, y: previewLobby.y, emote: previewLobby.emote }]
+        };
+      }
+      case "student_lobby_move": {
+        if (!previewLobby || args.p_lobby_token !== previewLobby.token)
+          throw new Error("Sala de espera de prévia inválida.");
+        previewLobby.x = args.p_x;
+        previewLobby.y = args.p_y;
+        previewLobby.emote = args.p_emote || null;
+        return { ok: true };
+      }
+      case "student_lobby_help": {
+        if (!previewLobby || args.p_lobby_token !== previewLobby.token)
+          throw new Error("Sala de espera de prévia inválida.");
+        previewLobby.helpPending = !!args.p_request;
+        return { ok: true, help_pending: previewLobby.helpPending };
+      }
+      case "student_lobby_enter": {
+        if (!previewLobby || args.p_lobby_token !== previewLobby.token ||
+            !previewLobby.authorized) {
+          throw new Error("Aguarde a liberação simulada da prova.");
+        }
+        return previewRpc("start_attempt_by_name", {
+          p_exam_slug: currentSlug, p_student_name: previewLobby.studentName
+        });
+      }
       case "start_attempt_by_name": {
+        if (!previewLobby?.authorized) {
+          throw new Error("A prévia exige passagem pela sala de espera.");
+        }
         if (preview && preview.status === "in_progress") {
           throw new Error("Já existe uma prévia em andamento nesta aba.");
         }
@@ -228,6 +281,16 @@
   }
 
   mp.rpc = previewRpc;
+
+  // A prévia possui liberação pedagógica local, sem modificar o preset
+  // ou autorizar estudantes no Supabase.
+  $("previewReleaseExam").addEventListener("click", async () => {
+    if (!previewLobby) return;
+    previewLobby.authorized = true;
+    $("previewReleaseExam").disabled = true;
+    $("previewReleaseExam").textContent = "Liberação simulada realizada";
+    await mp.lobbyBridge?.refresh();
+  });
 
   // Se não houver sessão do professor, a página exibe uma instrução clara.
   mp.validTeacherSession().then(session => {
