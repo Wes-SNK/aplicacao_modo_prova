@@ -566,8 +566,8 @@ Quando a autorização de início chega por `student_lobby_state`, `lobby.js` ex
 A primeira rodada de otimização prioriza tráfego de presença e movimentação, preservando a lógica de prova. Não envolve migração nem alteração das avaliações publicadas.
 
 **Sala de espera:**
-- Intervalo de consulta de presença: 4 s → **6,5 s**. Para 30 alunos presentes, a estimativa teórica cai de cerca de 450 para 277 consultas/minuto, sem contar movimentos. A consulta inicial é imediata. Uma consulta lenta não gera outra concorrente; a aba oculta não consulta e atualiza ao voltar.
-- Movimentação: `client-performance.js` coalesce posições e limita o envio a aproximadamente um a cada **750 ms**, por cliente, com no máximo uma gravação em curso. A movimentação do próprio avatar continua imediata localmente. Emoções geram prioridade; a última coordenada é mantida.
+- Intervalo de consulta de presença: **2 s** após a otimização de movimento remoto. Para 30 alunos, são aproximadamente 900 consultas/minuto de presença, sem contar movimentos. A consulta inicial é imediata. Uma consulta lenta não gera outra concorrente; a aba oculta não consulta e atualiza ao voltar.
+- Movimentação: `client-performance.js` coalesce posições e limita o envio a aproximadamente um a cada **550 ms**, por cliente, com no máximo uma gravação em curso. A movimentação do próprio avatar continua imediata localmente. Emoções geram prioridade; a última coordenada é mantida.
 - Renderização: os mesmos nós HTML dos avatares são reutilizados e reposicionados; apenas entradas/saídas criam ou eliminam nós. O aluno não recebe os nomes dos colegas.
 - O mapa SVG continua estático, sem downloads de imagens externas, e o mapa permanece como visualização única.
 
@@ -581,3 +581,20 @@ A primeira rodada de otimização prioriza tráfego de presença e movimentaçã
 3. homologação com usuários reais em computador e tablet, verificando acesso, tela cheia, rede Wi-Fi da escola, salvamento de respostas, retomada de tentativa e finalização.
 
 Os testes simulados validam limites de código e comportamento, **não demonstram** a capacidade real da rede da escola, nem o desempenho efetivo do Supabase durante uma turma simultânea. O servidor continua validando a autorização de início.
+
+## Histórico permanente de notas e finalização segura (27/11/2026)
+
+Migração `migrations/022_historico_notas_imutavel.sql`, aplicada ao Supabase exclusivo da aplicação de provas:
+
+- `public.grade_history` mantém uma linha por tentativa finalizada, com identificação do estudante, prova, nota, data, motivo e cópia das respostas. Não tem FK com exclusão em cascata; sua linha permanece mesmo quando o professor libera nova tentativa do zero.
+- A finalização bem-sucedida salva o resultado na tentativa e em seu histórico **na mesma transação**. Caso o histórico não possa ser gravado, a transação falha: não se confirma uma prova sem preservar a nota.
+- Repetir `submit_attempt` com o mesmo token devolve a nota anterior sem criar outro registro. Um novo attempt_id de nova tentativa recebe outra linha independente, sem sobrepor a primeira.
+- `_grade_attempt` recusa recalcular tentativas concluídas e deixa de aceitar execução anônima direta. Os campos críticos de uma tentativa finalizada e as linhas de `grade_history` são imutáveis.
+- `save_answer` e `submit_attempt` bloqueiam a mesma tentativa por transação para evitar que gravações atrasadas alterem a nota calculada.
+- `student.js` aguarda envios pendentes e não finaliza voluntariamente enquanto houver resposta não sincronizada; o cache local conserva a resposta em caso de falha de rede.
+- O painel do professor exibe **Histórico de notas**, incluindo finalizações anteriores a um reset, e permite exportação em CSV.
+- O histórico já recebeu as notas existentes no momento da migração, sem alterar seus valores.
+
+**Testes:** `tests/grade-history.test.cjs` (contratos) e `tests/grade-history-db.sql` (integração transacional com duas finalizações de notas diferentes, reenvio, bloqueios e exclusão da tentativa original). Para execução manual: abrir duas sessões fictícias no laboratório, concluir a primeira e a segunda, verificar a permanência de ambas no histórico e testar a exportação CSV. Não apagar histórico para reiniciar provas.
+
+**Limite da proteção:** essas salvaguardas não substituem backup periódico do banco de dados. Perda de conexão durante uma finalização automática (tempo esgotado ou limite de ocorrências) ainda exige acompanhamento do professor.
