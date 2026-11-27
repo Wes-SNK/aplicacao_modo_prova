@@ -55,14 +55,14 @@ CREATE TABLE public.attempts(
  UNIQUE(exam_id,student_id)
 );
 CREATE TABLE public.answers(
- attempt_id uuid NOT NULL REFERENCES public.attempts(id),
+ attempt_id uuid NOT NULL REFERENCES public.attempts(id) ON DELETE CASCADE,
  question_id uuid NOT NULL REFERENCES public.questions(id),
  answer jsonb NOT NULL,saved_at timestamptz DEFAULT now(),
  PRIMARY KEY(attempt_id,question_id)
 );
 CREATE TABLE public.exam_events(
  id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
- attempt_id uuid NOT NULL REFERENCES public.attempts(id),
+ attempt_id uuid NOT NULL REFERENCES public.attempts(id) ON DELETE CASCADE,
  event_type text NOT NULL,
  counted boolean NOT NULL DEFAULT true,
  occurred_at timestamptz DEFAULT now(),
