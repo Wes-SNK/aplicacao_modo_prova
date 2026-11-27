@@ -1067,3 +1067,9 @@ body.lobby-no-scroll{overflow:hidden;}
  .teacher-chat-compose{grid-template-columns:1fr;}
  .teacher-chat-moderation select{max-width:none;}
 }
+
+/* Histórico definitivo de notas: independente das tentativas ativas. */
+.grade-history-panel{margin-top:26px;padding-top:18px;border-top:1px solid #d4dee8;}
+.grade-history-panel h2{margin:0 0 6px;font-size:1.15rem;}
+#gradeHistoryTable{min-width:650px;}
+#gradeHistorySummary{margin:10px 0;}
