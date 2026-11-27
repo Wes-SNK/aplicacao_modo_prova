@@ -46,7 +46,7 @@ jobs:
           node-version: "22"
       - name: Validate JavaScript syntax
         run: |
-          for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby-curiosities.js client-performance.js lobby-chat-utils.js lobby-chat.js chat-professor.js lobby.js monitoramento.js alunos.js teacher-login.js teacher-pages.js; do
+          for file in config.js common.js professor.js student.js presets.js preview-aluno.js supervision-utils.js lobby-curiosities.js client-performance.js lobby-chat-utils.js lobby-chat.js chat-professor.js teacher-help-summary.js lobby.js monitoramento.js alunos.js teacher-login.js teacher-pages.js; do
             node --check "$file"
           done
       - name: Validate SVG map structure without external assets
