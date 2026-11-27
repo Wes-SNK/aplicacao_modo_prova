@@ -70,7 +70,8 @@ test("Chat somente no pátio e na área autenticada do professor",()=>{
  for(const id of ["teacherChatSection","teacherChatMessages","teacherChatEnabled",
   "teacherChatPeers","teacherChatSend","teacherChatMuteStudent","teacherChatUnmute"])
    assert.ok(shell.includes('id="'+id+'"'),"ID professor ausente: "+id);
- assert.match(loader,/if\(page==="painel"\)/);
+ assert.match(loader,/if\(page==="sala"\)/);
+ assert.match(read("chat-professor.js"),/teacherPage!=="sala"/);
  assert.match(loader,/chat-professor\.js/);
  assert.doesNotMatch(read("student.js"),/lobby_chat_send|lobby_chat_read/);
 });
