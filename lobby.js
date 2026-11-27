@@ -188,9 +188,6 @@
       node.a.remove?.();
       avatarNodes.delete(key);
     }
-    $("lobbySimpleStatus").textContent=
-      "Você está aguardando com "+Math.max(0,peers.length-1)+" colega(s). "+
-      (approved?"Prova liberada.":"Aguardando liberação da prova.");
   }
   function showBubble(senderId,message) {
     // Apenas mensagens públicas originam balões no mapa.
@@ -202,12 +199,6 @@
     node.bubbleTimer=setTimeout(()=>node.bubble.classList.add("hidden"),5000);
   }
   function updateAccessView() {
-    const inMap=true;
-    const simple=$("lobbySimpleMode").checked;
-    $("lobbyMap").classList.toggle("hidden",simple);
-    $("lobbySimpleStatus").classList.toggle("hidden",!simple);
-    document.querySelector(".lobby-movement").classList.toggle("hidden",simple);
-    $("lobbySimpleMode").disabled=false;
     $("lobbyHelpButton").classList.remove("hidden");
     $("lobbyEnterExam").disabled=!approved || busy;
     $("lobbyStatusBadge").textContent=approved?"Prova liberada":"Aguardando prova";
@@ -309,7 +300,7 @@
   }
   async function move(dx,dy,emote=null,auto=false) {
     if(!auto){clearInterval(walkingTimer);walkingTimer=null;}
-    if(!token || !onScreen || $("lobbySimpleMode").checked) return;
+    if(!token || !onScreen) return;
     if(!emote && Date.now()-lastMove<150) return;
     lastMove=Date.now();
     const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
@@ -328,7 +319,7 @@
     }
   }
   function walkToPoint(event) {
-    if(!onScreen || !token || $("lobbySimpleMode").checked)return;
+    if(!onScreen || !token)return;
     const map=$("lobbyMap");
     const bounds=map.getBoundingClientRect();
     if(!bounds.width||!bounds.height)return;
@@ -337,7 +328,7 @@
       (event.clientY-bounds.top)/bounds.height*100);
     clearInterval(walkingTimer);
     walkingTimer=setInterval(()=>{
-      if(!onScreen || $("lobbySimpleMode").checked){
+      if(!onScreen){
         clearInterval(walkingTimer);walkingTimer=null;return;
       }
       const dx=target.x-pos.x,dy=target.y-pos.y;
@@ -380,7 +371,6 @@
     $("lobbyMap").addEventListener("click",walkToPoint);
     document.addEventListener("fullscreenchange",syncFullscreenButton);
     $("lobbyEnterExam").addEventListener("click",enter);
-    $("lobbySimpleMode").addEventListener("change",updateAccessView);
     document.addEventListener("keydown",e=>{
       if (!onScreen)return;
       if(e.key==="Escape" && immersiveFallback){
@@ -388,12 +378,11 @@
         return;
       }
       if (["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName)) return;
-      if ((e.key==="f"||e.key==="F") && !$("lobbySimpleMode").checked){
+      if (e.key==="f"||e.key==="F"){
         e.preventDefault();
         toggleFullscreen();
         return;
       }
-      if($("lobbySimpleMode").checked)return;
       const dirs={ArrowUp:[0,-5],ArrowDown:[0,5],ArrowLeft:[-5,0],
         ArrowRight:[5,0],w:[0,-5],s:[0,5],a:[-5,0],d:[5,0]};
       const d=dirs[e.key];if(d){e.preventDefault();move(...d);}
