@@ -187,7 +187,6 @@
       const emote=({wave:"Olá!",question:"?",ready:"OK"})[p.emote]||"";
       node.emote.textContent=emote;
       node.emote.classList.toggle("hidden",!emote);
-      if(p.self && !movingLocally)pos={x:Number(p.x),y:Number(p.y)};
     });
     for(const [key,node] of avatarNodes){
       if(present.has(key))continue;
