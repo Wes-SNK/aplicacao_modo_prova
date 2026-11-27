@@ -204,7 +204,7 @@
       const retryBtn = document.createElement("button");
       retryBtn.className = "small danger";
       retryBtn.textContent = "Nova tentativa (do zero)";
-      retryBtn.title = "Apaga a tentativa atual e permite que o aluno recomece do zero.";
+      retryBtn.title = "Remove a tentativa atual, mas preserva notas finalizadas no histórico permanente.";
       retryBtn.addEventListener("click", () => openResetAttempt(r));
 
       tdAction.append(btn, retryBtn);
@@ -212,6 +212,30 @@
       tr.append(tdName, tdClass, tdStatus, tdStart, tdSubmit, tdScore, tdOcc, tdAction);
       tbody.appendChild(tr);
     });
+    renderGradeHistory(data.grade_history || []);
+  }
+
+  function renderGradeHistory(history) {
+    const rows=$("gradeHistoryTable").querySelector("tbody");
+    rows.textContent="";
+    $("gradeHistorySummary").textContent=history.length
+      ? history.length+" finalização(ões) preservada(s), inclusive tentativas anteriores."
+      : "Ainda não há provas finalizadas nesta avaliação.";
+    for(const item of history){
+      const tr=document.createElement("tr");
+      for(const value of [
+        item.student_name,
+        item.class_group||"—",
+        formatDateTime(item.submitted_at),
+        Number(item.score).toFixed(1)+" / "+Number(item.max_score).toFixed(1),
+        item.submission_reason||"Finalização"
+      ]){
+        const td=document.createElement("td");
+        td.textContent=value;
+        tr.appendChild(td);
+      }
+      rows.appendChild(tr);
+    }
   }
 
   // Preset de publicação: altera SOMENTE o estado online no banco.
@@ -843,7 +867,7 @@
   function openResetAttempt(row) {
     resetTarget = row;
     $("resetAttemptText").textContent =
-      `Deseja iniciar uma nova tentativa do zero para ${row.student_name}?`;
+      `Deseja iniciar uma nova tentativa do zero para ${row.student_name}? A tentativa atual será removida, mas a nota finalizada continuará preservada no Histórico de notas.`;
     $("resetAttemptModal").classList.remove("hidden");
   }
 
@@ -891,6 +915,19 @@
     downloadText(`resultado-${cfg.examSlug}.csv`, "\ufeff" + lines.join("\n"), "text/csv;charset=utf-8");
   }
 
+  function exportGradeHistoryCsv() {
+    if(!dashboardData)return;
+    const header=["Estudante","Turma","Tentativa","Status","Envio","Nota","Máximo","Motivo"];
+    const lines=[header.map(csvEscape).join(",")];
+    for(const h of dashboardData.grade_history||[]){
+      lines.push([h.student_name,h.class_group,h.attempt_id,h.status,
+        h.submitted_at,h.score,h.max_score,h.submission_reason||""]
+        .map(csvEscape).join(","));
+    }
+    downloadText("historico-notas-"+cfg.examSlug+".csv",
+      "\ufeff"+lines.join("\n"),"text/csv;charset=utf-8");
+  }
+
   function startPolling() {
     if (pollTimer) clearInterval(pollTimer);
     pollTimer = setInterval(refreshDashboard, 5000);
@@ -907,6 +944,7 @@
     });
     $("btnRefresh").addEventListener("click", refreshDashboard);
     $("btnExportCsv").addEventListener("click", exportCsv);
+    $("btnExportGradeHistory").addEventListener("click",exportGradeHistoryCsv);
     $("btnSaveSettings").addEventListener("click", saveExamSettings);
     $("btnToggleSimuladoOnline").addEventListener("click", toggleSimuladoOnline);
     ["examTitleInput","examDurationPreset","examDurationInput","examOccurrencesInput",
