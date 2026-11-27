@@ -101,6 +101,13 @@
       sel.value=data.class_group||old||"";
     }
     const students=Array.isArray(data.students)?data.students:[];
+    const pendingHelp=students.filter(s=>s.help_pending);
+    const helpAlert=$("supervisionHelpAlert");
+    helpAlert.classList.toggle("hidden",!pendingHelp.length);
+    helpAlert.textContent=pendingHelp.length
+      ? "Atenção: "+pendingHelp.length+" aluno(s) solicitando ajuda — "+
+        pendingHelp.map(s=>s.name).join(", ")+". Localize o aluno na tabela e clique em Atendido após prestar auxílio."
+      : "";
     const now=Date.parse(data.server_time)||Date.now();
     $("supervisionTotal").textContent=students.length;
     $("supervisionWaiting").textContent=students.filter(s=>s.waiting && !s.authorized
@@ -113,11 +120,12 @@
     const visible=students.filter(s=>s.name.toLocaleLowerCase("pt-BR").includes(filter));
     for(const s of visible){
       const tr=document.createElement("tr");
+      if(s.help_pending)tr.classList.add("supervision-needs-help");
       const name=cell(tr,s.name,"supervision-student");
       if(s.help_pending){
         const help=document.createElement("strong");
         help.className="supervision-help";
-        help.textContent=" Solicita ajuda";
+        help.textContent="Precisa de ajuda";
         name.appendChild(help);
       }
       cell(tr,deriveState(s,now));
@@ -152,6 +160,8 @@
   function showSwitchingClass() {
     data=null;
     $("supervisionRows").textContent="";
+    $("supervisionHelpAlert").classList.add("hidden");
+    $("supervisionHelpAlert").textContent="";
     for(const id of ["supervisionTotal","supervisionWaiting",
       "supervisionInProgress","supervisionFinished"])$(id).textContent="—";
     $("supervisionAuthorizeAll").disabled=true;
@@ -314,6 +324,8 @@
   window.addEventListener("modo-prova:teacher-logout",()=>{
     data=null;dirty=false;requestVersion++;
     $("supervisionRows").textContent="";
+    $("supervisionHelpAlert").classList.add("hidden");
+    $("supervisionHelpAlert").textContent="";
     announce("Entre como professor para acompanhar a turma.");
   });
   setInterval(refresh,5000);
