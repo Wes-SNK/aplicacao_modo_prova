@@ -545,7 +545,7 @@ Na avaliação supervisionada, o estudante entra diretamente no mapa após infor
 
 **Tela cheia:** botão **⛶ Tela cheia** no cabeçalho da sala, ou tecla F enquanto estiver no mapa. O elemento completo `#screenLobby` usa a Fullscreen API, incluindo mapa, controles e avisos. Quando a API não é permitida (por exemplo, em alguns navegadores móveis), a interface usa um modo imersivo por CSS, sem ocultar os controles. Escape ou o próprio botão deixam o modo imersivo. Ao avançar às regras, o módulo sai da tela cheia da sala; o modo de prova permanece independente.
 
-**Acessibilidade:** o aluno mantém a opção **Modo simples (sem mapa)**, com estado textual de espera. O `school-map.svg` não depende de CDN, sprite externo, biblioteca gráfica ou serviços pagos. A sala utiliza as rotinas de presença já existentes no Supabase; não houve migrações.
+**Acessibilidade:** a sala utiliza mapa ampliado, controles por teclado e botões de direção, além de avisos textuais de autorização. O `school-map.svg` não depende de CDN, sprite externo, biblioteca gráfica ou serviços pagos. A sala utiliza as rotinas de presença já existentes no Supabase; não houve migrações.
 
 **Validação manual:** abrir o link do laboratório de testes como aluno; verificar se a escola ocupa boa parte da largura; usar setas/WASD, clique, F, botão de tela cheia e sair da tela cheia; conferir o comportamento em outro navegador e com tela pequena; liberar a prova pelo painel e confirmar que as regras aparecem normalmente após fechar a sala. Verificar que a tela cheia da prova não contabiliza a saída da sala anterior como ocorrência.
 
@@ -556,9 +556,9 @@ A sala de espera supervisionada apresenta 20 curiosidades curtas e autossuficien
 
 A primeira curiosidade aparece imediatamente quando o estudante entra na sala de espera. O botão **Outra curiosidade** mostra um novo fato; durante a espera, outro fato aparece a cada aproximadamente 24 segundos após a última mudança. A ordem é embaralhada, sem repetição até completar o ciclo. A rotação cessa quando a prova está liberada, para não dispersar o aluno.
 
-Quando a autorização de início chega por `student_lobby_state`, `lobby.js` exibe uma notificação destacada **Sua prova foi liberada!**, com instrução para clicar em **Entrar na avaliação**. O aviso aparece uma vez por entrada na sala e pode ser dispensado, sem modificar a autorização nem iniciar a prova. A sala mantém o mapa, a opção de tela cheia e o modo simples. Não há novos endpoints, tabelas, questionários ou dependências.
+Quando a autorização de início chega por `student_lobby_state`, `lobby.js` exibe uma notificação destacada **Sua prova foi liberada!**, com instrução para clicar em **Entrar na avaliação**. O aviso aparece uma vez por entrada na sala e pode ser dispensado, sem modificar a autorização nem iniciar a prova. A sala mantém o mapa ampliado e a opção de tela cheia. Não há novos endpoints, tabelas, questionários ou dependências.
 
-**Validação recomendada:** entrar no laboratório com o aluno de teste; conferir a primeira curiosidade e o botão seguinte; aguardar a troca automática; liberar pelo painel de professor em outro navegador e conferir o aviso, botão de entrada e a ausência de repetições após fechar o aviso; confirmar o funcionamento em tela cheia e no modo simples. A prova continua começando somente após o estudante confirmar as regras.
+**Validação recomendada:** entrar no laboratório com o aluno de teste; conferir a primeira curiosidade e o botão seguinte; aguardar a troca automática; liberar pelo painel de professor em outro navegador e conferir o aviso, botão de entrada e a ausência de repetições após fechar o aviso; confirmar o funcionamento do mapa em tela cheia, a navegação por teclado e a legibilidade dos avisos. A prova continua começando somente após o estudante confirmar as regras.
 
 
 ## Otimização para turmas de aproximadamente 30 alunos e tablets (novembro/2026)
@@ -569,7 +569,7 @@ A primeira rodada de otimização prioriza tráfego de presença e movimentaçã
 - Intervalo de consulta de presença: 4 s → **6,5 s**. Para 30 alunos presentes, a estimativa teórica cai de cerca de 450 para 277 consultas/minuto, sem contar movimentos. A consulta inicial é imediata. Uma consulta lenta não gera outra concorrente; a aba oculta não consulta e atualiza ao voltar.
 - Movimentação: `client-performance.js` coalesce posições e limita o envio a aproximadamente um a cada **750 ms**, por cliente, com no máximo uma gravação em curso. A movimentação do próprio avatar continua imediata localmente. Emoções geram prioridade; a última coordenada é mantida.
 - Renderização: os mesmos nós HTML dos avatares são reutilizados e reposicionados; apenas entradas/saídas criam ou eliminam nós. O aluno não recebe os nomes dos colegas.
-- O mapa SVG continua estático, sem downloads de imagens externas, e o **modo simples** permanece disponível.
+- O mapa SVG continua estático, sem downloads de imagens externas, e o mapa permanece como visualização única.
 
 **Prova e dispositivos:**
 - Presença durante prova: heartbeat de 10 s → **15 s**, com prevenção de requisições simultâneas. Estimativa para 30 alunos realizando a prova: 180 → 120 pings/minuto. Isso não altera a correção, as regras, as respostas, as tentativas, o cronômetro nem o registro de ocorrências.
