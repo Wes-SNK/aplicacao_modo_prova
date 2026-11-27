@@ -43,10 +43,12 @@ BEGIN
   PERFORM public._grade_attempt('f0000000-0000-4000-8000-000000000004');
  EXCEPTION WHEN OTHERS THEN rejected:=true;END;
  IF NOT rejected THEN RAISE EXCEPTION 'Recálculo de nota finalizada permitido';END IF;
+ rejected:=false;
  BEGIN
   UPDATE public.grade_history SET score=0
   WHERE attempt_id='f0000000-0000-4000-8000-000000000004';
  EXCEPTION WHEN OTHERS THEN rejected:=true;END;
+ IF NOT rejected THEN RAISE EXCEPTION 'Histórico permitiu alteração da nota';END IF;
 END;$t$;
 -- Simula Nova tentativa do zero: DELETE da original não apaga o histórico.
 DELETE FROM public.attempts
