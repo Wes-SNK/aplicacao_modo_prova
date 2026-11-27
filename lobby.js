@@ -7,7 +7,7 @@
   "use strict";
   const mp = window.ModeProva;
   const $ = id => document.getElementById(id);
-  const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug;
+  const cacheKey = "modoProva:lobby:" + mp.cfg.examSlug + (mp.teacherPreview ? ":preview" : "");
   let token = null, approved = false, roomTimer = null, busy = false;
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
   let walkingTimer = null;
@@ -242,8 +242,7 @@
     beginPoll();
   }
   async function join(name,onEntry) {
-    // Na prévia, o interceptador não tem acesso a dados reais de estudante.
-    if(mp.teacherPreview) return false;
+    // Na prévia, as operações da sala são simuladas localmente.
     acceptEntry=onEntry;
     let response;
     try {
@@ -262,6 +261,7 @@
     return true;
   }
   async function resume(onEntry) {
+    // Prévia é sempre nova e não reutiliza sessão anterior.
     if(mp.teacherPreview) return false;
     let stored;
     try { stored=JSON.parse(sessionStorage.getItem(cacheKey)||"null"); } catch {return false;}
@@ -390,5 +390,5 @@
     });
   }
   setup();
-  mp.lobbyBridge={join,resume,reset:resetRoom};
+  mp.lobbyBridge={join,resume,reset:resetRoom,refresh:poll};
 })();
