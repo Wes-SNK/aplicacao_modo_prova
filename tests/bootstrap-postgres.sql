@@ -80,4 +80,5 @@ AS $fn$ SELECT jsonb_typeof(p_options)='array'
  AND jsonb_array_length(p_options) IN (4,5)
  AND p_answer IN ('A','B','C','D','E') $fn$;
 CREATE FUNCTION public._grade_attempt(p_attempt_id uuid)
-RETURNS int LANGUAGE sql AS $fn$ SELECT 1 $fn$;
+RETURNS TABLE(score numeric,max_score numeric) LANGUAGE sql
+AS $fn$ SELECT 1::numeric,1::numeric $fn$;
