@@ -16,7 +16,6 @@
   const avatarNodes=new Map();
   let acceptEntry = null;
   let onScreen = false;
-  let hasEntered = false;
   let immersiveFallback = false;
   const curiosities=Array.isArray(window.LobbyCuriosities)
     ? window.LobbyCuriosities : [];
@@ -285,7 +284,6 @@
       const payload=await mp.rpc("student_lobby_enter",{
         p_lobby_token:token,p_user_agent:navigator.userAgent
       });
-      hasEntered=true;
       // A prova usa sua própria política de tela cheia. Saia primeiro da
       // sala virtual para não exibir uma tela vazia durante a transição.
       if(document.fullscreenElement===lobbyScreen()){
