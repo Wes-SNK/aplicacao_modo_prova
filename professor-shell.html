@@ -26,6 +26,7 @@
 
     <nav id="teacherMainNav" class="teacher-main-nav hidden" aria-label="Seções do painel do professor">
       <a href="painel.html" data-page-link="painel">Painel de controle</a>
+      <a href="sala-espera.html" data-page-link="sala">Sala de espera</a>
       <a href="questoes.html" data-page-link="questoes">Questões</a>
       <a href="avaliacoes.html" data-page-link="avaliacoes">Avaliações e presets</a>
       <a href="alunos.html" data-page-link="alunos">Alunos e turmas</a>
@@ -134,7 +135,7 @@
         <p id="quickSimuladoMessage" class="muted" role="status" aria-live="polite">O simulado não é publicado automaticamente na data. Você decide quando liberar.</p>
       </section>
       <!-- Monitoramento supervisionado; módulo isolado e desativado por padrão. -->
-      <section id="supervisionPanel" data-page-area="painel" class="card supervision-panel">
+      <section id="supervisionPanel" data-page-area="sala" class="card supervision-panel">
         <div class="section-head">
           <div>
             <h1>Monitoramento e controle da turma</h1>
@@ -191,7 +192,7 @@
       </section>
 
       <!-- Chat supervisionado independente das permissões da avaliação. -->
-      <section id="teacherChatSection" data-page-area="painel" class="card teacher-chat-section">
+      <section id="teacherChatSection" data-page-area="sala" class="card teacher-chat-section">
         <div class="section-head">
           <div><h2>Mensagens da sala de espera</h2>
           <p class="muted">Acompanhe mensagens gerais, menções e comunicação reservada ao professor.</p></div>
@@ -315,6 +316,16 @@
         <div class="settings-actions">
           <span id="settingsMessage" class="muted"></span>
           <button id="btnSaveSettings" class="primary">Salvar configurações</button>
+        </div>
+      </section>
+
+      <section id="teacherHelpSummary" data-page-area="painel" class="card hidden" aria-label="Pedidos de ajuda da sala de espera">
+        <div class="section-head">
+          <div>
+            <h2>Pedidos de ajuda</h2>
+            <p id="teacherHelpSummaryText" role="status" aria-live="polite"></p>
+          </div>
+          <a id="teacherHelpSummaryLink" href="sala-espera.html" class="preset-action-link">Abrir sala de espera</a>
         </div>
       </section>
 
