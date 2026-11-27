@@ -82,3 +82,57 @@ test("todos os campos da sala continuam disponíveis no shell",()=>{
  const ids=[...shell.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]);
  assert.equal(ids.length,new Set(ids).size,"IDs HTML duplicados");
 });
+
+test("resumo do painel mostra pedido pendente e desaparece após atendimento",async()=>{
+ const vm=require("node:vm");
+ const listeners={};
+ const css=new Set(["hidden"]);
+ const panel={classList:{
+   add:x=>css.add(x),remove:x=>css.delete(x),
+   toggle:(x,condition)=>condition?css.add(x):css.delete(x)
+ }};
+ const message={textContent:""};
+ const link={href:""};
+ const document={
+   hidden:false,
+   body:{dataset:{teacherPage:"painel"}},
+   getElementById:id=>({
+     teacherHelpSummary:panel,
+     teacherHelpSummaryText:message,
+     teacherHelpSummaryLink:link
+   })[id],
+   addEventListener:(event,fn)=>{listeners[event]=fn}
+ };
+ let current=[{name:"Aluno Teste",help_pending:true}];
+ let requests=0;
+ const mode={
+   cfg:{examSlug:"ci-turma"},
+   validTeacherSession:async()=>({access_token:"professor-autenticado"}),
+   rpc:async(name,args,token)=>{
+     assert.equal(name,"teacher_supervision_roster_by_class");
+     assert.equal(args.p_exam_slug,"ci-turma");
+     assert.equal(args.p_class_group,null);
+     assert.equal(token,"professor-autenticado");
+     requests++;
+     return {students:current};
+   }
+ };
+ let interval;
+ vm.runInNewContext(read("teacher-help-summary.js"),{
+   document,window:{ModeProva:mode,location:{search:"?avaliacao=simulado"},
+      addEventListener:(event,fn)=>{listeners[event]=fn}},
+   setInterval:fn=>{interval=fn}
+ });
+ // Drain the microtasks produced by authentication and RPC promises.
+ for(let i=0;i<5;i++)await Promise.resolve();
+ assert.ok(!css.has("hidden"));
+ assert.match(message.textContent,/Aluno Teste/);
+ assert.equal(link.href,"sala-espera.html?avaliacao=simulado");
+ current=[];
+ interval();
+ for(let i=0;i<5;i++)await Promise.resolve();
+ assert.ok(css.has("hidden"));
+ assert.ok(requests>=2);
+ listeners["modo-prova:teacher-logout"]();
+ assert.ok(css.has("hidden"));
+});
