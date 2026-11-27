@@ -15,6 +15,7 @@ test("sala de espera dispõe de rota autenticada e navegação própria",()=>{
   assert.match(loader,/const session=await mode\.validTeacherSession\(\)/);
   assert.match(loader,/if\(!session\?\.access_token\)\{goToLogin\(\);return;\}/);
   assert.match(shell,/href="sala-espera\.html" data-page-link="sala"/);
+  assert.match(read("teacher-login.js"),/painel\|sala-espera\|questoes/);
   assert.match(loader,/sala:\{title:"Sala de espera"/);
 });
 
