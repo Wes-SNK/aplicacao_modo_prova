@@ -12,6 +12,7 @@
   let pos = {x:12,y:65}, lastMove = 0, peers = [], helpPending = false;
   let walkingTimer = null;
   let movementSender=null,pollBusy=false;
+  let ownPositionInitialized=false;
   // Nós de avatar permanecem no DOM entre consultas; só posições/expressões mudam.
   const avatarNodes=new Map();
   let acceptEntry = null;
@@ -103,6 +104,7 @@
     clearInterval(walkingTimer);walkingTimer=null;
     movementSender?.close();movementSender=null;
     pollBusy=false;
+    ownPositionInitialized=false;
     for(const node of avatarNodes.values())clearTimeout(node.bubbleTimer);
     $("lobbyAvatars").textContent="";avatarNodes.clear();
     roomTimer = null; onScreen = false; approved = false;
@@ -122,7 +124,8 @@
       payload=>mp.rpc("student_lobby_move",{
         p_lobby_token:token,p_x:payload.x,p_y:payload.y,p_emote:payload.emote
       }),{
-        minIntervalMs:750,
+        // Consolidar posições para evitar carga excessiva com até 30 tablets.
+        minIntervalMs:550,
         onError:()=>status("Reconectando movimentação…")
       }
     )||null;
@@ -166,13 +169,18 @@
       }
       node.a.className="lobby-avatar avatar-style-"+Number(p.style||0)+
         (p.self?" own-avatar":"");
-      // Não recuar o próprio avatar para uma coordenada antiga enquanto
-      // a atualização otimizada ainda está em trânsito.
-      const movingLocally=p.self && !!movementSender?.pending;
-      const x=movingLocally?pos.x:Number(p.x);
-      const y=movingLocally?pos.y:Number(p.y);
-      node.a.style.left=Math.min(96,Math.max(4,x||12))+"%";
-      node.a.style.top=Math.min(91,Math.max(8,y||65))+"%";
+      // A posição local tem prioridade: um poll antigo nunca deve puxar
+      // nosso avatar de volta. A primeira leitura restaura a posição salva.
+      if(p.self&&!ownPositionInitialized){
+        pos=window.SupervisionUtils.clampPosition(Number(p.x),Number(p.y));
+        ownPositionInitialized=true;
+      }
+      const x=p.self?pos.x:Number(p.x);
+      const y=p.self?pos.y:Number(p.y);
+      // Os colegas fazem uma transição CSS contínua entre leituras,
+      // sem criar requisições adicionais ao servidor por quadro.
+      node.a.style.left=Math.min(96,Math.max(4,Number.isFinite(x)?x:12))+"%";
+      node.a.style.top=Math.min(91,Math.max(8,Number.isFinite(y)?y:65))+"%";
       node.a.setAttribute("aria-label",p.self?
         "Seu personagem":"Outro estudante aguardando");
       node.label.textContent=p.self?"Você":"Colega";
@@ -234,9 +242,9 @@
   function beginPoll() {
     clearInterval(roomTimer);
     poll();
-    // 6,5 s mantém o aluno visível no painel (janela de presença > 25 s)
-    // com menos consultas do que os 4 s anteriores: ~37% de redução.
-    roomTimer=setInterval(poll,6500);
+    // 2 s: menor latência entre colegas. pollBusy impede sobreposição.
+    // 30 alunos geram ~15 leituras/s, sem sincronização por quadro.
+    roomTimer=setInterval(poll,2000);
   }
   function setSession(value,studentName) {
     token=value;
@@ -299,7 +307,7 @@
   async function move(dx,dy,emote=null,auto=false) {
     if(!auto){clearInterval(walkingTimer);walkingTimer=null;}
     if(!token || !onScreen) return;
-    if(!emote && Date.now()-lastMove<150) return;
+    if(!emote && Date.now()-lastMove<95) return;
     lastMove=Date.now();
     const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
     if(dx||dy)pos=next;
@@ -337,7 +345,7 @@
       // controles de posição já existentes no Supabase.
       move(Math.sign(dx)*Math.min(5,Math.abs(dx)),
         Math.sign(dy)*Math.min(5,Math.abs(dy)),null,true);
-    },180);
+    },110);
   }
   async function requestHelp() {
     if(!token || !onScreen) return;
