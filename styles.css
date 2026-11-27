@@ -1073,3 +1073,9 @@ body.lobby-no-scroll{overflow:hidden;}
 .grade-history-panel h2{margin:0 0 6px;font-size:1.15rem;}
 #gradeHistoryTable{min-width:650px;}
 #gradeHistorySummary{margin:10px 0;}
+
+/* Pedidos de ajuda persistem visíveis no painel geral, mesmo após separar a sala. */
+#teacherHelpSummary{border:2px solid #d4a017;background:#fff4bf;color:#583c08;}
+#teacherHelpSummary h2{margin:0 0 6px;}
+#teacherHelpSummary p{margin:0;line-height:1.5;color:#583c08;}
+#teacherHelpSummary .section-head{align-items:center;}
