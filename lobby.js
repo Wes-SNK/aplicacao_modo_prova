@@ -309,7 +309,7 @@
     if(!emote && Date.now()-lastMove<95) return;
     lastMove=Date.now();
     const next=window.SupervisionUtils.clampPosition(pos.x+dx,pos.y+dy);
-    if(dx||dy)pos=next;
+    if(dx||dy){pos=next;ownPositionInitialized=true;}
     const self=peers.find(p=>p.self);
     if(self){self.x=pos.x;self.y=pos.y;if(emote)self.emote=emote;drawAvatars();}
     if(movementSender){
