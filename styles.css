@@ -758,7 +758,33 @@ body.lobby-no-scroll{overflow:hidden;}
 .supervision-progress-track>div{height:100%;background:#397ea8;border-radius:6px;}
 .supervision-actions{min-width:120px;}
 .supervision-actions button{margin:2px;}
-.supervision-help{display:block;color:#975e13;font-size:.75rem;}
+.supervision-needs-help{background:#fff5c6;}
+.supervision-needs-help td{background:#fff5c6;}
+.supervision-needs-help .supervision-student{
+  border-left:5px solid #d4a017;
+  font-weight:800;
+}
+.supervision-help{
+  display:inline-block;
+  margin-top:5px;
+  padding:3px 9px;
+  border-radius:5px;
+  background:#facc15;
+  color:#3f3100;
+  font-weight:800;
+  font-size:.76rem;
+}
+.supervision-help-alert{
+  margin:12px 0;
+  padding:12px 15px;
+  border:2px solid #ca8a04;
+  border-radius:10px;
+  background:#fef3c7;
+  color:#713f12;
+  font-weight:750;
+  line-height:1.5;
+}
+.supervision-help-alert.hidden{display:none!important;}
 .supervision-offline{color:#965e22;font-weight:600;}
 @media(max-width:680px){
 
