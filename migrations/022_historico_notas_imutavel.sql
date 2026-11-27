@@ -189,3 +189,31 @@ REVOKE ALL ON FUNCTION public._archive_final_grade(uuid),
 GRANT EXECUTE ON FUNCTION public.submit_attempt(uuid,text) TO anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.teacher_dashboard(text) TO authenticated;
 REVOKE EXECUTE ON FUNCTION public.teacher_dashboard(text) FROM PUBLIC,anon;
+
+
+-- Serializar gravação de respostas com submit_attempt: após a finalização,
+-- nenhuma requisição atrasada pode alterar a base usada para o cálculo.
+CREATE OR REPLACE FUNCTION public.save_answer(
+ p_session_token uuid,p_question_id uuid,p_answer jsonb)
+RETURNS jsonb LANGUAGE plpgsql SECURITY DEFINER SET search_path='public' AS $fn$
+DECLARE a public.attempts; e public.exams;
+BEGIN
+ SELECT * INTO a FROM public.attempts WHERE session_token=p_session_token FOR UPDATE;
+ IF NOT FOUND OR a.status<>'in_progress' THEN
+   RAISE EXCEPTION 'Tentativa não está em andamento';
+ END IF;
+ SELECT * INTO e FROM public.exams WHERE id=a.exam_id;
+ IF e.duration_minutes IS NOT NULL
+   AND a.started_at + make_interval(mins=>e.duration_minutes)<=now()
+ THEN RAISE EXCEPTION 'Tempo encerrado';END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.questions
+   WHERE id=p_question_id AND exam_id=a.exam_id AND active=true)
+ THEN RAISE EXCEPTION 'Questão inválida';END IF;
+ INSERT INTO public.answers(attempt_id,question_id,answer)
+ VALUES(a.id,p_question_id,p_answer)
+ ON CONFLICT(attempt_id,question_id)
+ DO UPDATE SET answer=excluded.answer,saved_at=now();
+ UPDATE public.attempts SET last_seen_at=now() WHERE id=a.id;
+ RETURN jsonb_build_object('ok',true,'saved_at',now());
+END;$fn$;
+GRANT EXECUTE ON FUNCTION public.save_answer(uuid,uuid,jsonb) TO anon,authenticated;
