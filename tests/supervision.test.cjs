@@ -333,7 +333,7 @@ test("Curiosidades são conteúdo educativo local, sem questões ou rede",()=>{
   assert.match(html,/id="lobbyDismissRelease"/);
   assert.match(html,/role="status" aria-live="polite"/);
   assert.ok(html.indexOf('src="lobby-curiosities.js"')<
-    html.indexOf('src="lobby.js?v=20261126-turma30"'));
+    html.indexOf('src="lobby.js?v=20261127-movimento2"'));
  }
 });
 
