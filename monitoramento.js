@@ -177,7 +177,7 @@
     }finally{clearTimeout(id);}
   }
   async function refresh(force=false){
-    if(document.body.dataset.teacherPage!=="painel" ||
+    if(document.body.dataset.teacherPage!=="sala" ||
        changing || $("teacherDashboard").classList.contains("hidden"))return;
     if(loading && !force)return;
     const version=++requestVersion;
