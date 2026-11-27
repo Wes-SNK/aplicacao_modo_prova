@@ -594,7 +594,8 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
   transform:translate(-50%,-54%) scale(.75);
   width:48px;height:66px;
   display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
-  transition:left .16s linear,top .16s linear;
+  /* Interpolar posições remotas entre consultas ao servidor (2 s). */
+  transition:left 1.95s linear,top 1.95s linear;
   filter:drop-shadow(2px 3px 0 #253c4655);
 }
 .avatar-head{
@@ -648,7 +649,8 @@ th { font-size: .9rem; color: #475569; background: #f8fafc; }
  font-size:.66rem;line-height:1.6;font-weight:800;white-space:nowrap;
  border:2px solid #466074;border-radius:6px;
 }
-.lobby-avatar.own-avatar{z-index:6;}
+/* O próprio avatar reage imediatamente; só os colegas usam a transição longa. */
+.lobby-avatar.own-avatar{z-index:6;transition:left .11s linear,top .11s linear;}
 .lobby-avatar.own-avatar .avatar-body{outline:3px solid #ffd361;outline-offset:2px;}
 .lobby-avatar.own-avatar small{background:#ffdc77;}
 .avatar-emote{
