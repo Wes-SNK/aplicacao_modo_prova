@@ -13,6 +13,7 @@
   const $ = (id) => document.getElementById(id);
   const screens = ["screenLogin", "screenLobby", "screenRules", "screenExam", "screenFinished"];
 
+  const inFlightAnswerSaves = new Map();
   let state = {
     sessionToken: null,
     attemptId: null,
@@ -350,6 +351,7 @@
         input.value = opt.key;
         input.checked = current.value === opt.key;
         input.addEventListener("change", () => {
+          if(state.submitting || !state.active)return;
           state.answers[q.id] = { value: opt.key };
           queueSave(q.id);
           refreshQuestionNav();
@@ -366,8 +368,10 @@
       textarea.value = current.text || "";
       let timer = null;
       textarea.addEventListener("input", () => {
+        if(state.submitting || !state.active)return;
         state.answers[q.id] = { text: textarea.value };
         saveAnswerCache();
+        cachePending(q.id);
         refreshQuestionNav();
         $("saveStatus").textContent = "Salvando…";
         clearTimeout(timer);
@@ -386,43 +390,60 @@
   }
 
   async function queueSave(qid) {
+    if(!state.active || state.submitting)return;
     saveAnswerCache();
     cachePending(qid);
-    if (!navigator.onLine) {
-      $("saveStatus").textContent = "Sem conexão: resposta guardada neste computador.";
+    if(!navigator.onLine){
+      $("saveStatus").textContent="Sem conexão: resposta guardada neste computador.";
       return;
     }
-    try {
-      await rpc("save_answer", {
-        p_session_token: state.sessionToken,
-        p_question_id: qid,
-        p_answer: state.answers[qid]
-      });
-      delete state.pendingSync[qid];
-      localStorage.setItem(`${ANSWER_CACHE_KEY}:pending`, JSON.stringify(state.pendingSync));
-      $("saveStatus").textContent = "Resposta salva.";
-    } catch {
-      $("saveStatus").textContent = "Resposta guardada localmente; aguardando sincronização.";
-    }
+    // Apenas uma gravação por questão por vez. Se o aluno alterar a resposta
+    // durante o envio, o laço persiste a versão mais recente antes de encerrar.
+    if(inFlightAnswerSaves.has(qid))return inFlightAnswerSaves.get(qid);
+    const task=(async()=>{
+      while(state.pendingSync[qid] && state.active){
+        const answer=state.pendingSync[qid];
+        try{
+          await rpc("save_answer",{
+            p_session_token:state.sessionToken,p_question_id:qid,p_answer:answer
+          });
+          if(JSON.stringify(state.pendingSync[qid])===JSON.stringify(answer)){
+            delete state.pendingSync[qid];
+          }
+          localStorage.setItem(`${ANSWER_CACHE_KEY}:pending`,JSON.stringify(state.pendingSync));
+          $("saveStatus").textContent="Resposta salva.";
+        }catch{
+          $("saveStatus").textContent="Resposta guardada localmente; aguardando sincronização.";
+          return;
+        }
+      }
+    })();
+    inFlightAnswerSaves.set(qid,task);
+    try{await task;}finally{inFlightAnswerSaves.delete(qid);}
   }
 
   async function flushPendingAnswers() {
-    try {
-      const cached = JSON.parse(localStorage.getItem(`${ANSWER_CACHE_KEY}:pending`) || "{}");
-      state.pendingSync = { ...cached, ...state.pendingSync };
-    } catch {}
-    if (!navigator.onLine || !state.sessionToken) return;
-    for (const [qid, ans] of Object.entries(state.pendingSync)) {
-      try {
-        await rpc("save_answer", {
-          p_session_token: state.sessionToken,
-          p_question_id: qid,
-          p_answer: ans
+    // Aguarda gravações iniciadas pelo evento change/input antes de finalizar.
+    await Promise.allSettled([...inFlightAnswerSaves.values()]);
+    try{
+      const cached=JSON.parse(localStorage.getItem(`${ANSWER_CACHE_KEY}:pending`)||"{}");
+      state.pendingSync={...cached,...state.pendingSync};
+    }catch{}
+    if(!navigator.onLine || !state.sessionToken)return Object.keys(state.pendingSync).length===0 && navigator.onLine;
+    for(const [qid,answer] of Object.entries(state.pendingSync)){
+      try{
+        await rpc("save_answer",{
+          p_session_token:state.sessionToken,p_question_id:qid,p_answer:answer
         });
-        delete state.pendingSync[qid];
-      } catch {}
+        if(JSON.stringify(state.pendingSync[qid])===JSON.stringify(answer)){
+          delete state.pendingSync[qid];
+        }
+      }catch{
+        // Jamais remover da fila uma resposta cuja confirmação falhou.
+      }
     }
-    localStorage.setItem(`${ANSWER_CACHE_KEY}:pending`, JSON.stringify(state.pendingSync));
+    localStorage.setItem(`${ANSWER_CACHE_KEY}:pending`,JSON.stringify(state.pendingSync));
+    return Object.keys(state.pendingSync).length===0;
   }
 
   function startTimer() {
@@ -643,9 +664,11 @@
     if (state.submitting || !state.active) return;
     closeSubmitConfirmation();
     state.submitting = true;
-    await flushPendingAnswers();
-
     try {
+      if(!await flushPendingAnswers()){
+        showViolationToast("Há respostas ainda não sincronizadas. Não finalize agora: verifique a conexão e tente novamente.");
+        return;
+      }
       const payload = await rpc("submit_attempt", {
         p_session_token: state.sessionToken,
         p_reason: reason
@@ -656,8 +679,9 @@
         ? (state.assessmentMode === "simulation" ? "O tempo do simulado terminou e as respostas foram enviadas." : "O tempo da avaliação terminou e as respostas foram enviadas.")
         : (state.assessmentMode === "simulation" ? "Simulado finalizado. Confira seu resultado abaixo." : "Suas respostas foram enviadas com sucesso."));
     } catch {
-      state.submitting = false;
       showViolationToast("Não foi possível enviar a prova agora. Verifique a conexão e tente novamente.");
+    } finally {
+      state.submitting = false;
     }
   }
 
