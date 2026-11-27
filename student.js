@@ -215,14 +215,20 @@
       // Em avaliações supervisionadas, nunca recebe questões ou token de prova
       // antes que o professor autorize o ingresso na sala de espera.
       const lobby = window.ModeProva.lobbyBridge;
-      if (lobby && await lobby.join(studentName, payload => {
+      const admitted = await lobby?.join(studentName, payload => {
         hydrate(payload);
         renderRules();
         showScreen("screenRules");
-      })) {
+      });
+      if (admitted) {
         showScreen("screenLobby");
         setMessage($("loginMessage"), "", "info");
         return;
+      }
+      // A prévia interna do professor usa dados simulados e mantém o
+      // fluxo de teste próprio. Alunos reais nunca contornam a sala.
+      if (!window.ModeProva.teacherPreview) {
+        throw new Error("A sala de espera ainda não está configurada para esta turma. Solicite ao professor a liberação do acesso.");
       }
       const payload = await rpc("start_attempt_by_name", {
         p_exam_slug: cfg.examSlug,
