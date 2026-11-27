@@ -225,20 +225,7 @@
         setMessage($("loginMessage"), "", "info");
         return;
       }
-      // A prévia interna do professor usa dados simulados e mantém o
-      // fluxo de teste próprio. Alunos reais nunca contornam a sala.
-      if (!window.ModeProva.teacherPreview) {
-        throw new Error("A sala de espera ainda não está configurada para esta turma. Solicite ao professor a liberação do acesso.");
-      }
-      const payload = await rpc("start_attempt_by_name", {
-        p_exam_slug: cfg.examSlug,
-        p_student_name: studentName,
-        p_user_agent: navigator.userAgent
-      });
-      hydrate(payload);
-      renderRules();
-      showScreen("screenRules");
-      setMessage($("loginMessage"), "", "info");
+      throw new Error("A sala de espera não está disponível. Solicite ao professor a verificação da configuração.");
     } catch (err) {
       setMessage($("loginMessage"), humanError(err.message), "error");
     } finally {
