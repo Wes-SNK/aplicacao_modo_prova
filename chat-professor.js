@@ -4,7 +4,7 @@
  */
 (()=>{
  "use strict";
- if(document.body.dataset.teacherPage!=="painel")return;
+ if(document.body.dataset.teacherPage!=="sala")return;
  const mp=window.ModeProva,$=id=>document.getElementById(id);
  const utils=window.LobbyChatUtils;
  let last=0,items=[],students=[],busy=false,pollBusy=false,editing=false;
