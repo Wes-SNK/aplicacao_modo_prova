@@ -6,7 +6,7 @@ Projeto de produção preservado: `lqfchjfyftfopgzdwggi`.
 
 ## 1. Escopo e critérios de aprovação
 
-A versão implementa a opção de supervisão individual por avaliação, turma completa, liberação individual e coletiva, progresso por respostas, conexão aproximada, cronômetro, ajuda, cadastro de estudantes, códigos individuais opcionais, auditoria e sala de espera lúdica (2D) com modo simples. As avaliações existentes continuam no fluxo anterior se a supervisão não for habilitada.
+A versão implementa a opção de supervisão individual por avaliação, turma completa, liberação individual e coletiva, progresso por respostas, conexão aproximada, cronômetro, ajuda, cadastro de estudantes, códigos individuais opcionais, auditoria e sala de espera lúdica (2D) com mapa ampliado. As avaliações existentes continuam no fluxo anterior se a supervisão não for habilitada.
 
 **Separação de ambientes:** as migrações `migrations/013` até `016` estão somente no GitHub. Não foram aplicadas ao Supabase de produção. Para validação real, utilizar projeto/branch Supabase **de desenvolvimento**, com dados sintéticos, e configurar o cliente de homologação para sua própria URL/chave pública. Uma branch Supabase pode ter custo adicional: conferir preços e obter aprovação antes de criá-la. O CI executa migrações em um PostgreSQL descartável, independente do projeto real.
 
@@ -33,7 +33,7 @@ A versão implementa a opção de supervisão individual por avaliação, turma 
 - [ ] Conferir o movimento do avatar em dois navegadores, com dois estudantes fictícios.
 - [ ] Confirmar que os avatares dos colegas não revelam seus nomes reais.
 - [ ] Testar as reações **Olá**, **Pronto** e **Dúvida**.
-- [ ] Ativar **Modo simples**, verificar legibilidade, acessibilidade e ausência de mapa.
+- [ ] Verificar o mapa ampliado, controles por teclado, navegação acessível e legibilidade dos avisos.
 - [ ] Acionar **Preciso de ajuda**, confirmar a notificação no painel e seu encerramento.
 - [ ] Atualizar o navegador enquanto aguarda e confirmar a retomada da sala.
 - [ ] Simular desconexão de 20–40 segundos e reconexão; verificar que isso não gera infração nem dá acesso antecipado à prova.
@@ -113,7 +113,7 @@ Abrir `http://localhost:8000/professor.html?avaliacao=simulado` e, em outra aba/
 |---|---|---|
 | Cadastro e turma | Pendente | |
 | Código individual | Pendente | |
-| Mapa 2D / modo simples | Pendente | |
+| Mapa 2D / controles acessíveis | Pendente | |
 | Autorização individual | Pendente | |
 | Autorização coletiva | Pendente | |
 | Controle de acesso no servidor | Pendente | |
